@@ -822,7 +822,7 @@ This is an automated message. Please do not reply.""",
             "value": "default_salt_change_me",
             "help": "salt used for hashing privacy identifiers",
             "type": str}),
-        ("folder", {
+        ("privacy_folder", {
             "value": ".Radicale.privacy",
             "help": "folder name for storing privacy settings",
             "type": str})]))
