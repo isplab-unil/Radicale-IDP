@@ -816,7 +816,12 @@ This is an automated message. Please do not reply.""",
         ("max_freebusy_occurrence", {
             "value": "10000",
             "help": "number of occurrences per event when reporting",
-            "type": positive_int})]))
+            "type": positive_int})])),
+    ("privacy", OrderedDict([
+        ("salt", {
+            "value": "default_salt_change_me",
+            "help": "salt used for hashing privacy identifiers",
+            "type": str})]))
     ])
 
 
