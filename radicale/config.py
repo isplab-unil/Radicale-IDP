@@ -52,6 +52,8 @@ PROFILING: Sequence[str] = ("per_request", "per_request_method", "none")
 
 VALIDATE_TYPES: Sequence[str] = ("none", "minimal", "unicode-letter", "unicode-none", "strict")
 
+DATABASE_PATH = "radicale.db"  # Default path for the SQLite database
+
 
 def positive_int(value: Any) -> int:
     value = int(value)
