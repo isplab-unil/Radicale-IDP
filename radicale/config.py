@@ -821,6 +821,10 @@ This is an automated message. Please do not reply.""",
         ("salt", {
             "value": "default_salt_change_me",
             "help": "salt used for hashing privacy identifiers",
+            "type": str}),
+        ("folder", {
+            "value": ".Radicale.privacy",
+            "help": "folder name for storing privacy settings",
             "type": str})]))
     ])
 
