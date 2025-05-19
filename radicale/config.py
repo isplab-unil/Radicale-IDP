@@ -510,10 +510,6 @@ DEFAULT_CONFIG_SCHEMA: types.CONFIG_SCHEMA = OrderedDict([
             "value": "/var/lib/radicale/collections",
             "help": "path where collections are stored",
             "type": filepath}),
-        ("privacy_database_path", {
-            "value": "/var/lib/radicale/privacy.db",
-            "help": "path where the privacy settings database is stored",
-            "type": filepath}),
         ("filesystem_cache_folder", {
             "value": "",
             "help": "path where cache of collections is stored in case of use_cache_subfolder_* options are active",
@@ -626,6 +622,11 @@ DEFAULT_CONFIG_SCHEMA: types.CONFIG_SCHEMA = OrderedDict([
             "type": sharing.check_bday_max_age}),
         ])),
     ("privacy", OrderedDict([
+        ("type", {
+            "value": "database",
+            "help": "privacy backend",
+            "type": str_or_callable,
+            "internal": storage.INTERNAL_TYPES}),
         ("database_path", {
             "value": "/var/lib/radicale/privacy.db",
             "help": "path where the privacy settings database is stored",
