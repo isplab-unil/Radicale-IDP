@@ -52,6 +52,8 @@ PROFILING: Sequence[str] = ("per_request", "per_request_method", "none")
 
 VALIDATE_TYPES: Sequence[str] = ("none", "minimal", "unicode-letter", "unicode-none", "strict")
 
+DATABASE_PATH = "radicale.db"  # Default path for the SQLite database
+
 
 def positive_int(value: Any) -> int:
     value = int(value)
@@ -618,6 +620,49 @@ DEFAULT_CONFIG_SCHEMA: types.CONFIG_SCHEMA = OrderedDict([
             "value": str(sharing.SHARING_BDAY_AGE_MAX_DEFAULT),
             "help": "conversion bday age max",
             "type": sharing.check_bday_max_age}),
+        ])),
+    ("privacy", OrderedDict([
+        ("type", {
+            "value": "database",
+            "help": "privacy backend",
+            "type": str_or_callable,
+            "internal": storage.INTERNAL_TYPES}),
+        ("database_path", {
+            "value": "~/.local/share/radicale/privacy.db",
+            "help": "path where the privacy settings database is stored",
+            "type": filepath}),
+        ("default_allow_name", {
+            "value": "True",
+            "help": "default value for allowing name in privacy settings",
+            "type": bool}),
+        ("default_allow_email", {
+            "value": "True",
+            "help": "default value for allowing email in privacy settings",
+            "type": bool}),
+        ("default_allow_phone", {
+            "value": "True",
+            "help": "default value for allowing phone in privacy settings",
+            "type": bool}),
+        ("default_allow_company", {
+            "value": "True",
+            "help": "default value for allowing company in privacy settings",
+            "type": bool}),
+        ("default_allow_title", {
+            "value": "True",
+            "help": "default value for allowing title in privacy settings",
+            "type": bool}),
+        ("default_allow_photo", {
+            "value": "True",
+            "help": "default value for allowing photo in privacy settings",
+            "type": bool}),
+        ("default_allow_birthday", {
+            "value": "True",
+            "help": "default value for allowing birthday in privacy settings",
+            "type": bool}),
+        ("default_allow_address", {
+            "value": "True",
+            "help": "default value for allowing address in privacy settings",
+            "type": bool})
         ])),
     ("hook", OrderedDict([
         ("type", {

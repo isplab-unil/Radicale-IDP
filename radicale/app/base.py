@@ -23,8 +23,8 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from typing import Optional, Union
 
-from radicale import (auth, config, hook, httputils, log, pathutils, rights,
-                      sharing, storage, types, utils, web, xmlutils)
+from radicale import (auth, config, hook, httputils, log, pathutils, privacy,
+                      rights, sharing, storage, types, utils, web, xmlutils)
 from radicale.log import logger
 from radicale.rights import intersect
 
@@ -128,6 +128,7 @@ class ApplicationBase:
     _validate_user_value: str
     _validate_path_format: str
     _hook: hook.BaseHook
+    _privacy: Optional[privacy.PrivacyDatabase]
 
     def __init__(self, configuration: config.Configuration) -> None:
         self.configuration = configuration
@@ -146,6 +147,7 @@ class ApplicationBase:
         self._validate_user_value = configuration.get("server", "validate_user_value")
         self._validate_path_value = configuration.get("server", "validate_path_value")
         self._hook = hook.load(configuration)
+        self._privacy = privacy.load(configuration)
 
     def _read_xml_request_body(self,
                                environ: types.WSGIEnviron,
