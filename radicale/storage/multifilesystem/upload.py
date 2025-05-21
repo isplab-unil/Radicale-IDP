@@ -26,6 +26,8 @@ from typing import Iterable, Iterator, Optional, TextIO, Tuple, cast
 import radicale.item as radicale_item
 from radicale import pathutils
 from radicale.log import logger
+from radicale.privacy.database import PrivacyDatabase
+from radicale.privacy.enforcement import PrivacyEnforcement
 from radicale.storage.multifilesystem.base import CollectionBase
 from radicale.storage.multifilesystem.cache import CollectionPartCache
 from radicale.storage.multifilesystem.get import CollectionPartGet
@@ -35,19 +37,37 @@ from radicale.storage.multifilesystem.history import CollectionPartHistory
 class CollectionPartUpload(CollectionPartGet, CollectionPartCache,
                            CollectionPartHistory, CollectionBase):
 
+    _privacy_db: Optional[PrivacyDatabase] = None
+    _privacy_enforcement: Optional[PrivacyEnforcement] = None
+
     def upload(self, href: str, item: radicale_item.Item
                ) -> Tuple[radicale_item.Item, Optional[radicale_item.Item]]:
         if not pathutils.is_safe_filesystem_path_component(href):
             raise pathutils.UnsafePathError(href)
         path = pathutils.path_to_filesystem(self._filesystem_path, href, self._is_collision_free)
         old_item = self._get(href, verify_href=False)
+
+        # Debug logging for item properties
+        logger.debug("Item component name: %r", item.component_name)
+        logger.debug("Item name: %r", item.name)
+        logger.debug("Item type: %r", type(item))
+
+
         try:
+            # Get privacy enforcement instance
+            privacy_enforcement = PrivacyEnforcement.get_instance(self._storage.configuration)
+
+            # Apply privacy enforcement
+            item = privacy_enforcement.enforce_privacy(item)
+
+            # Write the modified item to disk
             with self._atomic_write(path, newline="") as fo:  # type: ignore
                 f = cast(TextIO, fo)
                 f.write(item.serialize())
         except Exception as e:
             raise ValueError("Failed to store item %r in collection %r: %s" %
                              (href, self.path, e)) from e
+
         # store cache file
         if self._storage._use_mtime_and_size_for_item_cache is True:
             cache_hash = self._item_cache_mtime_and_size(os.stat(path).st_size, os.stat(path).st_mtime_ns)
