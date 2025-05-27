@@ -5,12 +5,17 @@ This module provides RESTful endpoints for managing user privacy settings.
 """
 
 import json
+import logging
 import re
 from http import client
 from typing import Dict, Tuple
 
-from radicale import config, httputils, types
+from radicale import config, httputils, storage, types
+from radicale.item import Item
 from radicale.privacy.database import PrivacyDatabase
+from radicale.privacy.scanner import PrivacyScanner
+
+logger = logging.getLogger(__name__)
 
 
 class PrivacyAPI:
@@ -24,6 +29,8 @@ class PrivacyAPI:
         """
         self.configuration = configuration
         self._privacy_db = PrivacyDatabase(configuration)
+        storage_instance = storage.load(configuration)
+        self._scanner = PrivacyScanner(storage_instance)
 
     def _validate_user_identifier(self, user: str) -> Tuple[bool, str]:
         """Validate user identifier format.
@@ -190,3 +197,105 @@ class PrivacyAPI:
             return client.OK, {"Content-Type": "application/json"}, json.dumps({"status": "deleted"})
         except Exception as e:
             return client.BAD_REQUEST, {"Content-Type": "application/json"}, json.dumps({"error": str(e)})
+
+    def get_matching_cards(self, user: str) -> types.WSGIResponse:
+        """Get all vCards that match a user's identity.
+
+        Args:
+            user: The user identifier (email or phone)
+
+        Returns:
+            WSGI response with matching vCards
+        """
+        # Validate user identifier
+        is_valid, error_msg = self._validate_user_identifier(user)
+        if not is_valid:
+            return client.BAD_REQUEST, {"Content-Type": "application/json"}, json.dumps({
+                "error": error_msg
+            })
+
+        # Get user's privacy settings
+        settings = self._privacy_db.get_user_settings(user)
+        if not settings:
+            return httputils.NOT_FOUND
+
+        # Find matching vCards
+        try:
+            matches = self._scanner.find_identity_occurrences(user)
+            if not matches:
+                return client.OK, {"Content-Type": "application/json"}, json.dumps({
+                    "matches": []
+                })
+
+            # Get the vCards
+            vcard_matches = []
+            for match in matches:
+                try:
+                    logger.debug("Attempting to discover collection: %r", match["collection_path"])
+                    # Ensure path starts with a slash for discover()
+                    discover_path = "/" + match["collection_path"] if match["collection_path"] else "/"
+                    logger.debug("Using discover path: %r", discover_path)
+                    collections = list(self._scanner._storage.discover(discover_path))
+                    logger.debug("Discover returned %d collections", len(collections))
+                    collection = next(iter(collections), None)
+                except Exception as e:
+                    logger.info("Error discovering collection: %r", e)
+                    continue
+
+                if not collection:
+                    logger.debug("No collection found for path: %r", match["collection_path"])
+                    continue
+
+                # Get the vCard
+                vcard = None
+                for item in collection.get_all():
+                    if (isinstance(item, Item) and
+                        item.component_name == "VCARD" and
+                            hasattr(item.vobject_item, "uid") and
+                            item.vobject_item.uid.value == match["vcard_uid"]):
+                        vcard = item.vobject_item
+                        break
+
+                if not vcard:
+                    continue
+
+                # Create a simplified version of the vCard
+                vcard_match = {
+                    "vcard_uid": match["vcard_uid"],
+                    "collection_path": match["collection_path"],
+                    "matching_fields": match["matching_fields"],
+                    "fields": {}
+                }
+
+                # Add all available fields
+                if hasattr(vcard, "fn"):
+                    vcard_match["fields"]["fn"] = vcard.fn.value
+                if hasattr(vcard, "n"):
+                    vcard_match["fields"]["n"] = vcard.n.value
+                if hasattr(vcard, "nickname"):
+                    vcard_match["fields"]["nickname"] = vcard.nickname.value
+                if hasattr(vcard, "email_list"):
+                    vcard_match["fields"]["email"] = [e.value for e in vcard.email_list if e.value]
+                if hasattr(vcard, "tel_list"):
+                    vcard_match["fields"]["tel"] = [t.value for t in vcard.tel_list if t.value]
+                if hasattr(vcard, "org"):
+                    vcard_match["fields"]["org"] = vcard.org.value
+                if hasattr(vcard, "title"):
+                    vcard_match["fields"]["title"] = vcard.title.value
+                if hasattr(vcard, "photo"):
+                    vcard_match["fields"]["photo"] = True  # Just indicate presence, don't include data
+                if hasattr(vcard, "bday"):
+                    vcard_match["fields"]["bday"] = vcard.bday.value
+                if hasattr(vcard, "adr"):
+                    vcard_match["fields"]["adr"] = vcard.adr.value
+
+                vcard_matches.append(vcard_match)
+
+            return client.OK, {"Content-Type": "application/json"}, json.dumps({
+                "matches": vcard_matches
+            })
+
+        except Exception as e:
+            return client.INTERNAL_SERVER_ERROR, {"Content-Type": "application/json"}, json.dumps({
+                "error": f"Error finding matching cards: {str(e)}"
+            })
