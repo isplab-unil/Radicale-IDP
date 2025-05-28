@@ -4,22 +4,15 @@ This module handles the enforcement of privacy settings on vCard items.
 """
 
 import logging
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import radicale.item as radicale_item
 from radicale.privacy.database import PrivacyDatabase
 from radicale.privacy.vcard_properties import (PRIVACY_TO_VCARD_MAP,
+                                               PUBLIC_VCARD_PROPERTIES,
                                                VCARD_NAME_TO_ENUM)
 
 logger = logging.getLogger(__name__)
-
-
-class PrivacyViolationError(Exception):
-    """Exception raised when a vCard violates privacy settings."""
-    def __init__(self, message: str, status_code: int = 400):
-        self.message = message
-        self.status_code = status_code
-        super().__init__(message)
 
 
 class PrivacyEnforcement:
@@ -30,14 +23,7 @@ class PrivacyEnforcement:
 
     @classmethod
     def get_instance(cls, configuration) -> 'PrivacyEnforcement':
-        """Get or create a privacy enforcement instance for the given configuration.
-
-        Args:
-            configuration: The configuration object
-
-        Returns:
-            A PrivacyEnforcement instance
-        """
+        """Get or create a privacy enforcement instance for the given configuration."""
         config_id = str(id(configuration))
         if config_id not in cls._instances:
             cls._instances[config_id] = cls(configuration)
@@ -61,43 +47,41 @@ class PrivacyEnforcement:
             self._privacy_db = PrivacyDatabase(self._configuration)
             self._privacy_db.init_db()
 
-    def enforce_privacy(self, item: radicale_item.Item) -> radicale_item.Item:
-        """Enforce privacy settings on a vCard item by rejecting if it contains disallowed fields.
-
-        Args:
-            item: The vCard item to process
-
-        Returns:
-            The vCard item if no privacy violations are found
-
-        Raises:
-            PrivacyViolationError: If the vCard contains fields that violate privacy settings
-        """
-        if not item.component_name == "VCARD" and not item.name == "VCARD":
-            logger.debug("Not a VCF file")
-            return item
-
-        logger.info("Intercepted vCard for privacy enforcement:")
-        logger.debug("vCard content:\n%s", item.serialize())
-
-        # Get identifiers (email and phone) from vCard
+    def _extract_identifiers(self, vcard) -> List[Tuple[str, str]]:
+        """Extract all identifiers (email and phone) from a vCard."""
         identifiers = []
-        vcard = item.vobject_item
 
-        # Check for email
+        # Extract emails
         if hasattr(vcard, "email_list"):
             for email_prop in vcard.email_list:
                 if email_prop.value:
                     identifiers.append(("email", email_prop.value))
-                    logger.info("Found email in vCard: %r", email_prop.value)
+                    logger.debug("Found email in vCard: %r", email_prop.value)
 
-        # Check for phone
+        # Extract phones
         if hasattr(vcard, "tel_list"):
             for tel_prop in vcard.tel_list:
                 if tel_prop.value:
                     identifiers.append(("phone", tel_prop.value))
-                    logger.info("Found phone in vCard: %r", tel_prop.value)
+                    logger.debug("Found phone in vCard: %r", tel_prop.value)
 
+        return identifiers
+
+    def _is_valid_vcard_property(self, property_name: str) -> bool:
+        """Check if a property name is a valid vCard property."""
+        return property_name.lower() in VCARD_NAME_TO_ENUM
+
+    def enforce_privacy(self, item: radicale_item.Item) -> radicale_item.Item:
+        """Enforce privacy settings on a vCard item by filtering disallowed fields."""
+        if not item.component_name == "VCARD" and not item.name == "VCARD":
+            logger.debug("Not a VCF file")
+            return item
+
+        logger.info("Intercepted vCard for privacy enforcement")
+        logger.debug("vCard content:\n%s", item.serialize())
+
+        # Get identifiers from vCard
+        identifiers = self._extract_identifiers(item.vobject_item)
         if not identifiers:
             logger.info("No email or phone found in vCard")
             return item
@@ -115,56 +99,42 @@ class PrivacyEnforcement:
                     privacy_settings = settings
                 else:
                     # Apply most restrictive settings when multiple matches found
-                    privacy_settings.disallow_name = privacy_settings.disallow_name or settings.disallow_name
-                    privacy_settings.disallow_email = privacy_settings.disallow_email or settings.disallow_email
-                    privacy_settings.disallow_phone = privacy_settings.disallow_phone or settings.disallow_phone
-                    privacy_settings.disallow_company = privacy_settings.disallow_company or settings.disallow_company
-                    privacy_settings.disallow_title = privacy_settings.disallow_title or settings.disallow_title
-                    privacy_settings.disallow_photo = privacy_settings.disallow_photo or settings.disallow_photo
-                    privacy_settings.disallow_birthday = privacy_settings.disallow_birthday or settings.disallow_birthday
-                    privacy_settings.disallow_address = privacy_settings.disallow_address or settings.disallow_address
+                    for field in PRIVACY_TO_VCARD_MAP.keys():
+                        current_value = getattr(privacy_settings, field)
+                        new_value = getattr(settings, field)
+                        setattr(privacy_settings, field, current_value or new_value)
 
         if not privacy_settings:
             logger.info("No privacy settings found for any identifier")
             return item
 
-        # Log all privacy settings
-        logger.debug("Privacy settings details:")
-        logger.debug("  Name disallowed: %r", privacy_settings.disallow_name)
-        logger.debug("  Email disallowed: %r", privacy_settings.disallow_email)
-        logger.debug("  Phone disallowed: %r", privacy_settings.disallow_phone)
-        logger.debug("  Company disallowed: %r", privacy_settings.disallow_company)
-        logger.debug("  Title disallowed: %r", privacy_settings.disallow_title)
-        logger.debug("  Photo disallowed: %r", privacy_settings.disallow_photo)
-        logger.debug("  Birthday disallowed: %r", privacy_settings.disallow_birthday)
-        logger.debug("  Address disallowed: %r", privacy_settings.disallow_address)
+        # Process the vCard
+        logger.info("Processing vCard for privacy enforcement")
+        vcard = item.vobject_item
 
-        # Check for violations
-        violations = []
+        # Get all properties to remove based on privacy settings
+        properties_to_remove = set()
+        for privacy_field, vcard_properties in PRIVACY_TO_VCARD_MAP.items():
+            if getattr(privacy_settings, privacy_field):
+                properties_to_remove.update(vcard_properties)
 
-        # Check each property against privacy settings
-        for property_name in vcard.contents.keys():
-            logger.debug("Property name to check: %s", property_name)
+        # Remove disallowed properties
+        for property_name in list(vcard.contents.keys()):
+            property_name_lower = property_name.lower()
 
-            # Get the corresponding enum value for this property
-            vcard_property = VCARD_NAME_TO_ENUM.get(property_name.lower())
-            if vcard_property is None:
-                logger.debug("Unknown vCard property: %s", property_name)
+            # Skip if property is public or not a valid vCard property
+            if (property_name_lower in PUBLIC_VCARD_PROPERTIES or
+                    not self._is_valid_vcard_property(property_name)):
+                logger.debug("Skipping public or invalid property: %s", property_name)
                 continue
 
-            # Check if this property should be removed based on privacy settings
-            for privacy_field, vcard_properties in PRIVACY_TO_VCARD_MAP.items():
-                if vcard_property in vcard_properties and getattr(privacy_settings, privacy_field):
-                    violations.append(property_name)
-                    logger.debug("Property %s matches privacy field %s", property_name, privacy_field)
-                    break
+            # Remove if property is in the disallowed list
+            if property_name_lower in properties_to_remove:
+                logger.debug("Removing disallowed field: %s", property_name)
+                del vcard.contents[property_name]
 
-        if violations:
-            error_msg = f"Privacy violation: Cannot save vCard containing private fields: {', '.join(violations)}"
-            logger.warning(error_msg)
-            raise PrivacyViolationError(error_msg)
-
-        logger.info("No privacy violations found in vCard")
+        # Invalidate the item's text cache since we modified the vCard
+        item._text = None
         return item
 
     def close(self):
