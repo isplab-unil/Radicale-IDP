@@ -21,6 +21,7 @@
 
 import errno
 import itertools
+import json
 import logging
 import posixpath
 import re
@@ -181,6 +182,32 @@ class ApplicationPartPut(ApplicationBase):
     def do_PUT(self, environ: types.WSGIEnviron, base_prefix: str,
                path: str, user: str, request_info: dict) -> types.WSGIResponse:
         """Manage PUT request."""
+        # Handle privacy-specific paths first
+        if path.startswith("/privacy/"):
+            parts = path.strip("/").split("/")
+            if len(parts) != 3 or parts[1] != "settings":
+                return httputils.BAD_REQUEST
+
+            user_identifier = parts[2]
+
+            # Check if authenticated user matches the requested resource
+            if user != user_identifier:
+                return httputils.FORBIDDEN
+
+            # Read request body
+            try:
+                content_length = int(environ.get("CONTENT_LENGTH", 0))
+                if content_length > 0:
+                    body = environ["wsgi.input"].read(content_length)
+                    data = json.loads(body)
+                else:
+                    return httputils.BAD_REQUEST
+            except (ValueError, json.JSONDecodeError):
+                return httputils.BAD_REQUEST
+
+            success, result = self._privacy_api.update_settings(user_identifier, data)
+            return self._to_wsgi_response(success, result)
+
         actor = user
         permissions_filter = None
         if self._sharing._enabled:
