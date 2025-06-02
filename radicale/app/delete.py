@@ -65,6 +65,21 @@ class ApplicationPartDelete(ApplicationBase):
     def do_DELETE(self, environ: types.WSGIEnviron, base_prefix: str,
                   path: str, user: str, request_info: dict) -> types.WSGIResponse:
         """Manage DELETE request."""
+        # Handle privacy-specific paths first
+        if path.startswith("/privacy/"):
+            parts = path.strip("/").split("/")
+            if len(parts) != 3 or parts[1] != "settings":
+                return httputils.BAD_REQUEST
+
+            user_identifier = parts[2]
+
+            # Check if authenticated user matches the requested resource
+            if user != user_identifier:
+                return httputils.FORBIDDEN
+
+            success, result = self._privacy_api.delete_settings(user_identifier)
+            return self._to_wsgi_response(success, result)
+
         actor = user
         permissions_filter = None
         share = None

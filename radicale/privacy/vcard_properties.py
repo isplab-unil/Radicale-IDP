@@ -65,13 +65,21 @@ class VCardProperty(Enum):
     SOURCE = auto()
 
 
+class VCardPropertyType(Enum):
+    """Enumeration of vCard property value types."""
+    SINGLE = auto()  # Single value property
+    LIST = auto()    # List of values property
+    PRESENCE = auto()  # Property that only indicates presence
+
+
 # Mapping of privacy settings to vCard properties
 PRIVACY_TO_VCARD_MAP = {
-    'disallow_company': ['org', 'logo'],
-    'disallow_title': ['title', 'role'],
     'disallow_photo': ['photo'],
+    'disallow_gender': ['gender'],
     'disallow_birthday': ['bday', 'anniversary'],
     'disallow_address': ['adr', 'label'],
+    'disallow_company': ['org', 'logo'],
+    'disallow_title': ['title', 'role'],
 }
 
 # List of public vCard properties that should never be filtered
@@ -116,4 +124,25 @@ VCARD_NAME_TO_ENUM = {
     'kind': VCardProperty.KIND,
     'xml': VCardProperty.XML,
     'source': VCardProperty.SOURCE,
+}
+
+
+# Mapping of vCard property names to their value types
+VCARD_PROPERTY_TYPES = {
+    # List properties
+    'email': VCardPropertyType.LIST,
+    'tel': VCardPropertyType.LIST,
+    'impp': VCardPropertyType.LIST,
+    'member': VCardPropertyType.LIST,
+    'related': VCardPropertyType.LIST,
+    'categories': VCardPropertyType.LIST,
+    'clientpidmap': VCardPropertyType.LIST,
+
+    # Presence-only properties
+    'photo': VCardPropertyType.PRESENCE,
+    'logo': VCardPropertyType.PRESENCE,
+    'sound': VCardPropertyType.PRESENCE,
+    'key': VCardPropertyType.PRESENCE,
+
+    # All other properties are single value by default
 }
