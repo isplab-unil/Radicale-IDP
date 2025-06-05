@@ -27,6 +27,7 @@ from importlib import import_module, metadata
 from string import ascii_letters, digits, punctuation
 from typing import Callable, Sequence, Tuple, Type, TypeVar, Union
 
+import phonenumbers
 import vobject
 
 from radicale import config
@@ -297,6 +298,7 @@ def ssl_get_protocols(context):
     return protocols
 
 
+<<<<<<< HEAD
 def unknown_if_empty(value):
     if value == "":
         return "UNKNOWN"
@@ -528,3 +530,20 @@ def sha256_bytes(content: bytes) -> str:
     _hash = sha256()
     _hash.update(content)
     return _hash.hexdigest()
+
+
+def normalize_phone_e164(phone: str, default_region: str = "US") -> str:
+    """
+    Normalize a phone number to E.164 format. Returns the normalized number as a string,
+    or raises ValueError if the number is invalid or cannot be parsed.
+    By default, assumes US if no country code is present.
+    """
+    try:
+        # Remove common formatting characters
+        phone = phone.strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+        parsed = phonenumbers.parse(phone, default_region)
+        if not phonenumbers.is_valid_number(parsed):
+            raise ValueError(f"Invalid phone number: {phone}")
+        return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+    except Exception as e:
+        raise ValueError(f"Could not normalize phone number '{phone}': {e}")
