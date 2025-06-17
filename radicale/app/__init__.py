@@ -341,6 +341,11 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug("Response header: suppressed by config/option [logging] response_header_on_debug")
 
+            # Add session token to response headers if present in environment
+            session_token = environ.get("radicale.session_token")
+            if session_token:
+                headers["X-Radicale-Session-Token"] = session_token
+
             # Start response
             # delay on error
             delay: float = 0.0

@@ -298,7 +298,6 @@ def ssl_get_protocols(context):
     return protocols
 
 
-<<<<<<< HEAD
 def unknown_if_empty(value):
     if value == "":
         return "UNKNOWN"
