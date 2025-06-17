@@ -205,7 +205,7 @@ class ApplicationPartPut(ApplicationBase):
             except (ValueError, json.JSONDecodeError):
                 return httputils.BAD_REQUEST
 
-            success, result = self._privacy_api.update_settings(user_identifier, data)
+            success, result = self._privacy_core.update_settings(user_identifier, data)
             return self._to_wsgi_response(success, result)
 
         actor = user

@@ -282,7 +282,7 @@ class PrivacyCore:
                 try:
                     logger.debug("Attempting to discover collection: %r", match["collection_path"])
                     # Ensure path starts with a slash for discover()
-                    discover_path = "/" + match["collection_path"] if match["collection_path"] else "/"
+                    discover_path = "/" + match["collection_path"].lstrip("/")
                     logger.debug("Using discover path: %r", discover_path)
                     collections = list(self._scanner._storage.discover(discover_path))
                     logger.debug("Discover returned %d collections", len(collections))
@@ -299,7 +299,7 @@ class PrivacyCore:
                 vcard = None
                 for item in collection.get_all():
                     if (isinstance(item, Item) and
-                        item.component_name == "VCARD" and
+                        (item.component_name == "VCARD" or item.name == "VCARD") and
                             hasattr(item.vobject_item, "uid") and
                             item.vobject_item.uid.value == match["vcard_uid"]):
                         vcard = item.vobject_item
@@ -316,6 +316,12 @@ class PrivacyCore:
                     "fields": {}
                 }
 
+                def make_json_safe(value):
+                    """Convert any value to a JSON-safe format."""
+                    if hasattr(value, '__dict__'):
+                        return {k: make_json_safe(v) for k, v in value.__dict__.items() if not k.startswith('_')}
+                    return str(value)
+
                 # Add all available fields
                 for prop_name in VCARD_NAME_TO_ENUM:
                     prop_type = VCARD_PROPERTY_TYPES.get(prop_name, VCardPropertyType.SINGLE)
@@ -324,7 +330,9 @@ class PrivacyCore:
                         # Handle list properties
                         list_attr = f"{prop_name}_list"
                         if hasattr(vcard, list_attr):
-                            vcard_match["fields"][prop_name] = [e.value for e in getattr(vcard, list_attr) if e.value]
+                            values = [make_json_safe(e.value) for e in getattr(vcard, list_attr) if e.value]
+                            if values:
+                                vcard_match["fields"][prop_name] = values
                     elif prop_type == VCardPropertyType.PRESENCE:
                         # Handle presence-only properties
                         if hasattr(vcard, prop_name):
@@ -332,17 +340,14 @@ class PrivacyCore:
                     else:
                         # Handle single value properties
                         if hasattr(vcard, prop_name):
-                            vcard_match["fields"][prop_name] = getattr(vcard, prop_name).value
-
-                # Add photo field if present (special case as we only indicate presence)
-                if hasattr(vcard, "photo"):
-                    vcard_match["fields"]["photo"] = True
+                            vcard_match["fields"][prop_name] = make_json_safe(getattr(vcard, prop_name).value)
 
                 vcard_matches.append(vcard_match)
 
             return True, {"matches": vcard_matches}
 
         except Exception as e:
+            logger.error("Error finding matching cards: %s", str(e), exc_info=True)
             return False, f"Error finding matching cards: {str(e)}"
 
     def reprocess_cards(self, user: str) -> Tuple[bool, Union[Dict[str, Union[str, int, List[str]]], str]]:
