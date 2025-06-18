@@ -39,7 +39,7 @@ import time
 import traceback
 import zlib
 from http import client
-from typing import Iterable, List, Mapping, Tuple, Union
+from typing import Iterable, List, Mapping, Tuple, Union, cast
 
 from radicale import config, httputils, log, pathutils, types, utils
 from radicale.app import base as app_base
@@ -346,6 +346,12 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
             if session_token:
                 headers["X-Radicale-Session-Token"] = session_token
 
+            # Add JWT token to Authorization header if present in environment
+            jwt_token = environ.get("radicale.jwt_token")
+            if jwt_token:
+                headers["Authorization"] = f"Bearer {jwt_token}"
+                logger.debug("Added JWT token to Authorization header")
+
             # Start response
             # delay on error
             delay: float = 0.0
@@ -556,7 +562,23 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
             info = "not compliant to %r" % self._validate_user_value
             user = ""
         else:
-            (user, info) = self._auth.login(login, password, context) or ("", "") if login else ("", "")
+            # Enhanced authentication flow with JWT support
+            if login:
+                # Check if auth backend supports JWT tokens (like OTP Twilio)
+                if hasattr(self._auth, 'login_with_jwt') and callable(getattr(self._auth, 'login_with_jwt')):
+                    logger.debug("Using JWT-capable authentication backend for user: %s", login)
+                    user_result, jwt_token = self._auth.login_with_jwt(login, password)
+                    user, info = (user_result, "otp_twilio") if user_result else ("", "")
+
+                    # Store JWT token in environ for response headers
+                    if jwt_token:
+                        cast(dict, environ)["radicale.jwt_token"] = jwt_token
+                        logger.debug("JWT token stored in environ for user: %s", user_result)
+                else:
+                    # Standard auth backends without JWT support
+                    (user, info) = self._auth.login(login, password, context) or ("", "")
+            else:
+                user, info = ("", "")
         if self.configuration.get("auth", "type") == "ldap":
             try:
                 logger.debug("Groups received from LDAP: %r", ",".join(self._auth._ldap_groups))
