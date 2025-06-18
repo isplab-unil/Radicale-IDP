@@ -20,13 +20,16 @@
 
 import xml.etree.ElementTree as ET
 from http import client
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 from urllib.parse import quote
 
 from radicale import httputils, storage, types, xmlutils
 from radicale.app.base import Access, ApplicationBase
 from radicale.hook import HookNotificationItem, HookNotificationItemTypes
 from radicale.log import logger
+
+if TYPE_CHECKING:
+    from radicale.privacy.http import PrivacyHTTP
 
 
 def xml_delete(base_prefix: str, path: str, collection: storage.BaseCollection,
@@ -61,24 +64,14 @@ def xml_delete(base_prefix: str, path: str, collection: storage.BaseCollection,
 
 
 class ApplicationPartDelete(ApplicationBase):
+    _privacy_http: "PrivacyHTTP"
 
     def do_DELETE(self, environ: types.WSGIEnviron, base_prefix: str,
                   path: str, user: str, request_info: dict) -> types.WSGIResponse:
         """Manage DELETE request."""
         # Handle privacy-specific paths first
         if path.startswith("/privacy/"):
-            parts = path.strip("/").split("/")
-            if len(parts) != 3 or parts[1] != "settings":
-                return httputils.BAD_REQUEST
-
-            user_identifier = parts[2]
-
-            # Check if authenticated user matches the requested resource
-            if user != user_identifier:
-                return httputils.FORBIDDEN
-
-            success, result = self._privacy_core.delete_settings(user_identifier)
-            return self._to_wsgi_response(success, result)
+            return self._privacy_http.do_DELETE(environ, base_prefix, path, user)
 
         actor = user
         permissions_filter = None

@@ -58,6 +58,7 @@ from radicale.app.put import ApplicationPartPut
 from radicale.app.report import ApplicationPartReport
 from radicale.auth import AuthContext
 from radicale.log import logger
+from radicale.privacy.http import PrivacyHTTP
 
 # Combination of types.WSGIStartResponse and WSGI application return value
 _IntermediateResponse = Tuple[str, List[Tuple[str, str]], Iterable[bytes]]
@@ -94,6 +95,9 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
     profiler_per_request_method_counter: dict[str, int] = {}
     profiler_per_request_method_starttime: datetime.datetime
     profiler_per_request_method_logtime: datetime.datetime
+    _permit_delete_collection: bool
+    _permit_overwrite_collection: bool
+    _privacy_http: PrivacyHTTP
 
     def __init__(self, configuration: config.Configuration) -> None:
         """Initialize Application.
@@ -109,6 +113,8 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
                 raise RuntimeError("TEMP found in environment, but directory is not existing: %r" % os.environ['TEMP'])
             if not os.access(os.environ['TEMP'], os.W_OK):
                 raise RuntimeError("TEMP found in environment, but not writable: %r" % os.environ['TEMP'])
+        from radicale.privacy.http import PrivacyHTTP
+        self._privacy_http = PrivacyHTTP(configuration)
         self._mask_passwords = configuration.get("logging", "mask_passwords")
         self._delay_on_error = configuration.get("server", "delay_on_error")
         logger.info("delay_on_error set to: %.3f seconds", self._delay_on_error)
