@@ -39,7 +39,7 @@ import time
 import traceback
 import zlib
 from http import client
-from typing import Iterable, List, Mapping, Tuple, Union, cast
+from typing import Iterable, List, Mapping, Tuple, Union
 
 from radicale import config, httputils, log, pathutils, types, utils
 from radicale.app import base as app_base
@@ -535,6 +535,15 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
             logger.error("request contains invalid path: %r (not compliant to %r)", path, self._validate_path_value)
             return response(*httputils.BAD_REQUEST)
 
+        # --- Centralize privacy endpoint handling ---
+        if path.startswith("/privacy/"):
+            function = getattr(self._privacy_http, f"do_{request_method}", None)
+            if not function:
+                return response(*httputils.METHOD_NOT_ALLOWED)
+            status, headers, answer = function(environ, base_prefix, path, "")
+            return response(status, headers, answer)
+        # --- End privacy shortcut ---
+
         # Get function corresponding to method
         function = getattr(self, "do_%s" % request_method, None)
         if not function:
@@ -590,11 +599,6 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
                     logger.debug("Using JWT-capable authentication backend for user: %s", login)
                     user_result, jwt_token = self._auth.login_with_jwt(login, password)
                     user, info = (user_result, "otp_twilio") if user_result else ("", "")
-
-                    # Store JWT token in environ for response headers
-                    if jwt_token:
-                        cast(dict, environ)["radicale.jwt_token"] = jwt_token
-                        logger.debug("JWT token stored in environ for user: %s", user_result)
                 else:
                     # Standard auth backends without JWT support
                     (user, info) = self._auth.login(login, password, context) or ("", "")
