@@ -20,30 +20,16 @@
 
 import os
 from http import client
-from typing import TYPE_CHECKING
 
 from radicale import httputils, types
 from radicale.app.base import ApplicationBase
 
-if TYPE_CHECKING:
-    from radicale.privacy.http import PrivacyHTTP
-
 
 class ApplicationPartOptions(ApplicationBase):
-    _privacy_http: "PrivacyHTTP"
 
     def do_OPTIONS(self, environ: types.WSGIEnviron, base_prefix: str,
                    path: str, user: str, request_info: dict) -> types.WSGIResponse:
         """Manage OPTIONS request."""
-        # Handle privacy-specific paths for CORS preflight
-        if path.startswith("/privacy/"):
-            headers = {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization",
-                "Access-Control-Max-Age": "86400"
-            }
-            return client.OK, headers, None
         headers = {
             "Allow": ", ".join(
                 name[3:] for name in dir(self) if name.startswith("do_")),
