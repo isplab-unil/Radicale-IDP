@@ -571,6 +571,8 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
                 self.configuration, environ, base64.b64decode(
                     authorization.encode("ascii"))).split(":", 1)
 
+        # Initialize JWT token variable for privacy paths
+        jwt_token = None
         if login and not app_base._check_user_format(self._storage, login, self._validate_user_value):
             info = "not compliant to %r" % self._validate_user_value
             user = ""
@@ -697,8 +699,14 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
                     profiler_active = True
 
             try:
-                status, headers, answer, xml_request = function(
-                    environ, base_prefix, path, user, request_info)
+                # For privacy paths, pass the JWT token if available
+                if path.startswith("/privacy/") and jwt_token:
+                    status, headers, answer, xml_request = function(
+                        environ, base_prefix, path, user, request_info,
+                        jwt_token=jwt_token)
+                else:
+                    status, headers, answer, xml_request = function(
+                        environ, base_prefix, path, user, request_info)
             except PermissionError as e:
                 logger.error("PermissionError: %s", e)
                 status, headers, answer, xml_request = httputils.INTERNAL_SERVER_ERROR
