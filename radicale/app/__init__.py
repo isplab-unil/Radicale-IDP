@@ -556,39 +556,38 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
             login, password = external_login
             login, password = login or "", password or ""
         elif authorization.startswith("Bearer "):
-            # Handle JWT Bearer token authentication
+            # Handle Bearer JWT token authentication
             jwt_token = authorization[len("Bearer "):].strip()
             if hasattr(self._auth, '_validate_jwt') and callable(getattr(self._auth, '_validate_jwt')):
                 user = self._auth._validate_jwt(jwt_token)
                 if user:
                     login, password = user, "jwt_validated"  # Signal that JWT was used
-                    logger.debug("JWT Bearer token validated for user: %s", user)
+                    logger.debug("AUTH: Bearer JWT token validated for %s", user)
                 else:
-                    logger.warning("Invalid or expired JWT token")
+                    logger.warning("AUTH: Invalid or expired Bearer JWT token")
         elif authorization.startswith("Basic"):
             authorization = authorization[len("Basic"):].strip()
             login, password = httputils.decode_request(
                 self.configuration, environ, base64.b64decode(
                     authorization.encode("ascii"))).split(":", 1)
 
-        # Initialize JWT token variable for privacy paths
-        jwt_token = None
+        # Enhanced authentication flow with JWT support
+        jwt_token = None  # Initialize JWT token variable
         if login and not app_base._check_user_format(self._storage, login, self._validate_user_value):
             info = "not compliant to %r" % self._validate_user_value
             user = ""
         else:
-            # Enhanced authentication flow with JWT support
             if login:
-                # Check if this was JWT Bearer token authentication
+                # Check if this was Bearer JWT token authentication
                 if password == "jwt_validated":
                     user, info = login, "jwt"
-                    logger.debug("User authenticated via JWT Bearer token: %s", user)
+                    logger.debug("AUTH: User authenticated via Bearer JWT token: %s", user)
                 # Check if auth backend supports JWT tokens (like OTP Twilio)
                 elif hasattr(self._auth, 'login_with_jwt') and callable(getattr(self._auth, 'login_with_jwt')):
-                    logger.debug("Using JWT-capable authentication backend for user: %s", login)
+                    logger.debug("AUTH: Using JWT-capable backend for %s", login)
                     user_result, jwt_token = self._auth.login_with_jwt(login, password)
                     user, info = (user_result, "otp_twilio") if user_result else ("", "")
-                    logger.debug("JWT auth result: user=%s, jwt_token=%s", user_result, jwt_token is not None)
+                    logger.debug("AUTH: JWT result - user=%s, token=%s", user_result, jwt_token is not None)
                 else:
                     # Standard auth backends without JWT support
                     (user, info) = self._auth.login(login, password, context) or ("", "")
