@@ -1,251 +1,503 @@
-"""Unit tests for the OTP Twilio authentication backend."""
+"""
+Tests for the OTP Twilio authentication module.
+"""
 
-import time
-import unittest
+import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from radicale import config
 from radicale.auth.otp_twilio import Auth
 
 
-class TestOTPTwilioAuth(unittest.TestCase):
-    """Test cases for the OTP Twilio authentication backend."""
+@pytest.fixture
+def auth_config():
+    """Fixture to provide test configuration for OTP authentication."""
+    configuration = config.load()
+    configuration.update({
+        "auth": {
+            "type": "otp_twilio",
+            "twilio_account_sid": "test_account_sid",
+            "twilio_auth_token": "test_auth_token",
+            "twilio_service_sid": "test_service_sid",
+            "jwt_secret": "test_jwt_secret_key_for_testing_only",
+            "jwt_expiry": "3600"
+        }
+    }, "test")
+    return configuration
 
-    def setUp(self):
-        """Set up test cases."""
-        # Mock configuration
-        self.config = MagicMock(spec=config.Configuration)
-        self.config.get.side_effect = lambda section, option: {
-            "auth": {
-                "type": "otp_twilio",
-                "twilio_account_sid": "test_sid",
-                "twilio_auth_token": "test_token",
-                "twilio_from_number": "+1234567890",
-                "twilio_from_email": "test@example.com",
-                "otp_length": 6,
-                "otp_expiry": 300,  # 5 minutes
-                "session_expiry": 1234,  # Custom session expiry for testing
-                # Required by BaseAuth
-                "lc_username": False,
-                "uc_username": False,
-                "strip_domain": False,
-                "urldecode_username": False,
-                "delay": 1,
-                "cache_logins": False,
-                "cache_successful_logins_expiry": 15,
-                "cache_failed_logins_expiry": 90,
-            }
-        }[section][option]
 
-        # Create auth instance with mocked Twilio client
-        with patch("radicale.auth.otp_twilio.Client") as mock_client:
-            self.mock_twilio = mock_client.return_value
-            self.mock_message = MagicMock()
-            self.mock_message.sid = "test_sid"
-            self.mock_twilio.messages.create.return_value = self.mock_message
-            self.auth = Auth(self.config)
+@pytest.fixture
+def otp_auth(auth_config):
+    """Fixture to provide an OTP authentication instance with mocked Twilio client."""
+    with patch('radicale.auth.otp_twilio.Client') as mock_client:
+        # Mock the Twilio client
+        mock_client.return_value = MagicMock()
+        auth_instance = Auth(auth_config)
+        yield auth_instance
 
-    def test_init(self):
-        """Test initialization of the auth backend."""
-        self.assertEqual(self.auth._account_sid, "test_sid")
-        self.assertEqual(self.auth._auth_token, "test_token")
-        self.assertEqual(self.auth._from_number, "+1234567890")
-        self.assertEqual(self.auth._from_email, "test@example.com")
-        self.assertEqual(self.auth._otp_length, 6)
-        self.assertEqual(self.auth._otp_expiry, 300)
 
-    def test_init_missing_credentials(self):
-        """Test initialization with missing Twilio credentials."""
-        self.config.get.side_effect = lambda section, option: {
-            "auth": {
-                "type": "otp_twilio",
-                "twilio_account_sid": "",
-                "twilio_auth_token": "",
-                "twilio_from_number": "+1234567890",
-                "twilio_from_email": "test@example.com",
-                "otp_length": 6,
-                "otp_expiry": 300,
-                # Required by BaseAuth
-                "lc_username": False,
-                "uc_username": False,
-                "strip_domain": False,
-                "urldecode_username": False,
-                "delay": 1,
-                "cache_logins": False,
-                "cache_successful_logins_expiry": 15,
-                "cache_failed_logins_expiry": 90,
-            }
-        }[section][option]
+def test_init_with_valid_config(auth_config):
+    """Test initialization with valid configuration."""
+    with patch('radicale.auth.otp_twilio.Client') as mock_client:
+        mock_client.return_value = MagicMock()
+        auth_instance = Auth(auth_config)
 
-        with self.assertRaises(RuntimeError):
-            Auth(self.config)
+        assert auth_instance._account_sid == "test_account_sid"
+        assert auth_instance._auth_token == "test_auth_token"
+        assert auth_instance._service_sid == "test_service_sid"
+        assert auth_instance._jwt_secret == "test_jwt_secret_key_for_testing_only"
+        assert auth_instance._jwt_expiry == 3600
 
-    def test_generate_otp(self):
-        """Test OTP generation."""
-        otp = self.auth._generate_otp()
-        self.assertEqual(len(otp), 6)
-        self.assertTrue(otp.isdigit())
 
-    def test_send_otp_sms(self):
-        """Test sending OTP via SMS."""
-        self.auth._otp_method = "sms"
-        result = self.auth._send_otp("+1234567890", "123456")
-        self.assertTrue(result)
-        self.mock_twilio.messages.create.assert_called_once_with(
-            body="Your Radicale authentication code is: 123456",
-            from_="+1234567890",
-            to="+1234567890"
+def test_init_with_missing_twilio_config():
+    """Test initialization with missing Twilio configuration."""
+    configuration = config.load()
+    configuration.update({
+        "auth": {
+            "type": "otp_twilio",
+            # Missing Twilio credentials
+        }
+    }, "test")
+
+    with pytest.raises(RuntimeError, match="Twilio account SID, auth token and service SID are required"):
+        Auth(configuration)
+
+
+def test_init_with_auto_generated_jwt_secret():
+    """Test initialization with auto-generated JWT secret."""
+    # Create a fresh configuration without jwt_secret
+    configuration = config.load()
+    configuration.update({
+        "auth": {
+            "type": "otp_twilio",
+            "twilio_account_sid": "test_account_sid",
+            "twilio_auth_token": "test_auth_token",
+            "twilio_service_sid": "test_service_sid",
+            # No jwt_secret - should auto-generate
+        }
+    }, "test")
+
+    with patch('radicale.auth.otp_twilio.Client') as mock_client:
+        with patch('radicale.auth.otp_twilio.secrets.token_urlsafe') as mock_secrets:
+            mock_secrets.return_value = "auto_generated_secret"
+            mock_client.return_value = MagicMock()
+            auth_instance = Auth(configuration)
+
+            assert auth_instance._jwt_secret == "auto_generated_secret"
+
+
+def test_send_otp_email_success(otp_auth):
+    """Test successful OTP sending via email."""
+    # Mock the Twilio verification response
+    mock_verification = MagicMock()
+    mock_verification.sid = "test_verification_sid"
+    otp_auth._client.verify.v2.services.return_value.verifications.create.return_value = mock_verification
+
+    result = otp_auth._send_otp("test@example.com")
+
+    assert result is True
+    otp_auth._client.verify.v2.services.assert_called_once_with("test_service_sid")
+    otp_auth._client.verify.v2.services.return_value.verifications.create.assert_called_once_with(
+        to="test@example.com", channel="email"
+    )
+
+
+def test_send_otp_sms_success(otp_auth):
+    """Test successful OTP sending via SMS."""
+    # Mock the Twilio verification response
+    mock_verification = MagicMock()
+    mock_verification.sid = "test_verification_sid"
+    otp_auth._client.verify.v2.services.return_value.verifications.create.return_value = mock_verification
+
+    result = otp_auth._send_otp("+1234567890")
+
+    assert result is True
+    otp_auth._client.verify.v2.services.assert_called_once_with("test_service_sid")
+    otp_auth._client.verify.v2.services.return_value.verifications.create.assert_called_once_with(
+        to="+1234567890", channel="sms"
+    )
+
+
+def test_send_otp_failure(otp_auth):
+    """Test OTP sending failure."""
+    # Mock Twilio exception
+    otp_auth._client.verify.v2.services.return_value.verifications.create.side_effect = Exception("Twilio error")
+
+    result = otp_auth._send_otp("test@example.com")
+
+    assert result is False
+
+
+def test_check_otp_success(otp_auth):
+    """Test successful OTP validation."""
+    # Mock the Twilio verification check response
+    mock_verification_check = MagicMock()
+    mock_verification_check.status = "approved"
+    otp_auth._client.verify.v2.services.return_value.verification_checks.create.return_value = mock_verification_check
+
+    result = otp_auth._check_otp("test@example.com", "123456")
+
+    assert result is True
+    otp_auth._client.verify.v2.services.assert_called_once_with("test_service_sid")
+    otp_auth._client.verify.v2.services.return_value.verification_checks.create.assert_called_once_with(
+        to="test@example.com", code="123456"
+    )
+
+
+def test_check_otp_failure(otp_auth):
+    """Test OTP validation failure."""
+    # Mock the Twilio verification check response
+    mock_verification_check = MagicMock()
+    mock_verification_check.status = "denied"
+    otp_auth._client.verify.v2.services.return_value.verification_checks.create.return_value = mock_verification_check
+
+    result = otp_auth._check_otp("test@example.com", "123456")
+
+    assert result is False
+
+
+def test_check_otp_exception(otp_auth):
+    """Test OTP validation with Twilio exception."""
+    # Mock Twilio exception
+    otp_auth._client.verify.v2.services.return_value.verification_checks.create.side_effect = Exception("Twilio error")
+
+    result = otp_auth._check_otp("test@example.com", "123456")
+
+    assert result is False
+
+
+def test_login_with_jwt_initial_request_email(otp_auth):
+    """Test initial OTP request for email."""
+    with patch.object(otp_auth, '_send_otp', return_value=True) as mock_send:
+        user, jwt_token = otp_auth.login_with_jwt("test@example.com", "")
+
+        assert user == ""
+        assert jwt_token is None
+        mock_send.assert_called_once_with("test@example.com")
+
+
+def test_login_with_jwt_initial_request_phone(otp_auth):
+    """Test initial OTP request for phone."""
+    with patch.object(otp_auth, '_send_otp', return_value=True) as mock_send:
+        user, jwt_token = otp_auth.login_with_jwt("+1234567890", "")
+
+        assert user == ""
+        assert jwt_token is None
+        mock_send.assert_called_once_with("+1234567890")
+
+
+def test_login_with_jwt_otp_verification_success(otp_auth):
+    """Test successful OTP verification."""
+    with patch.object(otp_auth, '_check_otp', return_value=True) as mock_check:
+        with patch.object(otp_auth, '_generate_jwt', return_value="test_jwt_token") as mock_generate:
+            user, jwt_token = otp_auth.login_with_jwt("test@example.com", "123456")
+
+            assert user == "test@example.com"
+            assert jwt_token == "test_jwt_token"
+            mock_check.assert_called_once_with("test@example.com", "123456")
+            mock_generate.assert_called_once_with("test@example.com")
+
+
+def test_login_with_jwt_otp_verification_failure(otp_auth):
+    """Test failed OTP verification."""
+    with patch.object(otp_auth, '_check_otp', return_value=False) as mock_check:
+        user, jwt_token = otp_auth.login_with_jwt("test@example.com", "123456")
+
+        assert user == ""
+        assert jwt_token is None
+        mock_check.assert_called_once_with("test@example.com", "123456")
+
+
+def test_login_with_jwt_otp_verification_exception(otp_auth):
+    """Test OTP verification with exception."""
+    with patch.object(otp_auth, '_check_otp', return_value=False) as mock_check:
+        user, jwt_token = otp_auth.login_with_jwt("test@example.com", "123456")
+
+        assert user == ""
+        assert jwt_token is None
+        mock_check.assert_called_once_with("test@example.com", "123456")
+
+
+def test_check_otp_exception_handling(otp_auth):
+    """Test that exceptions in _check_otp are properly handled."""
+    # Mock Twilio exception in _check_otp
+    otp_auth._client.verify.v2.services.return_value.verification_checks.create.side_effect = Exception("Twilio error")
+
+    result = otp_auth._check_otp("test@example.com", "123456")
+
+    assert result is False
+
+
+def test_generate_jwt_email(otp_auth):
+    """Test JWT generation for email user."""
+    with patch('radicale.auth.otp_twilio.datetime') as mock_datetime:
+        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        mock_datetime.datetime.now.return_value = mock_now
+
+        # Mock timedelta to return a real timedelta object
+        def mock_timedelta(seconds):
+            return datetime.timedelta(seconds=seconds)
+        mock_datetime.timedelta = mock_timedelta
+
+        with patch('radicale.auth.otp_twilio.jwt.encode') as mock_encode:
+            mock_encode.return_value = "test_jwt_token"
+
+            result = otp_auth._generate_jwt("test@example.com")
+
+            assert result == "test_jwt_token"
+            mock_encode.assert_called_once()
+
+            # Check the payload
+            call_args = mock_encode.call_args
+            payload = call_args[0][0]  # First argument is the payload
+
+            assert payload["sub"] == "test@example.com"
+            assert payload["iat"] == mock_now
+            assert payload["exp"] == mock_now + datetime.timedelta(seconds=3600)
+            assert payload["identifier_type"] == "email"
+            assert payload["auth_method"] == "otp_twilio"
+
+
+def test_generate_jwt_phone(otp_auth):
+    """Test JWT generation for phone user."""
+    with patch('radicale.auth.otp_twilio.datetime') as mock_datetime:
+        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        mock_datetime.datetime.now.return_value = mock_now
+
+        # Mock timedelta to return a real timedelta object
+        def mock_timedelta(seconds):
+            return datetime.timedelta(seconds=seconds)
+        mock_datetime.timedelta = mock_timedelta
+
+        with patch('radicale.auth.otp_twilio.jwt.encode') as mock_encode:
+            mock_encode.return_value = "test_jwt_token"
+
+            result = otp_auth._generate_jwt("+1234567890")
+
+            assert result == "test_jwt_token"
+            mock_encode.assert_called_once()
+
+            # Check the payload
+            call_args = mock_encode.call_args
+            payload = call_args[0][0]  # First argument is the payload
+
+            assert payload["sub"] == "+1234567890"
+            assert payload["identifier_type"] == "phone"
+
+
+def test_validate_jwt_success(otp_auth):
+    """Test successful JWT validation."""
+    with patch('radicale.auth.otp_twilio.jwt.decode') as mock_decode:
+        mock_decode.return_value = {"sub": "test@example.com"}
+
+        result = otp_auth._validate_jwt("valid_jwt_token")
+
+        assert result == "test@example.com"
+        mock_decode.assert_called_once_with(
+            "valid_jwt_token",
+            "test_jwt_secret_key_for_testing_only",
+            algorithms=["HS256"]
         )
 
-    def test_send_otp_email(self):
-        """Test sending OTP via email."""
-        self.auth._otp_method = "email"
-        result = self.auth._send_otp("user@example.com", "123456")
-        self.assertTrue(result)
-        self.mock_twilio.messages.create.assert_called_once_with(
-            body="Your Radicale authentication code is: 123456",
-            from_="Radicale <test@example.com>",
-            to="user@example.com"
-        )
 
-    def test_send_otp_failure(self):
-        """Test OTP sending failure."""
-        self.mock_twilio.messages.create.side_effect = Exception("Twilio error")
-        result = self.auth._send_otp("user@example.com", "123456")
-        self.assertFalse(result)
+def test_validate_jwt_expired(otp_auth):
+    """Test JWT validation with expired token."""
+    with patch('radicale.auth.otp_twilio.jwt.decode') as mock_decode:
+        from jwt import ExpiredSignatureError
+        mock_decode.side_effect = ExpiredSignatureError("Token expired")
 
-    def test_get_stored_otp(self):
-        """Test retrieving stored OTP."""
-        # Store an OTP
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
+        result = otp_auth._validate_jwt("expired_jwt_token")
 
-        # Test valid OTP
-        stored_otp = self.auth._get_stored_otp("user@example.com")
-        self.assertIsNotNone(stored_otp)
-        self.assertEqual(stored_otp[0], "123456")
-
-        # Test expired OTP
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() - 1)
-        stored_otp = self.auth._get_stored_otp("user@example.com")
-        self.assertIsNone(stored_otp)
-        self.assertNotIn("user@example.com", self.auth._otp_store)
-
-        # Test non-existent OTP
-        stored_otp = self.auth._get_stored_otp("nonexistent@example.com")
-        self.assertIsNone(stored_otp)
-
-    def test_login_initial_request(self):
-        """Test initial login request (empty password)."""
-        user, session_token = self.auth.login_with_session("user@example.com", "")
-        self.assertEqual(user, "")
-        self.assertIsNone(session_token)
-        self.assertIn("user@example.com", self.auth._otp_store)
-        self.mock_twilio.messages.create.assert_called_once()
-
-    def test_login_valid_otp(self):
-        """Test login with valid OTP."""
-        # Store an OTP
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
-        # Test valid OTP
-        user, session_token = self.auth.login_with_session("user@example.com", "123456")
-        self.assertEqual(user, "user@example.com")
-        self.assertIsInstance(session_token, str)
-        self.assertNotIn("user@example.com", self.auth._otp_store)
-
-    def test_login_invalid_otp(self):
-        """Test login with invalid OTP."""
-        # Store an OTP
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
-        # Test invalid OTP
-        user, session_token = self.auth.login_with_session("user@example.com", "654321")
-        self.assertEqual(user, "")
-        self.assertIsNone(session_token)
-        self.assertIn("user@example.com", self.auth._otp_store)
-
-    def test_login_expired_otp(self):
-        """Test login with expired OTP."""
-        # Store an expired OTP
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() - 1)
-        # Test expired OTP
-        user, session_token = self.auth.login_with_session("user@example.com", "123456")
-        self.assertEqual(user, "")
-        self.assertIsNone(session_token)
-        self.assertIn("user@example.com", self.auth._otp_store)
-        self.mock_twilio.messages.create.assert_called_once()
-
-    def test_is_authenticated(self):
-        """Test is_authenticated method."""
-        # Store an OTP
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
-
-        # Test valid OTP
-        self.assertTrue(self.auth.is_authenticated("user@example.com", "123456"))
-
-        # Test invalid OTP
-        self.assertFalse(self.auth.is_authenticated("user@example.com", "654321"))
-
-        # Test empty password
-        self.assertFalse(self.auth.is_authenticated("user@example.com", ""))
-
-    def test_login_valid_otp_returns_session_token(self):
-        """Test login with valid OTP returns a session token."""
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
-        user, session_token = self.auth.login_with_session("user@example.com", "123456")
-        self.assertEqual(user, "user@example.com")
-        self.assertIsInstance(session_token, str)
-        self.assertTrue(session_token in self.auth._session_store)
-
-    def test_login_initial_request_no_session_token(self):
-        """Test initial login request does not return a session token."""
-        user, session_token = self.auth.login_with_session("user@example.com", "")
-        self.assertEqual(user, "")
-        self.assertIsNone(session_token)
-
-    def test_login_invalid_otp_no_session_token(self):
-        """Test login with invalid OTP does not return a session token."""
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
-        user, session_token = self.auth.login_with_session("user@example.com", "654321")
-        self.assertEqual(user, "")
-        self.assertIsNone(session_token)
-
-    def test_validate_session_token(self):
-        """Test validating a session token after successful login."""
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
-        user, session_token = self.auth.login_with_session("user@example.com", "123456")
-        validated_user = self.auth.validate_session(session_token)
-        self.assertEqual(validated_user, "user@example.com")
-
-    def test_session_token_expiry(self):
-        """Test that session tokens expire after the set time."""
-        token = self.auth._generate_session_token()
-        self.auth._session_store[token] = ("user@example.com", time.time() - 1)  # expired
-        validated_user = self.auth.validate_session(token)
-        self.assertIsNone(validated_user)
-        self.assertNotIn(token, self.auth._session_store)
-
-    def test_invalidate_session_token(self):
-        """Test that session tokens can be invalidated manually."""
-        token = self.auth._generate_session_token()
-        self.auth._session_store[token] = ("user@example.com", time.time() + 300)
-        self.auth.invalidate_session(token)
-        self.assertNotIn(token, self.auth._session_store)
-
-    def test_logout_invalidate_session_token(self):
-        """Test that logging out invalidates the session token."""
-        self.auth._otp_store["user@example.com"] = ("123456", time.time() + 300)
-        user, session_token = self.auth.login_with_session("user@example.com", "123456")
-        self.assertEqual(user, "user@example.com")
-        self.assertIsInstance(session_token, str)
-        self.assertTrue(session_token in self.auth._session_store)
-        # Invalidate (logout)
-        self.auth.invalidate_session(session_token)
-        self.assertIsNone(self.auth.validate_session(session_token))
-        self.assertNotIn(session_token, self.auth._session_store)
-
-    def test_session_expiry_config(self):
-        """Test that session_expiry is set from config."""
-        self.assertEqual(self.auth._session_expiry, 1234)
+        assert result is None
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_validate_jwt_invalid(otp_auth):
+    """Test JWT validation with invalid token."""
+    with patch('radicale.auth.otp_twilio.jwt.decode') as mock_decode:
+        from jwt import InvalidTokenError
+        mock_decode.side_effect = InvalidTokenError("Invalid token")
+
+        result = otp_auth._validate_jwt("invalid_jwt_token")
+
+        assert result is None
+
+
+def test_validate_jwt_missing_subject(otp_auth):
+    """Test JWT validation with missing subject."""
+    with patch('radicale.auth.otp_twilio.jwt.decode') as mock_decode:
+        mock_decode.return_value = {}  # No 'sub' field
+
+        result = otp_auth._validate_jwt("jwt_token_without_subject")
+
+        assert result is None
+
+
+def test_login_method_compatibility(otp_auth):
+    """Test the _login method for compatibility with base auth."""
+    with patch.object(otp_auth, 'login_with_jwt', return_value=("test@example.com", "jwt_token")):
+        result = otp_auth._login("test@example.com", "123456")
+
+        assert result == "test@example.com"
+
+
+def test_is_authenticated_method(otp_auth):
+    """Test the is_authenticated method."""
+    with patch.object(otp_auth, 'login_with_jwt', return_value=("test@example.com", "jwt_token")):
+        result = otp_auth.is_authenticated("test@example.com", "123456")
+
+        assert result is True
+
+
+def test_is_authenticated_method_failure(otp_auth):
+    """Test the is_authenticated method with failed authentication."""
+    with patch.object(otp_auth, 'login_with_jwt', return_value=("", None)):
+        result = otp_auth.is_authenticated("test@example.com", "wrong_otp")
+
+        assert result is False
+
+
+def test_jwt_expiry_from_config():
+    """Test JWT expiry configuration."""
+    configuration = config.load()
+    configuration.update({
+        "auth": {
+            "type": "otp_twilio",
+            "twilio_account_sid": "test_account_sid",
+            "twilio_auth_token": "test_auth_token",
+            "twilio_service_sid": "test_service_sid",
+            "jwt_secret": "test_secret",
+            "jwt_expiry": "7200"  # 2 hours
+        }
+    }, "test")
+
+    with patch('radicale.auth.otp_twilio.Client') as mock_client:
+        mock_client.return_value = MagicMock()
+        auth_instance = Auth(configuration)
+
+        assert auth_instance._jwt_expiry == 7200
+
+
+def test_jwt_expiry_default():
+    """Test default JWT expiry when not specified."""
+    configuration = config.load()
+    configuration.update({
+        "auth": {
+            "type": "otp_twilio",
+            "twilio_account_sid": "test_account_sid",
+            "twilio_auth_token": "test_auth_token",
+            "twilio_service_sid": "test_service_sid",
+            "jwt_secret": "test_secret",
+            # No jwt_expiry specified
+        }
+    }, "test")
+
+    with patch('radicale.auth.otp_twilio.Client') as mock_client:
+        mock_client.return_value = MagicMock()
+        auth_instance = Auth(configuration)
+
+        assert auth_instance._jwt_expiry == 3600  # Default 1 hour
+
+
+def test_send_otp_no_verification_sid(otp_auth):
+    """Test OTP sending when verification has no SID."""
+    # Mock the Twilio verification response without SID
+    mock_verification = MagicMock()
+    mock_verification.sid = None
+    otp_auth._client.verify.v2.services.return_value.verifications.create.return_value = mock_verification
+
+    result = otp_auth._send_otp("test@example.com")
+
+    assert result is False
+
+
+def test_check_otp_no_verification_sid(otp_auth):
+    """Test OTP checking when verification check has no SID."""
+    # Mock the Twilio verification check response without SID
+    mock_verification_check = MagicMock()
+    mock_verification_check.sid = None
+    otp_auth._client.verify.v2.services.return_value.verification_checks.create.return_value = mock_verification_check
+
+    result = otp_auth._check_otp("test@example.com", "123456")
+
+    assert result is False
+
+
+def test_login_with_jwt_send_otp_failure(otp_auth):
+    """Test initial OTP request when sending fails."""
+    with patch.object(otp_auth, '_send_otp', return_value=False) as mock_send:
+        user, jwt_token = otp_auth.login_with_jwt("test@example.com", "")
+
+        assert user == ""
+        assert jwt_token is None
+        mock_send.assert_called_once_with("test@example.com")
+
+
+def test_real_jwt_generation_and_validation(otp_auth):
+    """Test real JWT generation and validation (integration test)."""
+    # Generate a real JWT
+    user = "test@example.com"
+    jwt_token = otp_auth._generate_jwt(user)
+
+    # Validate the JWT
+    validated_user = otp_auth._validate_jwt(jwt_token)
+
+    assert validated_user == user
+    assert jwt_token is not None
+    assert len(jwt_token) > 0
+
+
+def test_jwt_token_expiry(otp_auth):
+    """Test that JWT tokens actually expire."""
+    # Generate a JWT with very short expiry
+    original_expiry = otp_auth._jwt_expiry
+    otp_auth._jwt_expiry = 1  # 1 second
+
+    user = "test@example.com"
+    jwt_token = otp_auth._generate_jwt(user)
+
+    # Token should be valid immediately
+    validated_user = otp_auth._validate_jwt(jwt_token)
+    assert validated_user == user
+
+    # Wait for token to expire
+    import time
+    time.sleep(2)
+
+    # Token should be expired now
+    expired_user = otp_auth._validate_jwt(jwt_token)
+    assert expired_user is None
+
+    # Restore original expiry
+    otp_auth._jwt_expiry = original_expiry
+
+
+def test_identifier_type_detection():
+    """Test automatic identifier type detection."""
+    configuration = config.load()
+    configuration.update({
+        "auth": {
+            "type": "otp_twilio",
+            "twilio_account_sid": "test_account_sid",
+            "twilio_auth_token": "test_auth_token",
+            "twilio_service_sid": "test_service_sid",
+            "jwt_secret": "test_secret",
+        }
+    }, "test")
+
+    with patch('radicale.auth.otp_twilio.Client') as mock_client:
+        mock_client.return_value = MagicMock()
+        auth_instance = Auth(configuration)
+
+        # Test email detection
+        with patch('radicale.auth.otp_twilio.jwt.encode') as mock_encode:
+            auth_instance._generate_jwt("user@example.com")
+            payload = mock_encode.call_args[0][0]
+            assert payload["identifier_type"] == "email"
+
+        # Test phone detection
+        with patch('radicale.auth.otp_twilio.jwt.encode') as mock_encode:
+            auth_instance._generate_jwt("+1234567890")
+            payload = mock_encode.call_args[0][0]
+            assert payload["identifier_type"] == "phone"

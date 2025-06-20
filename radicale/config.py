@@ -340,25 +340,17 @@ DEFAULT_CONFIG_SCHEMA: types.CONFIG_SCHEMA = OrderedDict([
             "value": "",
             "help": "Twilio auth token for OTP authentication",
             "type": str}),
-        ("twilio_from_number", {
+        ("twilio_service_sid", {
             "value": "",
-            "help": "Twilio phone number to send SMS OTP from",
+            "help": "Twilio service SID for OTP authentication",
             "type": str}),
-        ("twilio_from_email", {
+        ("jwt_secret", {
             "value": "",
-            "help": "Twilio email address to send OTP from",
+            "help": "JWT secret key for token signing (auto-generated if empty)",
             "type": str}),
-        ("otp_length", {
-            "value": "6",
-            "help": "Length of the OTP code",
-            "type": positive_int}),
-        ("otp_expiry", {
-            "value": "300",
-            "help": "OTP code expiry time in seconds (default: 5 minutes)",
-            "type": positive_int}),
-        ("session_expiry", {
+        ("jwt_expiry", {
             "value": "3600",
-            "help": "Session token expiry time in seconds (default: 1 hour)",
+            "help": "JWT token expiry time in seconds (default: 1 hour)",
             "type": positive_int}),
         ("htpasswd_filename", {
             "value": "/etc/radicale/users",
@@ -659,6 +651,10 @@ DEFAULT_CONFIG_SCHEMA: types.CONFIG_SCHEMA = OrderedDict([
             "value": "~/.local/share/radicale/privacy.db",
             "help": "path where the privacy settings database is stored",
             "type": filepath}),
+        ("database_logging", {
+            "value": "False",
+            "help": "disable logging privacy events to the database",
+            "type": bool}),
         ("default_disallow_name", {
             "value": "False",
             "help": "default value for disallowing name in privacy settings",

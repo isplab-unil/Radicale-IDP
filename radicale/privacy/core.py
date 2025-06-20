@@ -87,14 +87,27 @@ class PrivacyCore:
                 return False, str(e)
 
         settings = self._privacy_db.get_user_settings(lookup_id)
+
+        # If settings don't exist, auto-create them with defaults
         if not settings:
-            return False, "User settings not found"
+            try:
+                logger.info("PRIVACY: Creating default privacy settings for new user: %s", lookup_id)
+                settings = self._privacy_db.create_user_settings(lookup_id, {})
+            except Exception as e:
+                logger.error("PRIVACY: Failed to create default settings for user %s: %s", lookup_id, e)
+                return False, f"Failed to create default settings: {str(e)}"
 
         # Convert settings to dict
         settings_dict = {
             setting: getattr(settings, setting)
             for setting in PRIVACY_TO_VCARD_MAP.keys()
         }
+
+        # Log the privacy settings that were retrieved
+        logger.info("PRIVACY: Retrieved privacy settings for %s: %s", lookup_id, settings_dict)
+
+        # Log to database for statistics
+        self._privacy_db.log_settings_action("retrieved", lookup_id, settings_dict)
 
         return True, settings_dict
 
@@ -136,13 +149,19 @@ class PrivacyCore:
         try:
             self._privacy_db.create_user_settings(store_id, settings)
 
+            # Log the privacy settings that were created
+            logger.info("PRIVACY: Created privacy settings for %s: %s", store_id, settings)
+
+            # Log to database for statistics
+            self._privacy_db.log_settings_action("created", store_id, settings)
+
             # After creating settings, reprocess all vCards for this user
             try:
                 reprocessor = PrivacyReprocessor(self.configuration, self._scanner._storage)
                 reprocessor.reprocess_vcards(store_id)
                 return True, {"status": "created"}
             except Exception as e:
-                logger.error("Error reprocessing cards: %s", str(e))
+                logger.error("PRIVACY: Error reprocessing cards: %s", str(e))
                 # Still return success for settings creation, but include reprocessing error
                 return True, {
                     "status": "created",
@@ -194,13 +213,18 @@ class PrivacyCore:
             if not updated:
                 return False, "User settings not found"
 
+            logger.info("PRIVACY: Updated privacy settings for %s: %s", store_id, settings)
+
+            # Log to database for statistics
+            self._privacy_db.log_settings_action("updated", store_id, settings)
+
             # After updating settings, reprocess all vCards for this user
             try:
                 reprocessor = PrivacyReprocessor(self.configuration, self._scanner._storage)
                 reprocessor.reprocess_vcards(store_id)
                 return True, {"status": "updated"}
             except Exception as e:
-                logger.error("Error reprocessing cards: %s", str(e))
+                logger.error("PRIVACY: Error reprocessing cards: %s", str(e))
                 # Still return success for settings update, but include reprocessing error
                 return True, {
                     "status": "updated",
@@ -237,6 +261,12 @@ class PrivacyCore:
             deleted = self._privacy_db.delete_user_settings(store_id)
             if not deleted:
                 return False, "User settings not found"
+
+            logger.info("PRIVACY: Deleted privacy settings for %s", store_id)
+
+            # Log to database for statistics
+            self._privacy_db.log_settings_action("deleted", store_id)
+
             return True, {"status": "deleted"}
         except Exception as e:
             return False, str(e)
@@ -280,19 +310,19 @@ class PrivacyCore:
             vcard_matches = []
             for match in matches:
                 try:
-                    logger.debug("Attempting to discover collection: %r", match["collection_path"])
+                    logger.debug("PRIVACY: Attempting to discover collection: %r", match["collection_path"])
                     # Ensure path starts with a slash for discover()
                     discover_path = "/" + match["collection_path"].lstrip("/")
-                    logger.debug("Using discover path: %r", discover_path)
+                    logger.debug("PRIVACY: Using discover path: %r", discover_path)
                     collections = list(self._scanner._storage.discover(discover_path))
-                    logger.debug("Discover returned %d collections", len(collections))
+                    logger.debug("PRIVACY: Discover returned %d collections", len(collections))
                     collection = next(iter(collections), None)
                 except Exception as e:
-                    logger.info("Error discovering collection: %r", e)
+                    logger.warning("PRIVACY: Error discovering collection: %r", e)
                     continue
 
                 if not collection:
-                    logger.debug("No collection found for path: %r", match["collection_path"])
+                    logger.debug("PRIVACY: No collection found for path: %r", match["collection_path"])
                     continue
 
                 # Get the vCard
@@ -347,7 +377,7 @@ class PrivacyCore:
             return True, {"matches": vcard_matches}
 
         except Exception as e:
-            logger.error("Error finding matching cards: %s", str(e), exc_info=True)
+            logger.error("PRIVACY: Error finding matching cards: %s", str(e), exc_info=True)
             return False, f"Error finding matching cards: {str(e)}"
 
     def reprocess_cards(self, user: str) -> Tuple[bool, Union[Dict[str, Union[str, int, List[str]]], str]]:
