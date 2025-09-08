@@ -48,7 +48,7 @@ INTERNAL_TYPES: Sequence[str] = ("none", "remote_user", "http_x_remote_user",
                                  "oauth2",
                                  "pam",
                                  "dovecot",
-                                 "otp_twilio")
+                                 "token")
 
 CACHE_LOGIN_TYPES: Sequence[str] = (
                                     "dovecot",
