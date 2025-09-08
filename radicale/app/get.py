@@ -20,7 +20,7 @@
 
 import posixpath
 from http import client
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 from urllib.parse import quote
 
 from radicale import httputils, pathutils, storage, types, xmlutils
@@ -78,16 +78,14 @@ class ApplicationPartGet(ApplicationBase):
         return value
 
     def do_GET(self, environ: types.WSGIEnviron, base_prefix: str, path: str,
-               user: str, request_info: dict,
-               jwt_token: Optional[str] = None) -> types.WSGIResponse:
+               user: str, request_info: dict) -> types.WSGIResponse:
         """Manage GET request."""
         # Handle privacy-specific paths
         if path.startswith("/privacy/"):
             if not hasattr(self, '_privacy_http'):
                 from radicale.privacy.http import PrivacyHTTP
                 self._privacy_http = PrivacyHTTP(self.configuration)
-            status, headers, answer = self._privacy_http.do_GET(
-                environ, base_prefix, path, user, jwt_token=jwt_token)
+            status, headers, answer = self._privacy_http.do_GET(environ, path)
             return status, headers, answer, None
         # Redirect to /.web if the root path is requested
         if not pathutils.strip_path(path):
