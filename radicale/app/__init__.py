@@ -343,17 +343,6 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug("Response header: suppressed by config/option [logging] response_header_on_debug")
 
-            # Add session token to response headers if present in environment
-            session_token = environ.get("radicale.session_token")
-            if session_token:
-                headers["X-Radicale-Session-Token"] = session_token
-
-            # Add JWT token to Authorization header if present in environment
-            jwt_token = environ.get("radicale.jwt_token")
-            if jwt_token:
-                headers["Authorization"] = f"Bearer {jwt_token}"
-                logger.debug("Added JWT token to Authorization header")
-
             # Start response
             # delay on error
             delay: float = 0.0
@@ -555,44 +544,21 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
         if external_login:
             login, password = external_login
             login, password = login or "", password or ""
-        elif authorization.startswith("Bearer "):
-            # Handle Bearer JWT token authentication
-            jwt_token = authorization[len("Bearer "):].strip()
-            if hasattr(self._auth, '_validate_jwt') and callable(getattr(self._auth, '_validate_jwt')):
-                user = self._auth._validate_jwt(jwt_token)
-                if user:
-                    login, password = user, "jwt_validated"  # Signal that JWT was used
-                    logger.debug("AUTH: Bearer JWT token validated for %s", user)
-                else:
-                    logger.warning("AUTH: Invalid or expired Bearer JWT token")
         elif authorization.startswith("Basic"):
             authorization = authorization[len("Basic"):].strip()
             login, password = httputils.decode_request(
                 self.configuration, environ, base64.b64decode(
                     authorization.encode("ascii"))).split(":", 1)
 
-        # Enhanced authentication flow with JWT support
-        jwt_token = None  # Initialize JWT token variable
         if login and not app_base._check_user_format(self._storage, login, self._validate_user_value):
             info = "not compliant to %r" % self._validate_user_value
             user = ""
         else:
             if login:
-                # Check if this was Bearer JWT token authentication
-                if password == "jwt_validated":
-                    user, info = login, "jwt"
-                    logger.debug("AUTH: User authenticated via Bearer JWT token: %s", user)
-                # Check if auth backend supports JWT tokens (like OTP Twilio)
-                elif hasattr(self._auth, 'login_with_jwt') and callable(getattr(self._auth, 'login_with_jwt')):
-                    logger.debug("AUTH: Using JWT-capable backend for %s", login)
-                    user_result, jwt_token = self._auth.login_with_jwt(login, password)
-                    user, info = (user_result, "otp_twilio") if user_result else ("", "")
-                    logger.debug("AUTH: JWT result - user=%s, token=%s", user_result, jwt_token is not None)
-                else:
-                    # Standard auth backends without JWT support
-                    (user, info) = self._auth.login(login, password, context) or ("", "")
+                (user, info) = self._auth.login(login, password, context) or ("", "")
             else:
                 user, info = ("", "")
+
         if self.configuration.get("auth", "type") == "ldap":
             try:
                 logger.debug("Groups received from LDAP: %r", ",".join(self._auth._ldap_groups))
@@ -699,14 +665,8 @@ class Application(ApplicationPartDelete, ApplicationPartHead,
                     profiler_active = True
 
             try:
-                # For privacy paths, pass the JWT token if available
-                if path.startswith("/privacy/") and jwt_token:
-                    status, headers, answer, xml_request = function(
-                        environ, base_prefix, path, user, request_info,
-                        jwt_token=jwt_token)
-                else:
-                    status, headers, answer, xml_request = function(
-                        environ, base_prefix, path, user, request_info)
+                status, headers, answer, xml_request = function(
+                    environ, base_prefix, path, user, request_info)
             except PermissionError as e:
                 logger.error("PermissionError: %s", e)
                 status, headers, answer, xml_request = httputils.INTERNAL_SERVER_ERROR

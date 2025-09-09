@@ -37,11 +37,11 @@ dependencies = [
     "pika>=1.1.0",
     "requests",
     "sqlalchemy>=2.0.41",
-    "twilio>=9.6.2",
     "phonenumbers>=9.0.6",
     "pytest>=8.3.5",
     "pytest-mock>=3.14.1",
     "pyjwt>=2.8.0",
+    "werkzeug>=3.1.3",
 ]
 
 
@@ -212,6 +212,7 @@ skip_install = true
 deps = ["isort==5.13.2"]
 commands = [["isort", "--check", "--diff", "."]]
 skip_install = true
+allowlist_externals = ["isort"]
 
 [tool.tox.env.mypy]
 deps = ["mypy==1.11.0"]
