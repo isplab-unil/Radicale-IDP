@@ -70,20 +70,22 @@ class ApplicationPartGet(ApplicationBase):
         try:
             encoded_filename = quote(filename, encoding=self._encoding)
         except UnicodeEncodeError:
-            logger.warning("Failed to encode filename: %r", filename,
-                           exc_info=True)
+            logger.warning("Failed to encode filename: %r", filename, exc_info=True)
             encoded_filename = ""
         if encoded_filename:
             value += "; filename*=%s''%s" % (self._encoding, encoded_filename)
         return value
 
-    def do_GET(self, environ: types.WSGIEnviron, base_prefix: str, path: str,
-               user: str, request_info: dict) -> types.WSGIResponse:
+    def do_GET(
+        self, environ: types.WSGIEnviron, base_prefix: str, path: str,
+        user: str, request_info: dict,
+    ) -> types.WSGIResponse:
         """Manage GET request."""
         # Handle privacy-specific paths
         if path.startswith("/privacy/"):
-            if not hasattr(self, '_privacy_http'):
+            if not hasattr(self, "_privacy_http"):
                 from radicale.privacy.http import PrivacyHTTP
+
                 self._privacy_http = PrivacyHTTP(self.configuration)
             status, headers, answer = self._privacy_http.do_GET(environ, path)
             return status, headers, answer, None
@@ -97,8 +99,11 @@ class ApplicationPartGet(ApplicationBase):
                 unsafe_path = unsafe_path.removeprefix(base_prefix)
             if unsafe_path != path:
                 location = base_prefix + path
-                logger.info("Redirecting to sanitized path: %r ==> %r",
-                            base_prefix + unsafe_path, location)
+                logger.info(
+                    "Redirecting to sanitized path: %r ==> %r",
+                    base_prefix + unsafe_path,
+                    location,
+                )
                 return httputils.redirect(location, client.MOVED_PERMANENTLY)
             # Dispatch /.web path to web module
             return self._web.get(environ, base_prefix, path, user, request_info)
@@ -127,14 +132,18 @@ class ApplicationPartGet(ApplicationBase):
                 return httputils.NOT_ALLOWED
             if isinstance(item, storage.BaseCollection):
                 if not item.tag:
-                    return (httputils.NOT_ALLOWED if limited_access else
-                            httputils.DIRECTORY_LISTING)
+                    return (
+                        httputils.NOT_ALLOWED
+                        if limited_access
+                        else httputils.DIRECTORY_LISTING
+                    )
                 if share and share['Conversion'] == "bday":
                     content_type = xmlutils.MIMETYPES["VCALENDAR"]
                 else:
                     content_type = xmlutils.MIMETYPES[item.tag]
                 content_disposition = self._content_disposition_attachment(
-                    propose_filename(item, share))
+                    propose_filename(item, share)
+                )
             elif limited_access:
                 return httputils.NOT_ALLOWED
             else:
@@ -147,7 +156,8 @@ class ApplicationPartGet(ApplicationBase):
             headers = {
                 "Content-Type": content_type,
                 "Last-Modified": item.last_modified,
-                "ETag": item.etag}
+                "ETag": item.etag,
+            }
             if content_disposition:
                 headers["Content-Disposition"] = content_disposition
             if share and share['Conversion'] == "bday":
