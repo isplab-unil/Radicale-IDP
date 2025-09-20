@@ -1,11 +1,11 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3eedf89c-d0e1-4555-a44f-510463466c4e",
-  "prevId": "185c15c7-8972-49a4-b326-fa9795c33350",
+  "id": "f9ef3753-e089-4d00-94eb-ed3de22d2046",
+  "prevId": "c39768dc-a216-42f2-a010-92d6ba6360cf",
   "tables": {
-    "contact_records": {
-      "name": "contact_records",
+    "user_cards": {
+      "name": "user_cards",
       "columns": {
         "id": {
           "name": "id",
@@ -21,60 +21,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "fromContact": {
-          "name": "fromContact",
+        "data": {
+          "name": "data",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "company": {
-          "name": "company",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "nickname": {
-          "name": "nickname",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "jobTitle": {
-          "name": "jobTitle",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "mobile": {
-          "name": "mobile",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "spouse": {
-          "name": "spouse",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "createdAt": {
@@ -84,13 +35,21 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(datetime('now'))"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(datetime('now'))"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "contact_records_userId_users_id_fk": {
-          "name": "contact_records_userId_users_id_fk",
-          "tableFrom": "contact_records",
+        "user_cards_userId_users_id_fk": {
+          "name": "user_cards_userId_users_id_fk",
+          "tableFrom": "user_cards",
           "tableTo": "users",
           "columnsFrom": ["userId"],
           "columnsTo": ["id"],
@@ -173,7 +132,15 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 1
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(datetime('now'))"
         },
         "updatedAt": {
           "name": "updatedAt",

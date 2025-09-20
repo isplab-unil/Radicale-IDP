@@ -1,4 +1,5 @@
 import { verifyAuth } from '~/lib/auth';
+import { updatePrivacySettings, createPrivacySettings, reprocessUserCards } from '~/api/radicale';
 import {
   getUserByContact,
   getUserPreferences,
@@ -13,8 +14,7 @@ export async function loader({ request }: { request: Request }) {
     const env = process.env;
     const isDevelopment = import.meta.env.DEV;
     const JWT_SECRET =
-      env.JWT_SECRET ||
-      (isDevelopment ? 'dev-jwt-secret-key-for-testing-only' : undefined);
+      env.JWT_SECRET || (isDevelopment ? 'dev-jwt-secret-key-for-testing-only' : undefined);
 
     if (!JWT_SECRET) {
       return new Response(
@@ -24,7 +24,7 @@ export async function loader({ request }: { request: Request }) {
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        },
+        }
       );
     }
 
@@ -46,7 +46,7 @@ export async function loader({ request }: { request: Request }) {
       });
     }
 
-    // Get user preferences
+    // Get user preferences from web database
     const preferences = await getUserPreferences(dbUser.id);
 
     // Convert database format to frontend format
@@ -68,9 +68,7 @@ export async function loader({ request }: { request: Request }) {
           disallow_title: false,
         };
 
-    const contactProviderSynced = preferences
-      ? preferences.contactProviderSynced === 1
-      : true;
+    const contactProviderSynced = preferences ? preferences.contactProviderSynced === 1 : true;
 
     return new Response(
       JSON.stringify({
@@ -80,7 +78,7 @@ export async function loader({ request }: { request: Request }) {
       {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-      },
+      }
     );
   } catch {
     return new Response(
@@ -90,7 +88,7 @@ export async function loader({ request }: { request: Request }) {
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      },
+      }
     );
   }
 }
@@ -102,8 +100,7 @@ export async function action({ request }: { request: Request }) {
     const env = process.env;
     const isDevelopment = import.meta.env.DEV;
     const JWT_SECRET =
-      env.JWT_SECRET ||
-      (isDevelopment ? 'dev-jwt-secret-key-for-testing-only' : undefined);
+      env.JWT_SECRET || (isDevelopment ? 'dev-jwt-secret-key-for-testing-only' : undefined);
 
     if (!JWT_SECRET) {
       return new Response(
@@ -113,7 +110,7 @@ export async function action({ request }: { request: Request }) {
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        },
+        }
       );
     }
 
@@ -142,30 +139,58 @@ export async function action({ request }: { request: Request }) {
 
     const { preferences, action } = body;
 
-    // Handle sync action
+    // Handle sync action - sync with Radicale and call reprocess
     if (action === 'sync') {
+      // Get current preferences from web database
+      const currentPreferences = await getUserPreferences(dbUser.id);
+
+      if (currentPreferences) {
+        // Convert database format to Radicale format
+        const radicalePreferences = {
+          disallow_photo: currentPreferences.disallowPhoto === 1,
+          disallow_gender: currentPreferences.disallowGender === 1,
+          disallow_birthday: currentPreferences.disallowBirthday === 1,
+          disallow_address: currentPreferences.disallowAddress === 1,
+          disallow_company: currentPreferences.disallowCompany === 1,
+          disallow_title: currentPreferences.disallowTitle === 1,
+        };
+
+        // Update Radicale with current preferences
+        try {
+          await updatePrivacySettings(user.contact, radicalePreferences);
+        } catch (err: any) {
+          if (err?.status === 400) {
+            await createPrivacySettings(user.contact, radicalePreferences);
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      // Trigger reprocessing in Radicale
+      await reprocessUserCards(user.contact);
+
+      // Mark as synced in web database
       await markContactProviderSynced(dbUser.id);
+
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Contact provider synchronized',
+          message: 'Contact provider synchronized and reprocessing triggered',
         }),
         {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-        },
+        }
       );
     }
 
     // Handle preferences update
     if (!preferences || typeof preferences !== 'object') {
-      return new Response(
-        JSON.stringify({ error: 'Invalid preferences data' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
+      return new Response(JSON.stringify({ error: 'Invalid preferences data' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Convert frontend format to database format
@@ -178,6 +203,7 @@ export async function action({ request }: { request: Request }) {
       disallowTitle: preferences.disallow_title ? 1 : 0,
     };
 
+    // Save preferences to web database
     await saveUserPreferences(dbUser.id, dbPreferences);
 
     return new Response(JSON.stringify({ success: true }), {
@@ -192,7 +218,7 @@ export async function action({ request }: { request: Request }) {
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      },
+      }
     );
   }
 }

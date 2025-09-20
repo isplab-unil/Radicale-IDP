@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { db } from './index';
 import { usersTable, userPreferencesTable } from './schema';
+import type { CardMatch } from '~/api/radicale';
+import { userCardsTable } from './schema';
 
 // User operations
 export async function createUser(contact: string) {
@@ -22,16 +24,68 @@ export async function getUserByContact(contact: string) {
     return null;
   }
 
-  const users = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.contact, contact));
+  const users = await db.select().from(usersTable).where(eq(usersTable.contact, contact));
   return users[0];
 }
 
 export async function getUserById(id: number) {
   const users = await db.select().from(usersTable).where(eq(usersTable.id, id));
   return users[0];
+}
+
+// Simplified OTP operations
+export async function storeOtp(contact: string, otpCode: string, expiresInMinutes: number = 5) {
+  const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000).toISOString();
+
+  // Find or create user
+  let user = await getUserByContact(contact);
+
+  if (!user) {
+    user = await createUser(contact);
+  }
+
+  // Store OTP
+  await db
+    .update(usersTable)
+    .set({ otpCode, otpExpiresAt: expiresAt })
+    .where(eq(usersTable.id, user.id));
+
+  return user;
+}
+
+export async function verifyOtp(
+  contact: string,
+  providedCode: string
+): Promise<{ isValid: boolean; user?: typeof usersTable.$inferSelect }> {
+  // Find user
+  const user = await getUserByContact(contact);
+
+  if (!user || !user.otpCode || !user.otpExpiresAt) {
+    return { isValid: false };
+  }
+
+  // Check if OTP is expired
+  const now = new Date();
+  const expiresAt = new Date(user.otpExpiresAt);
+
+  if (now > expiresAt) {
+    // Clear expired OTP
+    await db
+      .update(usersTable)
+      .set({ otpCode: null, otpExpiresAt: null })
+      .where(eq(usersTable.id, user.id));
+    return { isValid: false };
+  }
+
+  const isValid = user.otpCode === providedCode;
+
+  // Clear OTP after verification attempt
+  await db
+    .update(usersTable)
+    .set({ otpCode: null, otpExpiresAt: null })
+    .where(eq(usersTable.id, user.id));
+
+  return { isValid, user: isValid ? user : undefined };
 }
 
 // User preferences operations
@@ -52,7 +106,7 @@ export async function saveUserPreferences(
     disallowAddress?: number;
     disallowCompany?: number;
     disallowTitle?: number;
-  },
+  }
 ) {
   // Try to update existing preferences first
   const existing = await getUserPreferences(userId);
@@ -91,63 +145,26 @@ export async function markContactProviderSynced(userId: number) {
   return updated[0];
 }
 
-// Simplified OTP operations
-export async function storeOtp(
-  contact: string,
-  otpCode: string,
-  expiresInMinutes: number = 5,
-) {
-  const expiresAt = new Date(
-    Date.now() + expiresInMinutes * 60 * 1000,
-  ).toISOString();
-
-  // Find or create user
-  let user = await getUserByContact(contact);
-
-  if (!user) {
-    user = await createUser(contact);
+export async function getUserCardsCache(userId: number): Promise<{ matches: CardMatch[] } | null> {
+  const rows = await db.select().from(userCardsTable).where(eq(userCardsTable.userId, userId));
+  const row = rows[0];
+  if (!row) return null;
+  try {
+    return JSON.parse(row.data);
+  } catch {
+    return null;
   }
-
-  // Store OTP
-  await db
-    .update(usersTable)
-    .set({ otpCode, otpExpiresAt: expiresAt })
-    .where(eq(usersTable.id, user.id));
-
-  return user;
 }
 
-export async function verifyOtp(
-  contact: string,
-  providedCode: string,
-): Promise<{ isValid: boolean; user?: typeof usersTable.$inferSelect }> {
-  // Find user
-  const user = await getUserByContact(contact);
-
-  if (!user || !user.otpCode || !user.otpExpiresAt) {
-    return { isValid: false };
-  }
-
-  // Check if OTP is expired
-  const now = new Date();
-  const expiresAt = new Date(user.otpExpiresAt);
-
-  if (now > expiresAt) {
-    // Clear expired OTP
+export async function saveUserCardsCache(userId: number, data: { matches: CardMatch[] }) {
+  const existing = await db.select().from(userCardsTable).where(eq(userCardsTable.userId, userId));
+  const payload = JSON.stringify(data);
+  if (existing[0]) {
     await db
-      .update(usersTable)
-      .set({ otpCode: null, otpExpiresAt: null })
-      .where(eq(usersTable.id, user.id));
-    return { isValid: false };
+      .update(userCardsTable)
+      .set({ data: payload, updatedAt: new Date().toISOString() })
+      .where(eq(userCardsTable.userId, userId));
+  } else {
+    await db.insert(userCardsTable).values({ userId, data: payload });
   }
-
-  const isValid = user.otpCode === providedCode;
-
-  // Clear OTP after verification attempt
-  await db
-    .update(usersTable)
-    .set({ otpCode: null, otpExpiresAt: null })
-    .where(eq(usersTable.id, user.id));
-
-  return { isValid, user: isValid ? user : undefined };
 }

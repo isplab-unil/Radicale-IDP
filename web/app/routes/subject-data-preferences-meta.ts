@@ -14,8 +14,7 @@ export function meta() {
     { property: 'og:title', content: 'Subject Data Preferences' },
     {
       property: 'og:description',
-      content:
-        'Control your personal information in the contact management system.',
+      content: 'Control your personal information in the contact management system.',
     },
     { property: 'og:type', content: 'website' },
   ];
