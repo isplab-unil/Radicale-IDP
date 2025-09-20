@@ -14,8 +14,7 @@ export function meta() {
     { property: 'og:title', content: 'Subject Data Access' },
     {
       property: 'og:description',
-      content:
-        'Transparent view of your personal information in contact management systems.',
+      content: 'Transparent view of your personal information in contact management systems.',
     },
     { property: 'og:type', content: 'website' },
   ];

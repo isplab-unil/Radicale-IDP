@@ -11,3 +11,40 @@ export const usersTable = sqliteTable('users', {
     .notNull()
     .default(sql`(datetime('now'))`),
 });
+
+// User preferences table - stores privacy preferences for each user
+export const userPreferencesTable = sqliteTable('user_preferences', {
+  id: int().primaryKey({ autoIncrement: true }),
+  userId: int()
+    .notNull()
+    .references(() => usersTable.id, { onDelete: 'cascade' }),
+  disallowPhoto: int().notNull().default(0), // 0 = false, 1 = true
+  disallowGender: int().notNull().default(0),
+  disallowBirthday: int().notNull().default(0),
+  disallowAddress: int().notNull().default(0),
+  disallowCompany: int().notNull().default(0),
+  disallowTitle: int().notNull().default(0),
+  contactProviderSynced: int().notNull().default(0), // 0 = false, 1 = true
+  createdAt: text()
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// Cards cache table - stores latest fetched cards JSON per user
+export const userCardsTable = sqliteTable('user_cards', {
+  id: int().primaryKey({ autoIncrement: true }),
+  userId: int()
+    .notNull()
+    .references(() => usersTable.id, { onDelete: 'cascade' }),
+  // JSON string containing { matches: CardMatch[] }
+  data: text().notNull(),
+  createdAt: text()
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});

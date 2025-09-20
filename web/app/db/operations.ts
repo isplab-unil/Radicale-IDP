@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { db } from './index';
-import { usersTable } from './schema';
+import { usersTable, userPreferencesTable } from './schema';
+import type { CardMatch } from '~/api/radicale';
+import { userCardsTable } from './schema';
 
 // User operations
 export async function createUser(contact: string) {
@@ -84,4 +86,85 @@ export async function verifyOtp(
     .where(eq(usersTable.id, user.id));
 
   return { isValid, user: isValid ? user : undefined };
+}
+
+// User preferences operations
+export async function getUserPreferences(userId: number) {
+  const preferences = await db
+    .select()
+    .from(userPreferencesTable)
+    .where(eq(userPreferencesTable.userId, userId));
+  return preferences[0];
+}
+
+export async function saveUserPreferences(
+  userId: number,
+  preferences: {
+    disallowPhoto?: number;
+    disallowGender?: number;
+    disallowBirthday?: number;
+    disallowAddress?: number;
+    disallowCompany?: number;
+    disallowTitle?: number;
+  }
+) {
+  // Try to update existing preferences first
+  const existing = await getUserPreferences(userId);
+
+  if (existing) {
+    const updated = await db
+      .update(userPreferencesTable)
+      .set({
+        ...preferences,
+        contactProviderSynced: 0, // Mark as out of sync when preferences change
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(userPreferencesTable.userId, userId))
+      .returning();
+    return updated[0];
+  } else {
+    // Create new preferences record
+    const created = await db
+      .insert(userPreferencesTable)
+      .values({ userId, ...preferences, contactProviderSynced: 0 })
+      .returning();
+    return created[0];
+  }
+}
+
+// New function to mark contact provider as synced
+export async function markContactProviderSynced(userId: number) {
+  const updated = await db
+    .update(userPreferencesTable)
+    .set({
+      contactProviderSynced: 1,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(userPreferencesTable.userId, userId))
+    .returning();
+  return updated[0];
+}
+
+export async function getUserCardsCache(userId: number): Promise<{ matches: CardMatch[] } | null> {
+  const rows = await db.select().from(userCardsTable).where(eq(userCardsTable.userId, userId));
+  const row = rows[0];
+  if (!row) return null;
+  try {
+    return JSON.parse(row.data);
+  } catch {
+    return null;
+  }
+}
+
+export async function saveUserCardsCache(userId: number, data: { matches: CardMatch[] }) {
+  const existing = await db.select().from(userCardsTable).where(eq(userCardsTable.userId, userId));
+  const payload = JSON.stringify(data);
+  if (existing[0]) {
+    await db
+      .update(userCardsTable)
+      .set({ data: payload, updatedAt: new Date().toISOString() })
+      .where(eq(userCardsTable.userId, userId));
+  } else {
+    await db.insert(userCardsTable).values({ userId, data: payload });
+  }
 }
