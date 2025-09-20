@@ -37,6 +37,7 @@ export default function PreferencesPage() {
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [contactProviderSynced, setContactProviderSynced] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
   // Client-side authentication check
@@ -46,7 +47,7 @@ export default function PreferencesPage() {
     }
   }, []);
 
-  // Load preferences from backend
+  // Load preferences from database
   useEffect(() => {
     const loadPreferences = async () => {
       try {
@@ -54,6 +55,7 @@ export default function PreferencesPage() {
         if (response.ok) {
           const data = await response.json();
           setPreferences(data.preferences);
+          setContactProviderSynced(data.contactProviderSynced);
         } else {
           toast.error('Failed to load preferences', {
             description: 'Unable to load your current privacy settings. Please refresh the page.',
@@ -80,6 +82,7 @@ export default function PreferencesPage() {
     };
 
     setPreferences(newPreferences);
+    setContactProviderSynced(false); // Mark as out of sync when preferences change
     setSaving(true);
 
     try {
@@ -101,6 +104,7 @@ export default function PreferencesPage() {
           ...prev,
           [fieldId]: !checked,
         }));
+        setContactProviderSynced(true); // Revert sync state on error
       }
     } catch {
       toast.error('Failed to save preferences', {
@@ -111,6 +115,7 @@ export default function PreferencesPage() {
         ...prev,
         [fieldId]: !checked,
       }));
+      setContactProviderSynced(true); // Revert sync state on error
     } finally {
       setSaving(false);
     }
@@ -126,8 +131,9 @@ export default function PreferencesPage() {
       });
 
       if (response.ok) {
-        toast.success('Reprocessing triggered!', {
-          description: 'Your data will be reprocessed according to your privacy preferences.',
+        setContactProviderSynced(true);
+        toast.success('Contact provider synchronized!', {
+          description: 'Your privacy preferences have been synchronized with the contact provider.',
         });
       } else {
         toast.error('Failed to synchronize', {
@@ -168,23 +174,31 @@ export default function PreferencesPage() {
             </p>
           </div>
 
-          {/* Reprocess Contacts Action */}
+          {/* Contact Provider Synchronization */}
           <div className="bg-gray-100 p-6 rounded-2xl mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Apply Preferences to Contacts
-                </h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Contact Provider Status</h3>
                 <p className="text-sm text-gray-600">
-                  Trigger a reprocessing of contact cards so changes take effect.
+                  {contactProviderSynced
+                    ? 'Your privacy preferences are synchronized with the contact provider.'
+                    : 'Your privacy preferences need to be synchronized with the contact provider.'}
                 </p>
               </div>
               <button
                 onClick={handleSyncContactProvider}
-                disabled={syncing || saving}
-                className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={contactProviderSynced || syncing || saving}
+                className={`px-6 py-3 rounded-lg font-medium text-sm transition-colors ${
+                  contactProviderSynced
+                    ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                }`}
               >
-                {syncing ? 'Reprocessing...' : 'Reprocess Contacts'}
+                {syncing
+                  ? 'Synchronizing...'
+                  : contactProviderSynced
+                    ? 'Contact Provider Synchronized'
+                    : 'Synchronize Contact Provider'}
               </button>
             </div>
           </div>

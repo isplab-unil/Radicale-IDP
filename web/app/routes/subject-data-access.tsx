@@ -118,15 +118,23 @@ export default function DataAccessPage() {
     setSyncing(true);
 
     try {
-      const response = await authFetch('/api/user/preferences', {
+      // Trigger sync: fetch from Radicale and update DB cache
+      const response = await authFetch('/api/user/cards', {
         method: 'PUT',
-        body: JSON.stringify({ action: 'sync' }),
       });
 
       if (response.ok) {
         toast.success('Contact provider synchronized!', {
           description: 'Your privacy preferences have been synchronized with the contact provider.',
         });
+        // Reload cards from DB cache
+        try {
+          const resp = await authFetch('/api/user/cards');
+          if (resp.ok) {
+            const data: CardsResponse = await resp.json();
+            setCards(data.matches || []);
+          }
+        } catch {}
       } else {
         toast.error('Failed to synchronize', {
           description: 'Please try again. If the problem persists, contact support.',
