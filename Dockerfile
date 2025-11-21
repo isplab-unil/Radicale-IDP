@@ -23,6 +23,11 @@ RUN addgroup -g 1000 radicale \
 
 COPY --chown=radicale:radicale --from=builder /app/venv /app
 
+# Create persistent storage directories with correct ownership
+RUN mkdir -p /var/lib/radicale/collections \
+    && chown -R radicale:radicale /var/lib/radicale \
+    && chmod -R 755 /var/lib/radicale
+
 # Persistent storage for data
 VOLUME /var/lib/radicale
 # TCP port of Radicale
