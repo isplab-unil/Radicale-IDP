@@ -1,0 +1,59 @@
+# Radicale Dockerfile - Local Build
+# This Dockerfile builds Radicale from local source code
+# Use when deploying the fork with privacy extensions
+#
+# Build: docker build -f Dockerfile.local -t radicale-idp .
+# Or via docker-compose: just use this as the Dockerfile
+
+FROM python:3-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache --virtual build-deps \
+    gcc libffi-dev musl-dev
+
+# Create virtual environment
+RUN python -m venv /app/venv
+
+# Copy local source code
+COPY . /app/src/
+
+# Install Radicale from local source with dependencies
+RUN /app/venv/bin/pip install --no-cache-dir \
+    -e /app/src[bcrypt]
+
+# Clean up build dependencies
+RUN apk del build-deps
+
+
+FROM python:3-alpine
+
+WORKDIR /app
+
+# Create radicale user and system user
+RUN addgroup -g 1000 radicale \
+    && adduser radicale --home /var/lib/radicale --system --uid 1000 --disabled-password -G radicale \
+    && apk add --no-cache ca-certificates openssl
+
+# Copy virtual environment from builder
+COPY --chown=radicale:radicale --from=builder /app/venv /app
+
+# Create required directories
+RUN mkdir -p /var/lib/radicale/collections /var/lib/radicale/cache \
+    && chown -R radicale:radicale /var/lib/radicale
+
+# Persistent storage for data
+VOLUME /var/lib/radicale
+
+# TCP port of Radicale
+EXPOSE 5232
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+    CMD /app/bin/python -c "import urllib.request; urllib.request.urlopen('http://localhost:5232/')" || exit 1
+
+# Run Radicale
+ENTRYPOINT ["/app/bin/python", "-m", "radicale"]
+CMD ["--hosts", "0.0.0.0:5232,[::]:5232"]
+
+# Drop privileges
+USER radicale

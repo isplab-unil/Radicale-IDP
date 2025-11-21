@@ -1,0 +1,153 @@
+version: '3.8'
+
+services:
+  # Radicale CalDAV/CardDAV server with privacy extensions
+  radicale:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: radicale-idp-server
+
+    # Bind to localhost only - reverse proxy will handle external access
+    ports:
+      - "127.0.0.1:5232:5232"
+
+    environment:
+      # Critical: Bearer token for privacy API authentication
+      # MUST match the web app's RADICALE_TOKEN
+      - RADICALE_TOKEN=${RADICALE_TOKEN:-changeme}
+
+    volumes:
+      # Persistent storage for CalDAV/CardDAV collections
+      - radicale_collections:/var/lib/radicale/collections
+      # Persistent storage for privacy settings database
+      - radicale_data:/var/lib/radicale
+      # Read-only configuration (mount your config here if not using env vars)
+      # - ./config/radicale.config:/etc/radicale/config:ro
+
+    # Docker network for inter-service communication
+    networks:
+      - radicale-network
+
+    # Health check to monitor service status
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5232/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Auto-restart on failure
+    restart: unless-stopped
+
+    # Resource limits (adjust based on your server capacity)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # React web application for privacy settings management
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: radicale-idp-web
+
+    # Bind to localhost only - reverse proxy will handle external access
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    environment:
+      # Radicale connection settings
+      - RADICALE_URL=http://radicale:5232
+      # Bearer token for privacy API (MUST match radicale service)
+      - RADICALE_TOKEN=${RADICALE_TOKEN:-changeme}
+
+      # JWT authentication for web app
+      - JWT_SECRET=${JWT_SECRET:-change-this-to-a-secure-random-string}
+
+      # Web app database configuration
+      - DB_FILE_NAME=/data/local.db
+
+      # AWS SES/SNS configuration for OTP delivery
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Radicale IDP}
+
+      # For testing/development without AWS credentials
+      # Uncomment to enable mock mode (logs OTP codes instead of sending)
+      # - MOCK_EMAIL=true
+      # - MOCK_SMS=true
+
+    volumes:
+      # Persistent storage for web app database
+      - web_data:/data
+
+    # Depends on radicale service being ready
+    depends_on:
+      radicale:
+        condition: service_healthy
+
+    # Docker network for inter-service communication
+    networks:
+      - radicale-network
+
+    # Health check - verify app is responding
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Auto-restart on failure
+    restart: unless-stopped
+
+    # Resource limits (adjust based on your server capacity)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Shared Docker network for service communication
+networks:
+  radicale-network:
+    driver: bridge
+
+# Named volumes for persistent data
+volumes:
+  # CalDAV/CardDAV collections storage
+  radicale_collections:
+    driver: local
+
+  # Radicale data (privacy database, cache, etc)
+  radicale_data:
+    driver: local
+
+  # Web application data (SQLite database, etc)
+  web_data:
+    driver: local

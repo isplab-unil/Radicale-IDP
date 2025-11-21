@@ -1,0 +1,165 @@
+#!/bin/bash
+# Health check script for Radicale-IDP services
+#
+# Checks:
+# - Both containers are running
+# - Services are responding to requests
+# - Databases are accessible
+# - Docker volumes are mounted
+#
+# Usage: ./scripts/health-check.sh
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Color output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Status tracking
+CHECKS_PASSED=0
+CHECKS_FAILED=0
+
+# Functions
+check() {
+    local name="$1"
+    local command="$2"
+
+    printf "%-50s " "Checking $name..."
+
+    if eval "$command" &>/dev/null; then
+        echo -e "${GREEN}✓${NC}"
+        ((CHECKS_PASSED++))
+        return 0
+    else
+        echo -e "${RED}✗${NC}"
+        ((CHECKS_FAILED++))
+        return 1
+    fi
+}
+
+info() {
+    echo -e "${BLUE}ℹ${NC} $1"
+}
+
+warn() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+error() {
+    echo -e "${RED}✗${NC} $1"
+}
+
+# Main checks
+main() {
+    cd "$PROJECT_ROOT"
+
+    echo "=== Radicale-IDP Health Check ==="
+    echo ""
+
+    # Docker availability
+    check "Docker is installed" "command -v docker"
+    check "docker-compose is installed" "command -v docker-compose"
+
+    echo ""
+    echo "Container Status:"
+    check "Radicale container is running" "docker-compose ps radicale | grep -q running"
+    check "Web container is running" "docker-compose ps web | grep -q running"
+
+    echo ""
+    echo "Service Availability:"
+    check "Radicale is responding" "curl -s http://127.0.0.1:5232/ >/dev/null"
+    check "Web app is responding" "curl -s http://127.0.0.1:3000/web >/dev/null"
+
+    echo ""
+    echo "Database Accessibility:"
+    check "Privacy database is accessible" "docker-compose exec radicale test -f /var/lib/radicale/privacy.db"
+    check "Web database is accessible" "docker-compose exec web test -f /data/local.db"
+
+    echo ""
+    echo "Volume Status:"
+    check "Collections volume exists" "docker volume ls | grep -q radicale_collections"
+    check "Radicale data volume exists" "docker volume ls | grep -q radicale_data"
+    check "Web data volume exists" "docker volume ls | grep -q web_data"
+
+    echo ""
+    echo "Configuration Files:"
+    check "docker-compose.yml exists" "test -f docker-compose.yml"
+    check ".env file exists" "test -f .env"
+    check "Radicale config exists" "test -f config/radicale.config"
+
+    # Additional info
+    echo ""
+    echo "=== Detailed Information ==="
+    echo ""
+
+    echo "Container Status:"
+    docker-compose ps
+
+    echo ""
+    echo "Radicale Configuration:"
+    docker-compose exec radicale cat /var/lib/radicale/privacy.db 2>/dev/null >/dev/null && echo "  Privacy database size: $(docker-compose exec radicale du -h /var/lib/radicale/privacy.db | cut -f1)" || echo "  Privacy database: Not initialized"
+
+    echo ""
+    echo "Web App Configuration:"
+    docker-compose exec web test -f /data/local.db && echo "  Web database size: $(docker-compose exec web du -h /data/local.db | cut -f1)" || echo "  Web database: Not initialized"
+
+    # Check environment variables
+    echo ""
+    echo "Critical Environment Variables:"
+    if docker-compose exec radicale env | grep -q RADICALE_TOKEN; then
+        echo "  ${GREEN}✓${NC} RADICALE_TOKEN is set"
+    else
+        echo "  ${RED}✗${NC} RADICALE_TOKEN is not set"
+    fi
+
+    if docker-compose exec web env | grep -q JWT_SECRET; then
+        echo "  ${GREEN}✓${NC} JWT_SECRET is set"
+    else
+        echo "  ${RED}✗${NC} JWT_SECRET is not set"
+    fi
+
+    # Docker stats
+    echo ""
+    echo "Resource Usage:"
+    docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}" | grep -E "(radicale|web)" || true
+
+    # Summary
+    echo ""
+    echo "=== Summary ==="
+    echo -e "Checks passed: ${GREEN}$CHECKS_PASSED${NC}"
+    echo -e "Checks failed: ${RED}$CHECKS_FAILED${NC}"
+
+    if [ $CHECKS_FAILED -eq 0 ]; then
+        echo ""
+        echo -e "${GREEN}All systems operational!${NC}"
+        return 0
+    else
+        echo ""
+        echo -e "${RED}Some checks failed. Review the output above.${NC}"
+        return 1
+    fi
+}
+
+# Show logs if any check failed
+show_logs_on_failure() {
+    if [ $CHECKS_FAILED -gt 0 ]; then
+        echo ""
+        echo "Recent logs:"
+        echo ""
+        echo "Radicale logs:"
+        docker-compose logs --tail=5 radicale
+        echo ""
+        echo "Web app logs:"
+        docker-compose logs --tail=5 web
+    fi
+}
+
+# Execute
+main
+show_logs_on_failure
