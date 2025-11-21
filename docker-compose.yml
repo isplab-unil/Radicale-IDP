@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Radicale CalDAV/CardDAV server with privacy extensions
   radicale:
