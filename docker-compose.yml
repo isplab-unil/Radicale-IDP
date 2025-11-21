@@ -86,9 +86,9 @@ services:
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Radicale IDP}
 
       # For testing/development without AWS credentials
-      # Uncomment to enable mock mode (logs OTP codes instead of sending)
-      # - MOCK_EMAIL=true
-      # - MOCK_SMS=true
+      # Enable mock mode to log OTP codes to console instead of sending via AWS
+      - MOCK_EMAIL=${MOCK_EMAIL:-false}
+      - MOCK_SMS=${MOCK_SMS:-false}
 
     volumes:
       # Persistent storage for web app database
