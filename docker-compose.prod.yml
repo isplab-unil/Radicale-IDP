@@ -53,28 +53,3 @@ services:
         max-size: "50m"
         max-file: "5"
         labels: "service=web"
-
-volumes:
-  radicale_collections:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      # IMPORTANT: Change this path to your actual persistent storage location
-      device: /mnt/radicale/collections
-
-  radicale_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      # IMPORTANT: Change this path to your actual persistent storage location
-      device: /mnt/radicale/data
-
-  web_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      # IMPORTANT: Change this path to your actual persistent storage location
-      device: /mnt/web/data

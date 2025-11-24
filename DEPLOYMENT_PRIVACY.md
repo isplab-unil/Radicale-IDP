@@ -160,26 +160,17 @@ chmod 600 .env
 
 ### Step 4: Start Services
 
-**For development/testing** (local Docker volumes):
+**For development/testing**:
 ```bash
 docker-compose up -d
 ```
 
-**For production** (persistent storage):
+**For production**:
 ```bash
-# Create persistent storage directories
-sudo mkdir -p /mnt/radicale/collections
-sudo mkdir -p /mnt/radicale/data
-sudo mkdir -p /mnt/web/data
-
-# Set permissions (Radicale runs as UID 1000)
-sudo chown 1000:1000 /mnt/radicale/collections
-sudo chown 1000:1000 /mnt/radicale/data
-sudo chown 1000:1000 /mnt/web/data
-
-# Start with production config
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
+
+Docker automatically manages volume creation and permissions.
 
 ### Step 5: Verify Deployment
 
@@ -453,8 +444,6 @@ type = authenticated  # Privacy features enabled
 
 **Use case**: Testing, local development, learning
 
-Docker creates named volumes automatically. Data is ephemeral (lost on `docker-compose down -v`).
-
 ```bash
 cd /opt/radicale-idp
 
@@ -468,47 +457,29 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 
-# Stop services
+# Stop services (keeps data)
 docker-compose down
+
+# Stop and remove data
+docker-compose down -v
 ```
 
 **Characteristics**:
 - Fast startup
 - Automatic volume management
-- Data lost when containers removed
+- Data persists across container restarts
 - Low resource overhead
 
 ### Option 2: Production Deployment
 
 **Use case**: Live server, persistent data, backups
 
-Uses bind mounts to directories on the host system. Data persists across container restarts.
-
-**Step 1: Create Persistent Directories**
-
-```bash
-# Create storage structure
-sudo mkdir -p /mnt/radicale/collections
-sudo mkdir -p /mnt/radicale/data
-sudo mkdir -p /mnt/web/data
-
-# Set ownership to Radicale user (UID 1000)
-sudo chown 1000:1000 /mnt/radicale/collections
-sudo chown 1000:1000 /mnt/radicale/data
-sudo chown 1000:1000 /mnt/web/data
-
-# Set permissions
-sudo chmod 755 /mnt/radicale/collections
-sudo chmod 755 /mnt/radicale/data
-sudo chmod 755 /mnt/web/data
-```
-
-**Step 2: Start with Production Config**
+Identical to development, but with enhanced resource limits, logging, and health checks.
 
 ```bash
 cd /opt/radicale-idp
 
-# Use both compose files (prod.yml overrides dev settings)
+# Start with production config
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Verify services
@@ -518,22 +489,17 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml ps
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
 ```
 
-**Step 3: Verify Data Persistence**
-
-```bash
-# Check that directories have data
-ls -la /mnt/radicale/
-ls -la /mnt/web/
-
-# Databases should exist
-ls -la /mnt/radicale/data/
-```
+**What the production override adds**:
+- Enhanced resource allocation (2 CPU, 1GB RAM per container)
+- More aggressive health checks
+- Larger log rotation (50MB per file, keep 5 files)
 
 **Characteristics**:
 - Data persists across container restarts
-- Backups can use standard filesystem tools
-- Larger disk I/O
-- Better for production
+- Docker-managed named volumes (automatic backup compatible)
+- Better resource management
+- Enterprise-grade logging
+- Zero manual setup required
 
 ### Which Dockerfile to Use
 
@@ -806,7 +772,7 @@ React-based web app provides user-friendly interface:
 
 ### Backup Strategy
 
-Regular backups are critical for production deployments.
+Regular backups are critical for production deployments. The backup script works seamlessly with Docker-managed volumes.
 
 #### Automated Backup
 
@@ -816,11 +782,16 @@ Regular backups are critical for production deployments.
 
 # Backups saved to /backup/radicale-idp/YYYYMMDD_HHMMSS/
 # Contents:
-#   - collections.tar.gz (vCards and calendars)
-#   - radicale-data.tar.gz (privacy database)
-#   - web-data.tar.gz (web app database)
-#   - .env.backup (encrypted configuration)
+#   - collections-*.tar.gz (vCards and calendars)
+#   - radicale-data-*.tar.gz (privacy database)
+#   - web-data-*.tar.gz (web app database)
+#   - config-*.tar.gz (configuration files)
+#   - privacy-db-*.sql (privacy database SQL dump)
+#   - web-db-*.sql (web app database SQL dump)
+#   - .env.backup (configuration - keep secure!)
 ```
+
+**No special setup needed** - the backup script automatically accesses Docker-managed volumes.
 
 #### Schedule Daily Backups
 
@@ -841,15 +812,29 @@ ls /backup/radicale-idp/
 # Stop services
 docker-compose down
 
-# Restore specific backup
-cd /backup/radicale-idp/YYYYMMDD_HHMMSS/
-tar -xzf collections.tar.gz -C /mnt/radicale/collections/
-tar -xzf radicale-data.tar.gz -C /mnt/radicale/data/
-tar -xzf web-data.tar.gz -C /mnt/web/data/
+# Remove volumes (CAUTION: removes current data!)
+docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
 
-# Fix permissions
-sudo chown 1000:1000 /mnt/radicale/*
-sudo chown 1000:1000 /mnt/web/*
+# Restore specific backup (example from backup YYYYMMDD_HHMMSS)
+cd /backup/radicale-idp/YYYYMMDD_HHMMSS/
+
+# Restore collections
+docker run --rm \
+  -v radicale-idp_radicale_collections:/collections \
+  -v .:/backup:ro \
+  alpine tar xzf /backup/collections-*.tar.gz -C /collections
+
+# Restore Radicale data (privacy database)
+docker run --rm \
+  -v radicale-idp_radicale_data:/data \
+  -v .:/backup:ro \
+  alpine tar xzf /backup/radicale-data-*.tar.gz -C /data
+
+# Restore web app data
+docker run --rm \
+  -v radicale-idp_web_data:/data \
+  -v .:/backup:ro \
+  alpine tar xzf /backup/web-data-*.tar.gz -C /data
 
 # Restart services
 docker-compose up -d
@@ -985,12 +970,12 @@ docker-compose logs web
    sudo lsof -i :3000
    ```
 
-3. **Volume permission denied**
+3. **Volume permission issues**
    ```bash
-   sudo chown 1000:1000 /mnt/radicale/*
-   sudo chown 1000:1000 /mnt/web/*
-   chmod 755 /mnt/radicale/*
-   chmod 755 /mnt/web/*
+   # Docker manages volumes automatically, but if you have permission issues:
+   # Remove and recreate volumes
+   docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
+   docker-compose up -d
    ```
 
 ### Connection Refused
@@ -1126,8 +1111,9 @@ docker-compose exec web <command>
 
 **On Server**:
 - Config: `/opt/radicale-idp/`
-- Data (prod): `/mnt/radicale/` and `/mnt/web/`
+- Data: Docker-managed volumes (automatic, no manual paths)
 - Backups: `/backup/radicale-idp/`
+- Docker volumes: Use `docker volume ls` to view
 
 **In Containers**:
 - Radicale data: `/var/lib/radicale/`
