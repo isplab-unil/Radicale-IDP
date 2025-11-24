@@ -211,11 +211,164 @@ Then: `ssh radicale-server` (tunnels run in background)
 
 ---
 
+## Docker Management
+
+Docker Compose manages all containers, volumes, and networking. No manual setup of directories or permissions needed.
+
+### Understanding Docker Compose
+
+The deployment uses two configuration files:
+- `docker-compose.yml` - Base configuration (development defaults)
+- `docker-compose.prod.yml` - Production overrides (applied on top)
+
+When you use both: `docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
+
+### Building Images
+
+Build Docker images from Dockerfiles:
+
+```bash
+# Build all images
+docker-compose build
+
+# Build specific service
+docker-compose build web
+docker-compose build radicale
+
+# Force rebuild (ignore cache)
+docker-compose build --no-cache web
+```
+
+**When to rebuild**:
+- After pulling code changes (`git pull`)
+- After updating dependencies (Dockerfile changes, package.json updates)
+- When troubleshooting deployment issues
+- After updating the `.env` file (variables used in builds)
+
+### Starting and Stopping Services
+
+**Start services**:
+```bash
+# Development (background)
+docker-compose up -d
+
+# Production (background)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Foreground (see output directly)
+docker-compose up
+```
+
+**Stop services**:
+```bash
+# Stop containers (keeps all data)
+docker-compose down
+
+# Stop and remove all volumes (REMOVES ALL DATA!)
+docker-compose down -v
+```
+
+### Viewing Logs
+
+```bash
+# All services, real-time
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f radicale
+docker-compose logs -f web
+
+# Last 50 lines
+docker-compose logs --tail=50
+
+# With timestamps
+docker-compose logs -f -t
+
+# Stop log viewing: press Ctrl+C
+```
+
+### Checking Status
+
+```bash
+# List running containers
+docker-compose ps
+
+# Show all containers (including stopped)
+docker-compose ps -a
+
+# Show resource usage (CPU, memory, network)
+docker stats
+
+# Check specific container details
+docker-compose ps web
+```
+
+### Common Workflows
+
+**Update code and redeploy:**
+```bash
+cd /opt/radicale-idp
+
+# Get latest code
+git pull
+
+# Rebuild images
+docker-compose build
+
+# Stop old containers
+docker-compose down
+
+# Start with new images
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Check logs
+docker-compose logs -f
+```
+
+**Quick restart (keeps data)**:
+```bash
+docker-compose restart
+# or
+docker-compose down && docker-compose up -d
+```
+
+**Complete rebuild (removes all data)**:
+```bash
+# CAUTION: This removes all data! Create backup first!
+docker-compose down -v              # Stop and remove volumes
+docker-compose build --no-cache     # Rebuild from scratch
+docker-compose up -d                # Start fresh
+docker-compose logs -f              # Watch startup
+```
+
+**Troubleshooting workflow**:
+```bash
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs web
+
+# Rebuild specific service
+docker-compose build --no-cache web
+
+# Restart service
+docker-compose down web
+docker-compose up -d web
+
+# Check logs again
+docker-compose logs -f web
+```
+
+---
+
 ## Environment Configuration
 
 ### Complete .env Reference
 
-All configuration is managed through environment variables. Copy `.env.example` to `.env` and customize:
+All configuration is managed through environment variables. Copy `.env.example` to `.env` and customize.
+
+**Note**: Docker automatically manages volume creation and permissions. No manual directory setup or `chmod`/`chown` commands needed - just copy the `.env` file and start the containers!
 
 ```ini
 # ====== CRITICAL - Security Tokens ======
@@ -1065,10 +1218,15 @@ docker stats
 
 **Check disk space**:
 ```bash
+# Overall disk usage
 df -h
+
+# Docker volumes usage
 du -sh /var/lib/docker/volumes/*
-du -sh /mnt/radicale/*
-du -sh /mnt/web/*
+
+# View all volumes
+docker volume ls
+docker volume inspect radicale-idp_radicale_collections
 ```
 
 **Optimize database**:
@@ -1109,15 +1267,26 @@ docker-compose exec web <command>
 
 ### Important Paths
 
-**On Server**:
-- Config: `/opt/radicale-idp/`
-- Data: Docker-managed volumes (automatic, no manual paths)
+**On Server (Host)**:
+- Project directory: `/opt/radicale-idp/`
+- Configuration: `/opt/radicale-idp/.env`
 - Backups: `/backup/radicale-idp/`
-- Docker volumes: Use `docker volume ls` to view
+- Docker volumes: Managed automatically (use `docker volume ls` to see)
 
-**In Containers**:
+**Inside Containers** (for reference):
 - Radicale data: `/var/lib/radicale/`
-- Web data: `/data/`
+- Web app data: `/data/`
+
+**Docker Volume Names**:
+```bash
+# List volumes
+docker volume ls
+
+# View volume details
+docker volume inspect radicale-idp_radicale_collections
+docker volume inspect radicale-idp_radicale_data
+docker volume inspect radicale-idp_web_data
+```
 
 ### Port Reference
 
