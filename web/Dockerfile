@@ -22,5 +22,7 @@ RUN corepack enable && corepack prepare pnpm@10.13.1 --activate
 COPY ./package.json pnpm-lock.yaml /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
+COPY drizzle.config.ts /app/
+COPY drizzle /app/drizzle
 WORKDIR /app
-CMD ["pnpm", "start"]
+CMD ["sh", "-c", "pnpm db:push && pnpm start"]
