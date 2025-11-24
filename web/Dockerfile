@@ -24,5 +24,6 @@ COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
 COPY drizzle.config.ts /app/
 COPY drizzle /app/drizzle
+COPY app/db /app/app/db
 WORKDIR /app
 CMD ["sh", "-c", "pnpm db:push && pnpm start"]
