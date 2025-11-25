@@ -64,8 +64,8 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 
 ### What's Included
 
-- `docker-compose.yml` - Service orchestration
-- `docker-compose.prod.yml` - Production overrides with persistent storage
+- `docker compose.yml` - Service orchestration
+- `docker compose.prod.yml` - Production overrides with persistent storage
 - `Dockerfile.local` - Build Radicale from local source with privacy extensions
 - `.env.example` - Environment variable template
 - `config/radicale.config` - Radicale server configuration
@@ -102,7 +102,7 @@ On your server, verify Docker is installed:
 
 ```bash
 docker --version      # Should be 20.10+
-docker-compose --version  # Should be 2.0+
+docker compose --version  # Should be 2.0+
 ```
 
 If not installed, see the [Troubleshooting](#troubleshooting) section.
@@ -121,7 +121,7 @@ ssh user@your-server.com
 mkdir -p /opt/radicale-idp
 cd /opt/radicale-idp
 
-git clone https://github.com/your-org/radicale-idp.git .
+git clone https://github.com/isplab-unil/Radicale-IDP.git .
 ```
 
 ### Step 2: Generate Security Tokens
@@ -162,12 +162,12 @@ chmod 600 .env
 
 **For development/testing**:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 **For production**:
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 ```
 
 Docker automatically manages volume creation and permissions.
@@ -176,13 +176,13 @@ Docker automatically manages volume creation and permissions.
 
 ```bash
 # Check services status
-docker-compose ps
+docker compose ps
 
 # Run health check
 ./scripts/health-check.sh
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 Both services should show as "Up" and healthy.
@@ -218,10 +218,10 @@ Docker Compose manages all containers, volumes, and networking. No manual setup 
 ### Understanding Docker Compose
 
 The deployment uses two configuration files:
-- `docker-compose.yml` - Base configuration (development defaults)
-- `docker-compose.prod.yml` - Production overrides (applied on top)
+- `docker compose.yml` - Base configuration (development defaults)
+- `docker compose.prod.yml` - Production overrides (applied on top)
 
-When you use both: `docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
+When you use both: `docker compose -f docker compose.yml -f docker compose.prod.yml up -d`
 
 ### Building Images
 
@@ -229,14 +229,14 @@ Build Docker images from Dockerfiles:
 
 ```bash
 # Build all images
-docker-compose build
+docker compose build
 
 # Build specific service
-docker-compose build web
-docker-compose build radicale
+docker compose build web
+docker compose build radicale
 
 # Force rebuild (ignore cache)
-docker-compose build --no-cache web
+docker compose build --no-cache web
 ```
 
 **When to rebuild**:
@@ -250,39 +250,39 @@ docker-compose build --no-cache web
 **Start services**:
 ```bash
 # Development (background)
-docker-compose up -d
+docker compose up -d
 
 # Production (background)
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 
 # Foreground (see output directly)
-docker-compose up
+docker compose up
 ```
 
 **Stop services**:
 ```bash
 # Stop containers (keeps all data)
-docker-compose down
+docker compose down
 
 # Stop and remove all volumes (REMOVES ALL DATA!)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Viewing Logs
 
 ```bash
 # All services, real-time
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose logs -f radicale
-docker-compose logs -f web
+docker compose logs -f radicale
+docker compose logs -f web
 
 # Last 50 lines
-docker-compose logs --tail=50
+docker compose logs --tail=50
 
 # With timestamps
-docker-compose logs -f -t
+docker compose logs -f -t
 
 # Stop log viewing: press Ctrl+C
 ```
@@ -291,16 +291,16 @@ docker-compose logs -f -t
 
 ```bash
 # List running containers
-docker-compose ps
+docker compose ps
 
 # Show all containers (including stopped)
-docker-compose ps -a
+docker compose ps -a
 
 # Show resource usage (CPU, memory, network)
 docker stats
 
 # Check specific container details
-docker-compose ps web
+docker compose ps web
 ```
 
 ### Common Workflows
@@ -313,51 +313,51 @@ cd /opt/radicale-idp
 git pull
 
 # Rebuild images
-docker-compose build
+docker compose build
 
 # Stop old containers
-docker-compose down
+docker compose down
 
 # Start with new images
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 
 # Check logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 **Quick restart (keeps data)**:
 ```bash
-docker-compose restart
+docker compose restart
 # or
-docker-compose down && docker-compose up -d
+docker compose down && docker compose up -d
 ```
 
 **Complete rebuild (removes all data)**:
 ```bash
 # CAUTION: This removes all data! Create backup first!
-docker-compose down -v              # Stop and remove volumes
-docker-compose build --no-cache     # Rebuild from scratch
-docker-compose up -d                # Start fresh
-docker-compose logs -f              # Watch startup
+docker compose down -v              # Stop and remove volumes
+docker compose build --no-cache     # Rebuild from scratch
+docker compose up -d                # Start fresh
+docker compose logs -f              # Watch startup
 ```
 
 **Troubleshooting workflow**:
 ```bash
 # Check status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs web
+docker compose logs web
 
 # Rebuild specific service
-docker-compose build --no-cache web
+docker compose build --no-cache web
 
 # Restart service
-docker-compose down web
-docker-compose up -d web
+docker compose down web
+docker compose up -d web
 
 # Check logs again
-docker-compose logs -f web
+docker compose logs -f web
 ```
 
 ---
@@ -601,20 +601,20 @@ type = authenticated  # Privacy features enabled
 cd /opt/radicale-idp
 
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Services accessible at:
 # - Radicale: http://localhost:5232/
 # - Web app: http://localhost:3000/web
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop services (keeps data)
-docker-compose down
+docker compose down
 
 # Stop and remove data
-docker-compose down -v
+docker compose down -v
 ```
 
 **Characteristics**:
@@ -633,13 +633,13 @@ Identical to development, but with enhanced resource limits, logging, and health
 cd /opt/radicale-idp
 
 # Start with production config
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 
 # Verify services
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml ps
+docker compose -f docker compose.yml -f docker compose.prod.yml ps
 
 # View logs
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
+docker compose -f docker compose.yml -f docker compose.prod.yml logs -f
 ```
 
 **What the production override adds**:
@@ -653,36 +653,6 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
 - Better resource management
 - Enterprise-grade logging
 - Zero manual setup required
-
-### Which Dockerfile to Use
-
-Two options provided:
-
-| | Dockerfile | Dockerfile.local |
-|---|---|---|
-| **Source** | Official Radicale from GitHub | Your local fork |
-| **Privacy Extensions** | No | Yes (Recommended) |
-| **Build Time** | Slower (downloads) | Faster |
-| **Image Size** | Smaller (~150MB) | Larger (~200MB) |
-| **Use Case** | Unmodified Radicale | This project |
-
-**Recommendation**: Use `Dockerfile.local` to ensure privacy extensions are deployed.
-
-**To use Dockerfile.local**, edit `docker-compose.yml`:
-
-```yaml
-services:
-  radicale:
-    build:
-      context: .
-      dockerfile: Dockerfile.local  # Change from 'Dockerfile'
-```
-
-Then rebuild:
-```bash
-docker-compose build --no-cache radicale
-docker-compose up -d
-```
 
 ---
 
@@ -963,7 +933,7 @@ sudo crontab -e
 ls /backup/radicale-idp/
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Remove volumes (CAUTION: removes current data!)
 docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
@@ -990,7 +960,7 @@ docker run --rm \
   alpine tar xzf /backup/web-data-*.tar.gz -C /data
 
 # Restart services
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Health Monitoring
@@ -1015,56 +985,56 @@ Reclaim unused space:
 
 ```bash
 # Radicale privacy database
-docker-compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
 
 # Web app database
-docker-compose exec web sqlite3 /data/local.db "VACUUM;"
+docker compose exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 #### Backup Databases
 
 ```bash
 # Privacy database
-docker-compose exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > privacy-backup.sql
+docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > privacy-backup.sql
 
 # Web database
-docker-compose exec web sqlite3 /data/local.db ".dump" > web-backup.sql
+docker compose exec web sqlite3 /data/local.db ".dump" > web-backup.sql
 ```
 
 ### Updating Containers
 
 ```bash
 # Pull latest images
-docker-compose pull
+docker compose pull
 
 # Rebuild local image
-docker-compose build --no-cache radicale
+docker compose build --no-cache radicale
 
 # Restart services
-docker-compose up -d
+docker compose up -d
 
 # Verify update
-docker-compose ps
-docker-compose logs
+docker compose ps
+docker compose logs
 ```
 
 ### Viewing Logs
 
 ```bash
 # Real-time logs
-docker-compose logs -f
+docker compose logs -f
 
 # Radicale logs only
-docker-compose logs -f radicale
+docker compose logs -f radicale
 
 # Web app logs only
-docker-compose logs -f web
+docker compose logs -f web
 
 # Last 100 lines of logs
-docker-compose logs -f --tail=100
+docker compose logs -f --tail=100
 
 # Logs with timestamps
-docker-compose logs -f -t
+docker compose logs -f -t
 ```
 
 ### Token Rotation
@@ -1088,8 +1058,8 @@ nano .env
 
 **Step 3**: Restart services
 ```bash
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 ```
 
 **Step 4**: Invalidate old tokens
@@ -1104,9 +1074,9 @@ docker-compose up -d
 
 **Check logs**:
 ```bash
-docker-compose logs
-docker-compose logs radicale
-docker-compose logs web
+docker compose logs
+docker compose logs radicale
+docker compose logs web
 ```
 
 **Common issues**:
@@ -1128,14 +1098,14 @@ docker-compose logs web
    # Docker manages volumes automatically, but if you have permission issues:
    # Remove and recreate volumes
    docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
-   docker-compose up -d
+   docker compose up -d
    ```
 
 ### Connection Refused
 
 **Verify services running**:
 ```bash
-docker-compose ps
+docker compose ps
 
 # All services should show "Up"
 ```
@@ -1156,7 +1126,7 @@ curl http://localhost:3000/web
 
 **Verify RADICALE_TOKEN is set**:
 ```bash
-docker-compose exec radicale env | grep RADICALE_TOKEN
+docker compose exec radicale env | grep RADICALE_TOKEN
 ```
 
 **Test API with token**:
@@ -1174,8 +1144,8 @@ curl -H "Authorization: Bearer $RADICALE_TOKEN" \
 
 **Check if databases exist**:
 ```bash
-docker-compose exec radicale ls -la /var/lib/radicale/
-docker-compose exec web ls -la /data/
+docker compose exec radicale ls -la /var/lib/radicale/
+docker compose exec web ls -la /data/
 ```
 
 **Initialize web database**:
@@ -1185,8 +1155,8 @@ docker-compose exec web ls -la /data/
 
 **Reset databases** (careful - removes all data):
 ```bash
-docker-compose down -v
-docker-compose up -d
+docker compose down -v
+docker compose up -d
 ```
 
 ### Nginx SSL Certificate Issues
@@ -1231,8 +1201,8 @@ docker volume inspect radicale-idp_radicale_collections
 
 **Optimize database**:
 ```bash
-docker-compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
-docker-compose exec web sqlite3 /data/local.db "VACUUM;"
+docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+docker compose exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 ---
@@ -1243,16 +1213,16 @@ docker-compose exec web sqlite3 /data/local.db "VACUUM;"
 
 ```bash
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Check status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Run backup
 ./scripts/backup.sh
@@ -1261,8 +1231,8 @@ docker-compose logs -f
 ./scripts/health-check.sh
 
 # Execute command in container
-docker-compose exec radicale <command>
-docker-compose exec web <command>
+docker compose exec radicale <command>
+docker compose exec web <command>
 ```
 
 ### Important Paths
@@ -1326,4 +1296,4 @@ POST   /privacy/cards/{user}/reprocess    # Reprocess vCards
 **Updated**: 2025-11-24
 **Status**: Production-ready
 
-For additional help, check service logs: `docker-compose logs` or review individual documentation in the `docs/archive/` folder for detailed information on specific topics.
+For additional help, check service logs: `docker compose logs` or review individual documentation in the `docs/archive/` folder for detailed information on specific topics.
