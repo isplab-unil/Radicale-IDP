@@ -3,7 +3,7 @@ services:
   radicale:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.local
     container_name: radicale-idp-server
 
     # Bind to localhost only - reverse proxy will handle external access
