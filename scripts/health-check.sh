@@ -66,12 +66,12 @@ main() {
 
     # Docker availability
     check "Docker is installed" "command -v docker"
-    check "docker-compose is installed" "command -v docker-compose"
+    check "docker compose is installed" "command -v docker-compose"
 
     echo ""
     echo "Container Status:"
-    check "Radicale container is running" "docker-compose ps radicale | grep -q running"
-    check "Web container is running" "docker-compose ps web | grep -q running"
+    check "Radicale container is running" "docker compose ps radicale | grep -q Up"
+    check "Web container is running" "docker compose ps web | grep -q Up"
 
     echo ""
     echo "Service Availability:"
@@ -80,8 +80,8 @@ main() {
 
     echo ""
     echo "Database Accessibility:"
-    check "Privacy database is accessible" "docker-compose exec radicale test -f /var/lib/radicale/privacy.db"
-    check "Web database is accessible" "docker-compose exec web test -f /data/local.db"
+    check "Privacy database is accessible" "docker compose exec radicale test -f /var/lib/radicale/privacy.db"
+    check "Web database is accessible" "docker compose exec web test -f /data/local.db"
 
     echo ""
     echo "Volume Status:"
@@ -102,26 +102,26 @@ main() {
     echo ""
 
     echo "Container Status:"
-    docker-compose ps
+    docker compose ps
 
     echo ""
     echo "Radicale Configuration:"
-    docker-compose exec radicale cat /var/lib/radicale/privacy.db 2>/dev/null >/dev/null && echo "  Privacy database size: $(docker-compose exec radicale du -h /var/lib/radicale/privacy.db | cut -f1)" || echo "  Privacy database: Not initialized"
+    docker compose exec radicale cat /var/lib/radicale/privacy.db 2>/dev/null >/dev/null && echo "  Privacy database size: $(docker compose exec radicale du -h /var/lib/radicale/privacy.db | cut -f1)" || echo "  Privacy database: Not initialized"
 
     echo ""
     echo "Web App Configuration:"
-    docker-compose exec web test -f /data/local.db && echo "  Web database size: $(docker-compose exec web du -h /data/local.db | cut -f1)" || echo "  Web database: Not initialized"
+    docker compose exec web test -f /data/local.db && echo "  Web database size: $(docker compose exec web du -h /data/local.db | cut -f1)" || echo "  Web database: Not initialized"
 
     # Check environment variables
     echo ""
     echo "Critical Environment Variables:"
-    if docker-compose exec radicale env | grep -q RADICALE_TOKEN; then
+    if docker compose exec radicale env | grep -q RADICALE_TOKEN; then
         echo -e "  ${GREEN}✓${NC} RADICALE_TOKEN is set"
     else
         echo -e "  ${RED}✗${NC} RADICALE_TOKEN is not set"
     fi
 
-    if docker-compose exec web env | grep -q JWT_SECRET; then
+    if docker compose exec web env | grep -q JWT_SECRET; then
         echo -e "  ${GREEN}✓${NC} JWT_SECRET is set"
     else
         echo -e "  ${RED}✗${NC} JWT_SECRET is not set"
@@ -156,10 +156,10 @@ show_logs_on_failure() {
         echo "Recent logs:"
         echo ""
         echo "Radicale logs:"
-        docker-compose logs --tail=5 radicale
+        docker compose logs --tail=5 radicale
         echo ""
         echo "Web app logs:"
-        docker-compose logs --tail=5 web
+        docker compose logs --tail=5 web
     fi
 }
 
