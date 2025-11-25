@@ -62,6 +62,8 @@ main() {
     echo "=== Radicale-IDP Health Check ==="
     echo ""
 
+    set +e  # Disable exit on error for health checks
+
     # Docker availability
     check "Docker is installed" "command -v docker"
     check "docker-compose is installed" "command -v docker-compose"
@@ -92,6 +94,7 @@ main() {
     check "docker-compose.yml exists" "test -f docker-compose.yml"
     check ".env file exists" "test -f .env"
     check "Radicale config exists" "test -f config/radicale.config"
+    set -e  # Re-enable exit on error
 
     # Additional info
     echo ""
@@ -113,15 +116,15 @@ main() {
     echo ""
     echo "Critical Environment Variables:"
     if docker-compose exec radicale env | grep -q RADICALE_TOKEN; then
-        echo "  ${GREEN}✓${NC} RADICALE_TOKEN is set"
+        echo -e "  ${GREEN}✓${NC} RADICALE_TOKEN is set"
     else
-        echo "  ${RED}✗${NC} RADICALE_TOKEN is not set"
+        echo -e "  ${RED}✗${NC} RADICALE_TOKEN is not set"
     fi
 
     if docker-compose exec web env | grep -q JWT_SECRET; then
-        echo "  ${GREEN}✓${NC} JWT_SECRET is set"
+        echo -e "  ${GREEN}✓${NC} JWT_SECRET is set"
     else
-        echo "  ${RED}✗${NC} JWT_SECRET is not set"
+        echo -e "  ${RED}✗${NC} JWT_SECRET is not set"
     fi
 
     # Docker stats
