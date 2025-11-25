@@ -19,7 +19,7 @@ COPY . /app/src/
 
 # Install Radicale from local source with dependencies
 RUN /app/venv/bin/pip install --no-cache-dir \
-    -e /app/src[bcrypt]
+    /app/src[bcrypt]
 
 # Clean up build dependencies
 RUN apk del build-deps
