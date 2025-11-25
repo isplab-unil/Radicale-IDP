@@ -20,8 +20,8 @@ services:
       - radicale_collections:/var/lib/radicale/collections
       # Persistent storage for privacy settings database
       - radicale_data:/var/lib/radicale
-      # Read-only configuration (mount your config here if not using env vars)
-      # - ./config/radicale.config:/etc/radicale/config:ro
+      # Read-only configuration
+      - ./config/radicale.config:/etc/radicale/config:ro
 
     # Docker network for inter-service communication
     networks:
