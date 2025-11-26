@@ -6,9 +6,9 @@ services:
       dockerfile: Dockerfile.local
     container_name: radicale-idp-server
 
-    # Bind to localhost only - reverse proxy will handle external access
-    ports:
-      - "127.0.0.1:5232:5232"
+    # Port exposed only within Docker network (nginx will proxy)
+    expose:
+      - "5232"
 
     environment:
       # Critical: Bearer token for privacy API authentication
@@ -52,9 +52,9 @@ services:
       dockerfile: Dockerfile
     container_name: radicale-idp-web
 
-    # Bind to localhost only - reverse proxy will handle external access
-    ports:
-      - "127.0.0.1:3000:3000"
+    # Port exposed only within Docker network (nginx will proxy)
+    expose:
+      - "3000"
 
     environment:
       # Radicale connection settings
@@ -111,6 +111,75 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Nginx reverse proxy for external access
+  nginx:
+    image: nginx:alpine
+    container_name: radicale-idp-nginx
+
+    # Expose HTTP and HTTPS to the host
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      # Nginx configuration files
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # SSL certificates (managed by certbot)
+      - nginx_certs:/etc/nginx/ssl
+      # Let's Encrypt challenge directory
+      - nginx_challenge:/var/www/certbot
+
+    # Wait for backend services to be ready
+    depends_on:
+      radicale:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+    # Docker network for inter-service communication
+    networks:
+      - radicale-network
+
+    # Health check to monitor nginx status
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    # Auto-restart on failure
+    restart: unless-stopped
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Certbot for SSL certificate management
+  certbot:
+    image: certbot/certbot
+    container_name: radicale-idp-certbot
+
+    volumes:
+      # Share certificate storage with nginx
+      - nginx_certs:/etc/letsencrypt
+      # Share challenge directory with nginx
+      - nginx_challenge:/var/www/certbot
+
+    # Run certificate renewal check every 12 hours
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+    # Docker network for inter-service communication
+    networks:
+      - radicale-network
+
+    # Auto-restart on failure
+    restart: unless-stopped
+
 # Shared Docker network for service communication
 networks:
   radicale-network:
@@ -128,4 +197,12 @@ volumes:
 
   # Web application data (SQLite database, etc)
   web_data:
+    driver: local
+
+  # SSL/TLS certificates from Let's Encrypt
+  nginx_certs:
+    driver: local
+
+  # Let's Encrypt ACME challenge files
+  nginx_challenge:
     driver: local
