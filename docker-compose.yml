@@ -6,7 +6,10 @@ services:
       dockerfile: Dockerfile.local
     container_name: radicale-idp-server
 
-    # Port exposed only within Docker network (nginx will proxy)
+    # Port exposed within Docker network (nginx will proxy)
+    # Also exposed on localhost for local testing
+    ports:
+      - "127.0.0.1:5232:5232"
     expose:
       - "5232"
 
@@ -52,7 +55,10 @@ services:
       dockerfile: Dockerfile
     container_name: radicale-idp-web
 
-    # Port exposed only within Docker network (nginx will proxy)
+    # Port exposed within Docker network (nginx will proxy)
+    # Also exposed on localhost for local testing
+    ports:
+      - "127.0.0.1:3000:3000"
     expose:
       - "3000"
 
