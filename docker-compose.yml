@@ -38,16 +38,6 @@ services:
     # Auto-restart on failure
     restart: unless-stopped
 
-    # Resource limits (adjust based on your server capacity)
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
-
     # Logging configuration
     logging:
       driver: "json-file"
@@ -113,16 +103,6 @@ services:
 
     # Auto-restart on failure
     restart: unless-stopped
-
-    # Resource limits (adjust based on your server capacity)
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
 
     # Logging configuration
     logging:

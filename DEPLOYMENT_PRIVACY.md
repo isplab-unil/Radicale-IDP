@@ -82,7 +82,7 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 - **OS**: Linux (Ubuntu 20.04+, Debian 11+, or similar)
 - **SSH Access**: Server accessible only via SSH with sudo privileges
 - **Docker**: 20.10+ with Docker Compose 2.0+
-- **Resources**: Minimum 2GB RAM, 10GB disk space
+- **Resources**: 1GB+ RAM recommended, 10GB disk space
 - **Python 3.8+**: Already in Docker containers
 
 ### Before You Start
@@ -627,31 +627,31 @@ docker compose down -v
 
 **Use case**: Live server, persistent data, backups
 
-Identical to development, but with enhanced resource limits, logging, and health checks.
+Same commands as development deployment. The configuration includes health checks and logging suitable for production use.
 
 ```bash
 cd /opt/radicale-idp
 
-# Start with production config
-docker compose -f docker compose.yml -f docker compose.prod.yml up -d
+# Start services
+docker compose up -d
 
 # Verify services
-docker compose -f docker compose.yml -f docker compose.prod.yml ps
+docker compose ps
 
 # View logs
-docker compose -f docker compose.yml -f docker compose.prod.yml logs -f
+docker compose logs -f
 ```
 
-**What the production override adds**:
-- Enhanced resource allocation (2 CPU, 1GB RAM per container)
-- More aggressive health checks
-- Larger log rotation (50MB per file, keep 5 files)
+**Production features included**:
+- Health checks with automatic service monitoring
+- Log rotation (10MB per file, keep 3 files)
+- Automatic restart on failure
+- Named volumes for data persistence
 
 **Characteristics**:
 - Data persists across container restarts
 - Docker-managed named volumes (automatic backup compatible)
-- Better resource management
-- Enterprise-grade logging
+- Containers use resources as needed (no artificial limits)
 - Zero manual setup required
 
 ---
