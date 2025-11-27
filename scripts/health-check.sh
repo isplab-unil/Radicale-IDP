@@ -72,11 +72,15 @@ main() {
     echo "Container Status:"
     check "Radicale container is running" "docker compose ps radicale | grep -q Up"
     check "Web container is running" "docker compose ps web | grep -q Up"
+    check "Nginx container is running" "docker compose ps nginx | grep -q Up"
+    check "Certbot container is running" "docker compose ps certbot | grep -q Up"
 
     echo ""
     echo "Service Availability:"
     check "Radicale is responding" "curl -s http://127.0.0.1:5232/ >/dev/null"
     check "Web app is responding" "curl -s http://127.0.0.1:3000/web >/dev/null"
+    check "Nginx HTTP is responding" "curl -s -o /dev/null http://127.0.0.1:80/"
+    check "Nginx HTTPS is responding" "curl -k -s -o /dev/null https://127.0.0.1:443/"
 
     echo ""
     echo "Database Accessibility:"
@@ -145,33 +149,57 @@ main() {
     fi
 
     echo ""
-    echo "SSL/TLS Domain Configuration:"
-    if [ -f .env ] && grep -q "^DOMAIN=" .env; then
-        DOMAIN=$(grep "^DOMAIN=" .env | cut -d'=' -f2)
-        if [ "$DOMAIN" = "your-domain.com" ] || [ -z "$DOMAIN" ]; then
-            echo -e "  ${YELLOW}⚠${NC} DOMAIN not configured (using placeholder)"
+    echo "SSL/TLS Configuration:"
+    if [ -f .env ] && grep -q "^SELF_SIGNED_SSL=" .env; then
+        SELF_SIGNED_SSL=$(grep "^SELF_SIGNED_SSL=" .env | cut -d'=' -f2)
+        if [ "$SELF_SIGNED_SSL" = "true" ]; then
+            echo -e "  ${YELLOW}⚠${NC} Using SELF-SIGNED certificates (development mode)"
+            # Check if self-signed certificates exist
+            if [ -f volumes/ssl/self-signed/fullchain.pem ] && [ -f volumes/ssl/self-signed/privkey.pem ]; then
+                echo -e "  ${GREEN}✓${NC} Self-signed certificates exist"
+                CERT_EXPIRY=$(openssl x509 -enddate -noout -in volumes/ssl/self-signed/fullchain.pem | cut -d= -f2)
+                echo -e "  ${BLUE}ℹ${NC} Certificate expires: $CERT_EXPIRY"
+            else
+                echo -e "  ${RED}✗${NC} Self-signed certificates not found"
+            fi
         else
-            echo -e "  ${GREEN}✓${NC} DOMAIN is set to: $DOMAIN"
-        fi
-    else
-        echo -e "  ${RED}✗${NC} DOMAIN is not set"
-    fi
+            echo -e "  ${GREEN}✓${NC} Using Let's Encrypt certificates (production mode)"
+            if [ -f .env ] && grep -q "^DOMAIN=" .env; then
+                DOMAIN=$(grep "^DOMAIN=" .env | cut -d'=' -f2)
+                if [ "$DOMAIN" = "your-domain.com" ] || [ -z "$DOMAIN" ]; then
+                    echo -e "  ${RED}✗${NC} DOMAIN not configured (required for Let's Encrypt)"
+                else
+                    echo -e "  ${GREEN}✓${NC} DOMAIN is set to: $DOMAIN"
+                    # Check if Let's Encrypt certificates exist
+                    if docker compose exec certbot test -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" 2>/dev/null; then
+                        echo -e "  ${GREEN}✓${NC} Let's Encrypt certificates exist for $DOMAIN"
+                    else
+                        echo -e "  ${YELLOW}⚠${NC} Let's Encrypt certificates not yet obtained"
+                    fi
+                fi
+            else
+                echo -e "  ${RED}✗${NC} DOMAIN is not set (required for Let's Encrypt)"
+            fi
 
-    if [ -f .env ] && grep -q "^EMAIL=" .env; then
-        EMAIL=$(grep "^EMAIL=" .env | cut -d'=' -f2)
-        if [ "$EMAIL" = "admin@your-domain.com" ] || [ -z "$EMAIL" ]; then
-            echo -e "  ${YELLOW}⚠${NC} EMAIL not configured (using placeholder)"
-        else
-            echo -e "  ${GREEN}✓${NC} EMAIL is set to: $EMAIL"
+            if [ -f .env ] && grep -q "^EMAIL=" .env; then
+                EMAIL=$(grep "^EMAIL=" .env | cut -d'=' -f2)
+                if [ "$EMAIL" = "admin@your-domain.com" ] || [ -z "$EMAIL" ]; then
+                    echo -e "  ${YELLOW}⚠${NC} EMAIL not configured (using placeholder)"
+                else
+                    echo -e "  ${GREEN}✓${NC} EMAIL is set to: $EMAIL"
+                fi
+            else
+                echo -e "  ${RED}✗${NC} EMAIL is not set (required for Let's Encrypt)"
+            fi
         fi
     else
-        echo -e "  ${RED}✗${NC} EMAIL is not set"
+        echo -e "  ${YELLOW}⚠${NC} SELF_SIGNED_SSL not set (defaulting to true)"
     fi
 
     # Docker stats
     echo ""
     echo "Resource Usage:"
-    docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}" | grep -E "(radicale|web)" || true
+    docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}" | grep -E "(radicale|web|nginx|certbot)" || true
 
     # Summary
     echo ""
@@ -201,6 +229,12 @@ show_logs_on_failure() {
         echo ""
         echo "Web app logs:"
         docker compose logs --tail=5 web
+        echo ""
+        echo "Nginx logs:"
+        docker compose logs --tail=5 nginx
+        echo ""
+        echo "Certbot logs:"
+        docker compose logs --tail=5 certbot
     fi
 }
 
