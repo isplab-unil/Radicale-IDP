@@ -127,6 +127,47 @@ main() {
         echo -e "  ${RED}✗${NC} JWT_SECRET is not set"
     fi
 
+    echo ""
+    echo "Development/Mock Mode Configuration:"
+    MOCK_EMAIL=$(docker compose exec web env | grep MOCK_EMAIL | cut -d'=' -f2 | tr -d '\r\n')
+    MOCK_SMS=$(docker compose exec web env | grep MOCK_SMS | cut -d'=' -f2 | tr -d '\r\n')
+
+    if [ "$MOCK_EMAIL" = "true" ]; then
+        echo -e "  ${YELLOW}⚠${NC} MOCK_EMAIL is enabled (development mode)"
+    else
+        echo -e "  ${GREEN}✓${NC} MOCK_EMAIL is disabled (production mode)"
+    fi
+
+    if [ "$MOCK_SMS" = "true" ]; then
+        echo -e "  ${YELLOW}⚠${NC} MOCK_SMS is enabled (development mode)"
+    else
+        echo -e "  ${GREEN}✓${NC} MOCK_SMS is disabled (production mode)"
+    fi
+
+    echo ""
+    echo "SSL/TLS Domain Configuration:"
+    if [ -f .env ] && grep -q "^DOMAIN=" .env; then
+        DOMAIN=$(grep "^DOMAIN=" .env | cut -d'=' -f2)
+        if [ "$DOMAIN" = "your-domain.com" ] || [ -z "$DOMAIN" ]; then
+            echo -e "  ${YELLOW}⚠${NC} DOMAIN not configured (using placeholder)"
+        else
+            echo -e "  ${GREEN}✓${NC} DOMAIN is set to: $DOMAIN"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} DOMAIN is not set"
+    fi
+
+    if [ -f .env ] && grep -q "^EMAIL=" .env; then
+        EMAIL=$(grep "^EMAIL=" .env | cut -d'=' -f2)
+        if [ "$EMAIL" = "admin@your-domain.com" ] || [ -z "$EMAIL" ]; then
+            echo -e "  ${YELLOW}⚠${NC} EMAIL not configured (using placeholder)"
+        else
+            echo -e "  ${GREEN}✓${NC} EMAIL is set to: $EMAIL"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} EMAIL is not set"
+    fi
+
     # Docker stats
     echo ""
     echo "Resource Usage:"
