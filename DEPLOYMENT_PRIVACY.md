@@ -33,20 +33,21 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Reverse Proxy (Nginx)                    │
-│              [SSL/TLS termination, public access]            │
+│                  Nginx (Docker Container)                    │
+│     [SSL/TLS termination, reverse proxy, HTTP/HTTPS]        │
+│                    Ports: 80 (HTTP), 443 (HTTPS)            │
 └────────────────────────┬────────────────────────────────────┘
                          │
      ┌───────────────────┼───────────────────┐
      │                   │                   │
      ▼                   ▼                   ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  Radicale    │  │  Web App     │  │  Privacy API │
-│  (port 5232) │  │  (port 3000) │  │  (built-in)  │
+│  Radicale    │  │  Web App     │  │  Certbot     │
+│  (port 5232) │  │  (port 3000) │  │  (SSL mgmt)  │
 │              │  │              │  │              │
-│ • CalDAV     │  │ • React UI   │  │ • Bearer     │
-│ • CardDAV    │  │ • OTP Auth   │  │   token auth │
-│              │  │ • DB queries │  │              │
+│ • CalDAV     │  │ • React UI   │  │ • Self-sign  │
+│ • CardDAV    │  │ • OTP Auth   │  │ • Let's Enc. │
+│ • Privacy    │  │ • DB queries │  │ • Auto-renew │
 └──────────────┘  └──────────────┘  └──────────────┘
      │                   │                   │
      └───────────────────┼───────────────────┘
@@ -64,13 +65,15 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 
 ### What's Included
 
-- `docker compose.yml` - Service orchestration
-- `docker compose.prod.yml` - Production overrides with persistent storage
+- `docker compose.yml` - Service orchestration with nginx, certbot, radicale, and web services
 - `Dockerfile.local` - Build Radicale from local source with privacy extensions
 - `.env.example` - Environment variable template
 - `config/radicale.config` - Radicale server configuration
+- `volumes/certbot/certbot-entrypoint.sh` - Automated SSL certificate management
+- `volumes/nginx/nginx-entrypoint.sh` - Dynamic nginx SSL configuration
+- `volumes/nginx/conf.d/default.conf.template` - Nginx configuration template
 - `scripts/backup.sh` - Automated backup tool
-- `scripts/health-check.sh` - System monitoring
+- `scripts/health-check.sh` - System monitoring with SSL validation
 - `scripts/init-web-db.sh` - Database initialization
 
 ---
@@ -378,6 +381,16 @@ RADICALE_TOKEN=<generate-with-openssl-rand-hex-32>
 # Web app session signing (32+ random characters)
 JWT_SECRET=<generate-with-openssl-rand-hex-32>
 
+# ====== SSL/TLS Configuration ======
+# SSL certificate mode: true = self-signed (development), false = Let's Encrypt (production)
+SELF_SIGNED_SSL=true
+
+# Domain name (required for Let's Encrypt mode when SELF_SIGNED_SSL=false)
+DOMAIN=your-domain.com
+
+# Email for Let's Encrypt notifications (required when SELF_SIGNED_SSL=false)
+EMAIL=admin@your-domain.com
+
 # ====== AWS Configuration (Optional) ======
 # Leave blank or use MOCK_* flags for development
 
@@ -476,6 +489,23 @@ Generate with: `openssl rand -hex 32`
 - Changing this invalidates all active sessions
 
 Generate with: `openssl rand -hex 32`
+
+**SSL/TLS Configuration**
+- **SELF_SIGNED_SSL**: Controls certificate mode
+  - `true` (default): Use self-signed certificates for development
+  - `false`: Use Let's Encrypt certificates for production
+- **DOMAIN**: Your domain name (required when `SELF_SIGNED_SSL=false`)
+  - Must point to your server's IP address
+  - Example: `radicale.example.com`
+- **EMAIL**: Contact email for Let's Encrypt (required when `SELF_SIGNED_SSL=false`)
+  - Used for certificate expiration notifications
+  - Example: `admin@example.com`
+
+**SSL Certificate Management**
+- Fully automated via certbot-entrypoint.sh
+- Development mode: Generates and auto-renews self-signed certificates
+- Production mode: Obtains and auto-renews Let's Encrypt certificates
+- No manual intervention required
 
 **AWS Credentials (for OTP)**
 - Required if MOCK_EMAIL and MOCK_SMS are false
@@ -658,118 +688,215 @@ docker compose logs -f
 
 ## Reverse Proxy & SSL
 
-For public access, you need a reverse proxy to handle HTTPS and route traffic to Docker containers bound to localhost.
+Radicale-IDP includes **built-in nginx and certbot containers** that handle reverse proxy and SSL/TLS automatically. No manual nginx or Certbot installation needed!
 
-### Nginx Reverse Proxy
+### How It Works
 
-#### Installation
+The system provides **two SSL modes** controlled by the `SELF_SIGNED_SSL` environment variable:
 
+1. **Development Mode** (`SELF_SIGNED_SSL=true`):
+   - Automatically generates self-signed certificates
+   - Perfect for local development and testing
+   - Certificates stored in `volumes/ssl/self-signed/`
+   - Auto-renewed 10 days before expiration
+
+2. **Production Mode** (`SELF_SIGNED_SSL=false`):
+   - Automatically obtains Let's Encrypt certificates
+   - Trusted by all browsers and clients
+   - Certificates stored in `volumes/certbot/conf/live/${DOMAIN}/`
+   - Auto-renewed 30 days before expiration
+
+### Architecture
+
+**Nginx Container**: Handles HTTP/HTTPS traffic and reverse proxy
+- Exposes ports 80 (HTTP) and 443 (HTTPS)
+- Routes traffic to radicale (port 5232) and web (port 3000) containers
+- Dynamic SSL configuration via nginx-entrypoint.sh
+
+**Certbot Container**: Manages SSL certificates
+- Generates self-signed certificates in dev mode
+- Obtains Let's Encrypt certificates in production mode
+- Runs continuously with daily renewal checks
+- No manual intervention required
+
+### Development Mode (Default)
+
+Perfect for local testing and development.
+
+**Configuration** (in `.env`):
 ```bash
-sudo apt-get update
-sudo apt-get install -y nginx
-
-# Enable to start on boot
-sudo systemctl enable nginx
+SELF_SIGNED_SSL=true
 ```
 
-#### Configuration
+**What happens**:
+1. Start services: `docker compose up -d`
+2. Certbot container generates self-signed certificate on first run
+3. Nginx container configures SSL with self-signed certificate
+4. Services available at `https://localhost/` (expect browser warning)
 
-Example Nginx config for `/etc/nginx/sites-available/radicale-idp`:
+**Certificate Management**:
+- Location: `volumes/ssl/self-signed/fullchain.pem` and `privkey.pem`
+- Valid for: 365 days
+- Auto-renewal: 10 days before expiration
+- No domain or email configuration needed
 
-```nginx
-# Redirect HTTP to HTTPS
-server {
-    listen 80;
-    listen [::]:80;
-    server_name your-domain.com www.your-domain.com;
+### Production Mode
 
-    location / {
-        return 301 https://$server_name$request_uri;
-    }
-}
+For public-facing deployments with trusted SSL certificates.
 
-# HTTPS server
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name your-domain.com www.your-domain.com;
+**Prerequisites**:
+1. **Domain name** pointing to your server's IP address
+2. **Ports 80 and 443** open in firewall
+3. **DNS propagation** complete (verify with `dig your-domain.com`)
 
-    # SSL certificates (added by Certbot)
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-
-    # Proxy to Radicale
-    location / {
-        proxy_pass http://127.0.0.1:5232;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # WebDAV support for CalDAV/CardDAV
-        proxy_request_buffering off;
-        proxy_buffering off;
-    }
-
-    # Proxy web app
-    location /web {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-#### Enable and Test
-
+**Configuration** (in `.env`):
 ```bash
-# Enable site
-sudo ln -s /etc/nginx/sites-available/radicale-idp /etc/nginx/sites-enabled/
-
-# Test configuration
-sudo nginx -t
-
-# Reload
-sudo systemctl reload nginx
+SELF_SIGNED_SSL=false
+DOMAIN=radicale.example.com
+EMAIL=admin@example.com
 ```
 
-### SSL/TLS with Let's Encrypt
+**What happens**:
+1. Start services: `docker compose up -d`
+2. Certbot container obtains Let's Encrypt certificate via ACME challenge
+3. Nginx container configures SSL with Let's Encrypt certificate
+4. Services available at `https://your-domain.com/` (trusted certificate)
 
-#### Automatic Setup with Certbot
+**Certificate Management**:
+- Location: `volumes/certbot/conf/live/${DOMAIN}/`
+- Valid for: 90 days
+- Auto-renewal: 30 days before expiration (daily checks)
+- Email notifications sent before expiration
 
+### Switching Between Modes
+
+**From Development to Production**:
 ```bash
-# Install Certbot and Nginx plugin
-sudo apt-get install -y certbot python3-certbot-nginx
+# 1. Update .env file
+nano .env
+# Set:
+#   SELF_SIGNED_SSL=false
+#   DOMAIN=your-domain.com
+#   EMAIL=admin@example.com
 
-# Generate certificate
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+# 2. Ensure DNS points to your server
+dig your-domain.com
 
-# Automatic renewal (runs daily via systemd)
-sudo certbot renew --dry-run
+# 3. Restart services
+docker compose down
+docker compose up -d
+
+# 4. Monitor certificate acquisition
+docker compose logs -f certbot
 ```
 
-Certbot automatically:
-1. Creates SSL certificates
-2. Updates Nginx config
-3. Sets up auto-renewal
-
-#### Manual Certificate Setup
-
-If you have existing certificates:
-
+**From Production to Development**:
 ```bash
-# Copy certificates
-sudo cp /path/to/cert.crt /etc/ssl/certs/your-domain.com.crt
-sudo cp /path/to/key.key /etc/ssl/private/your-domain.com.key
+# 1. Update .env file
+nano .env
+# Set:
+#   SELF_SIGNED_SSL=true
 
-# Update permissions
-sudo chmod 644 /etc/ssl/certs/your-domain.com.crt
-sudo chmod 600 /etc/ssl/private/your-domain.com.key
-
-# Update Nginx config with paths, then test and reload
+# 2. Restart services
+docker compose down
+docker compose up -d
 ```
+
+### SSL Certificate Verification
+
+**Check certificate status**:
+```bash
+# Run health check (includes SSL validation)
+./scripts/health-check.sh
+
+# Check certificate expiration (self-signed mode)
+openssl x509 -enddate -noout -in volumes/ssl/self-signed/fullchain.pem
+
+# Check certificate expiration (Let's Encrypt mode)
+docker compose exec certbot certbot certificates
+```
+
+**View certbot logs**:
+```bash
+docker compose logs certbot
+```
+
+### Manual Certificate Operations
+
+**Force certificate renewal** (Let's Encrypt mode only):
+```bash
+# Renew certificate
+docker compose exec certbot certbot renew --force-renewal
+
+# Restart nginx to load renewed certificate
+docker compose restart nginx
+```
+
+**Regenerate self-signed certificate**:
+```bash
+# Remove existing certificate
+rm volumes/ssl/self-signed/fullchain.pem volumes/ssl/self-signed/privkey.pem
+
+# Restart certbot to generate new certificate
+docker compose restart certbot
+
+# Restart nginx to load new certificate
+docker compose restart nginx
+```
+
+### Nginx Configuration
+
+Nginx configuration is **dynamically generated** based on SSL mode:
+- Template: `volumes/nginx/conf.d/default.conf.template`
+- Entrypoint: `volumes/nginx/nginx-entrypoint.sh`
+- Final config: Generated at container startup using `envsubst`
+
+**Key features**:
+- HTTP to HTTPS redirect
+- WebDAV support for CalDAV/CardDAV
+- Reverse proxy to radicale (/) and web (/web)
+- Proper header forwarding
+- ACME challenge endpoint for Let's Encrypt
+
+### Troubleshooting SSL
+
+**Nginx won't start**:
+```bash
+# Check if certificates exist
+ls -la volumes/ssl/self-signed/  # For self-signed mode
+docker compose exec certbot ls -la /etc/letsencrypt/live/  # For Let's Encrypt mode
+
+# If missing, restart certbot to generate
+docker compose restart certbot
+docker compose logs -f certbot
+```
+
+**Let's Encrypt certificate acquisition failed**:
+```bash
+# 1. Verify DNS points to your server
+dig your-domain.com
+nslookup your-domain.com
+
+# 2. Check firewall allows HTTP (port 80)
+sudo ufw status
+curl -I http://your-domain.com/.well-known/acme-challenge/test
+
+# 3. Check certbot logs
+docker compose logs certbot
+
+# 4. Common issues:
+#    - DNS not propagated (wait 24-48 hours)
+#    - Port 80 blocked by firewall
+#    - Domain doesn't point to server
+#    - Let's Encrypt rate limit hit (50 certs/domain/week)
+```
+
+**Browser shows "Not Secure" warning**:
+- **Expected in development mode** (self-signed certificates)
+- In production mode: Verify Let's Encrypt certificate was obtained successfully
+- Check certificate expiration: `docker compose exec certbot certbot certificates`
+
+For more detailed SSL documentation, see: `nginx/ssl/README.md`
 
 ---
 
@@ -1021,20 +1148,23 @@ docker compose logs
 ### Viewing Logs
 
 ```bash
-# Real-time logs
+# Real-time logs (all services)
 docker compose logs -f
 
-# Radicale logs only
+# Specific service logs
 docker compose logs -f radicale
-
-# Web app logs only
 docker compose logs -f web
+docker compose logs -f nginx
+docker compose logs -f certbot
 
 # Last 100 lines of logs
 docker compose logs -f --tail=100
 
 # Logs with timestamps
 docker compose logs -f -t
+
+# Multiple services at once
+docker compose logs -f radicale web nginx
 ```
 
 ### Token Rotation
@@ -1159,23 +1289,48 @@ docker compose down -v
 docker compose up -d
 ```
 
-### Nginx SSL Certificate Issues
+### SSL/TLS Certificate Issues
 
-**Test Nginx configuration**:
+**Check SSL mode configuration**:
 ```bash
-sudo nginx -t
+# View current SSL mode
+grep SELF_SIGNED_SSL .env
+
+# Run health check (includes SSL validation)
+./scripts/health-check.sh
 ```
 
-**Check certificate validity**:
+**Nginx container won't start**:
 ```bash
-sudo openssl x509 -in /etc/ssl/certs/your-domain.com.crt -text -noout
+# Check nginx logs
+docker compose logs nginx
+
+# Verify certificates exist
+ls -la volumes/ssl/self-signed/  # For SELF_SIGNED_SSL=true
+docker compose exec certbot ls -la /etc/letsencrypt/live/  # For SELF_SIGNED_SSL=false
+
+# Restart certbot to regenerate certificates
+docker compose restart certbot
+docker compose logs -f certbot
 ```
 
-**View Nginx error logs**:
+**Certificate expired or invalid**:
 ```bash
-sudo tail -f /var/log/nginx/radicale-idp-error.log
-sudo tail -f /var/log/nginx/radicale-idp-access.log
+# Check certificate expiration
+openssl x509 -enddate -noout -in volumes/ssl/self-signed/fullchain.pem
+
+# Force renewal (Let's Encrypt mode)
+docker compose exec certbot certbot renew --force-renewal
+docker compose restart nginx
+
+# Regenerate (self-signed mode)
+rm volumes/ssl/self-signed/*.pem
+docker compose restart certbot
+docker compose restart nginx
 ```
+
+**Let's Encrypt acquisition failed**:
+See the detailed troubleshooting section in "Reverse Proxy & SSL" → "Troubleshooting SSL"
 
 ### Performance Issues
 
@@ -1240,12 +1395,17 @@ docker compose exec web <command>
 **On Server (Host)**:
 - Project directory: `/opt/radicale-idp/`
 - Configuration: `/opt/radicale-idp/.env`
+- SSL certificates (self-signed): `volumes/ssl/self-signed/`
+- SSL certificates (Let's Encrypt): `volumes/certbot/conf/live/${DOMAIN}/`
+- Nginx config: `volumes/nginx/conf.d/`
 - Backups: `/backup/radicale-idp/`
 - Docker volumes: Managed automatically (use `docker volume ls` to see)
 
 **Inside Containers** (for reference):
 - Radicale data: `/var/lib/radicale/`
 - Web app data: `/data/`
+- Nginx SSL (self-signed): `/etc/ssl/self-signed/`
+- Nginx SSL (Let's Encrypt): `/etc/letsencrypt/live/${DOMAIN}/`
 
 **Docker Volume Names**:
 ```bash
@@ -1260,12 +1420,13 @@ docker volume inspect radicale-idp_web_data
 
 ### Port Reference
 
-| Service | Port | Access |
-|---------|------|--------|
-| Radicale | 5232 | localhost only |
-| Web App | 3000 | localhost only |
-| Nginx (HTTP) | 80 | public |
-| Nginx (HTTPS) | 443 | public |
+| Service | Port | Access | Notes |
+|---------|------|--------|-------|
+| Radicale | 5232 | localhost only | Exposed on 127.0.0.1:5232 |
+| Web App | 3000 | localhost only | Exposed on 127.0.0.1:3000 |
+| Nginx (HTTP) | 80 | public | Docker container, exposed on all interfaces |
+| Nginx (HTTPS) | 443 | public | Docker container, exposed on all interfaces |
+| Certbot | - | internal | Background service, no exposed ports |
 
 ### API Endpoints
 
@@ -1284,6 +1445,9 @@ POST   /privacy/cards/{user}/reprocess    # Reprocess vCards
 |----------|---------|---------|
 | RADICALE_TOKEN | Privacy API auth | 64-char hex string |
 | JWT_SECRET | Session signing | 64-char hex string |
+| SELF_SIGNED_SSL | SSL mode | true (dev) / false (prod) |
+| DOMAIN | Domain name (prod) | radicale.example.com |
+| EMAIL | Let's Encrypt email | admin@example.com |
 | AWS_ACCESS_KEY_ID | OTP delivery | IAM key |
 | AWS_SECRET_ACCESS_KEY | OTP delivery | IAM secret |
 | MOCK_EMAIL | Dev OTP | true/false |
@@ -1293,7 +1457,11 @@ POST   /privacy/cards/{user}/reprocess    # Reprocess vCards
 ---
 
 **Created**: 2024
-**Updated**: 2025-11-24
+**Updated**: 2025-11-27
 **Status**: Production-ready
 
-For additional help, check service logs: `docker compose logs` or review individual documentation in the `docs/archive/` folder for detailed information on specific topics.
+For additional help:
+- Check service logs: `docker compose logs`
+- SSL documentation: `nginx/ssl/README.md`
+- Health check: `./scripts/health-check.sh`
+- Archive documentation: `docs/archive/` (legacy information)
