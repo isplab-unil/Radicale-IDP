@@ -130,18 +130,21 @@ services:
     environment:
       - SELF_SIGNED_SSL=${SELF_SIGNED_SSL:-true}
       - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
 
     volumes:
       # Nginx configuration
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./volumes/nginx/conf.d/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       # SSL certificates (both types)
-      - ./volumes/certbot/conf:/etc/letsencrypt:ro
+      - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/ssl/self-signed:/etc/ssl/self-signed:ro
       # ACME challenge
       - ./volumes/certbot/www:/var/www/letsencrypt:ro
       # Entrypoint script
       - ./volumes/nginx/nginx-entrypoint.sh:/nginx-entrypoint.sh:ro
+      # SSL certificate acquisition script
+      - ./volumes/nginx/obtain-ssl-certificate.sh:/usr/local/bin/obtain-ssl-certificate.sh:ro
 
     entrypoint: "/nginx-entrypoint.sh"
 

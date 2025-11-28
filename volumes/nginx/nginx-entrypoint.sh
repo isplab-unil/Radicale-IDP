@@ -21,15 +21,50 @@ fi
 echo "SSL_CERTIFICATE=${SSL_CERTIFICATE}"
 echo "SSL_CERTIFICATE_KEY=${SSL_CERTIFICATE_KEY}"
 
-# Process nginx configuration template with envsubst
-echo "Processing nginx configuration templates..."
-envsubst '${SSL_CERTIFICATE} ${SSL_CERTIFICATE_KEY}' \
-    < /etc/nginx/templates/default.conf.template \
-    > /etc/nginx/conf.d/default.conf
+# Check if SSL certificates exist
+if [ ! -f "$SSL_CERTIFICATE" ] || [ ! -f "$SSL_CERTIFICATE_KEY" ]; then
+    echo "WARNING: SSL certificates not found!"
+    echo "Starting nginx in HTTP-only mode for ACME challenge..."
 
-# Verify nginx configuration
-echo "Verifying nginx configuration..."
-nginx -t
+    # Create a minimal HTTP-only configuration
+    cat > /etc/nginx/conf.d/default.conf <<'EOF'
+# HTTP-only configuration for SSL certificate acquisition
+server {
+    listen 80;
+    listen [::]:80;
+    server_name _;
+
+    # Let's Encrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+    }
+
+    # Temporary message for other requests
+    location / {
+        return 503 'SSL certificates are being obtained. Please run: obtain-ssl-certificate.sh\n';
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+    echo ""
+    echo "=========================================="
+    echo "Nginx started in HTTP-only mode."
+    echo "To obtain SSL certificates, run:"
+    echo "  podman compose exec nginx obtain-ssl-certificate.sh"
+    echo "=========================================="
+    echo ""
+else
+    # Certificates exist, process the full HTTPS configuration
+    echo "SSL certificates found, processing HTTPS configuration..."
+    envsubst '${SSL_CERTIFICATE} ${SSL_CERTIFICATE_KEY}' \
+        < /etc/nginx/templates/default.conf.template \
+        > /etc/nginx/conf.d/default.conf
+
+    # Verify nginx configuration
+    echo "Verifying nginx configuration..."
+    nginx -t
+fi
 
 # Start nginx in the foreground
 echo "Starting nginx..."
