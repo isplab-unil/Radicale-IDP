@@ -768,6 +768,123 @@ EMAIL=admin@example.com
 - Auto-renewal: 30 days before expiration (daily checks)
 - Email notifications sent before expiration
 
+### SSL Certificate Bootstrapping (First-Time Setup)
+
+When deploying for the first time with Let's Encrypt (`SELF_SIGNED_SSL=false`), there's a bootstrapping challenge:
+- Nginx needs SSL certificates to start with HTTPS configuration
+- Certbot needs nginx running to complete the ACME HTTP-01 challenge
+- Ports 80 and 443 must be accessible from the internet
+
+**The Solution**: The system automatically handles this by starting nginx in HTTP-only mode when certificates are missing.
+
+#### How It Works
+
+**Step 1: Nginx Starts in HTTP-Only Mode**
+
+When certificates don't exist, `nginx-entrypoint.sh` automatically:
+1. Detects missing certificates
+2. Creates a minimal HTTP-only configuration
+3. Starts nginx to serve ACME challenges
+4. Displays instructions for obtaining certificates
+
+**Step 2: Certbot Obtains Certificates**
+
+The certbot container runs automatically and:
+1. Checks if certificates exist
+2. If missing, requests certificate from Let's Encrypt via ACME challenge
+3. Uses nginx's HTTP endpoint (`/.well-known/acme-challenge/`)
+4. Saves certificates to `/etc/letsencrypt/live/${DOMAIN}/`
+
+**Step 3: Switch to HTTPS**
+
+Run the bootstrapping script to complete setup:
+```bash
+podman compose exec nginx obtain-ssl-certificate.sh
+```
+
+This script:
+1. Waits for certbot to obtain the certificate (up to 2 minutes)
+2. Generates the HTTPS nginx configuration
+3. Tests the configuration
+4. Reloads nginx with HTTPS enabled
+
+#### Complete Workflow
+
+**Prerequisites**:
+- Ports 80 and 443 are open and accessible from the internet
+- DNS points to your server (`dig your-domain.com`)
+- `.env` configured with `SELF_SIGNED_SSL=false`, `DOMAIN`, and `EMAIL`
+
+**Commands**:
+```bash
+# 1. Start services (nginx starts in HTTP-only mode)
+podman compose up -d
+
+# 2. Obtain SSL certificate and switch to HTTPS
+podman compose exec nginx obtain-ssl-certificate.sh
+
+# 3. Verify HTTPS is working
+curl https://your-domain.com/
+```
+
+#### When Ports Are Not Accessible
+
+If ports 80/443 are closed or not yet configured, certbot cannot complete the ACME challenge.
+
+**Temporary Solution** - Use self-signed certificates:
+```bash
+# 1. Stop services
+podman compose down
+
+# 2. Update .env
+SELF_SIGNED_SSL=true
+
+# 3. Start with self-signed certificates
+podman compose up -d
+```
+
+**Switch to Let's Encrypt Later** (once ports are open):
+```bash
+# 1. Update .env
+SELF_SIGNED_SSL=false
+DOMAIN=your-domain.com
+EMAIL=your-email@example.com
+
+# 2. Restart services
+podman compose down
+podman compose up -d
+
+# 3. Obtain Let's Encrypt certificate
+podman compose exec nginx obtain-ssl-certificate.sh
+```
+
+#### Troubleshooting Bootstrapping
+
+**obtain-ssl-certificate.sh times out**:
+```bash
+# Check if certbot container is running
+podman compose ps
+
+# View certbot logs
+podman compose logs certbot
+
+# Common causes:
+# - Ports 80/443 not accessible from internet
+# - DNS not pointing to server
+# - Let's Encrypt rate limit hit
+```
+
+**Certbot fails with "Connection refused"**:
+- Verify nginx is running: `podman compose ps nginx`
+- Check nginx logs: `podman compose logs nginx`
+- Ensure port 80 is accessible: `curl http://your-domain.com/.well-known/acme-challenge/test`
+
+**Already have certificates but nginx won't start with HTTPS**:
+```bash
+# Manually reload nginx with HTTPS
+podman compose exec nginx obtain-ssl-certificate.sh
+```
+
 ### Switching Between Modes
 
 **From Development to Production**:
@@ -895,6 +1012,16 @@ docker compose logs certbot
 - **Expected in development mode** (self-signed certificates)
 - In production mode: Verify Let's Encrypt certificate was obtained successfully
 - Check certificate expiration: `docker compose exec certbot certbot certificates`
+
+**First-time setup - ports 80/443 are closed**:
+
+If you're setting up Let's Encrypt but ports 80/443 aren't accessible yet:
+1. Use `SELF_SIGNED_SSL=true` temporarily
+2. Request firewall/network admin to open ports
+3. Switch to Let's Encrypt mode once ports are open
+4. Run `podman compose exec nginx obtain-ssl-certificate.sh`
+
+See "SSL Certificate Bootstrapping" section above for detailed instructions.
 
 For more detailed SSL documentation, see: `nginx/ssl/README.md`
 
