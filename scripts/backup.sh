@@ -15,6 +15,28 @@ set -e  # Exit on error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# Detect container runtime (Docker or Podman)
+if command -v docker &> /dev/null; then
+    CONTAINER_RUNTIME="docker"
+elif command -v podman &> /dev/null; then
+    CONTAINER_RUNTIME="podman"
+else
+    echo "Error: Neither docker nor podman found in PATH"
+    exit 1
+fi
+
+# Detect compose command
+if command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+elif [ "$CONTAINER_RUNTIME" = "docker" ] && docker compose version &> /dev/null; then
+    COMPOSE_CMD="docker compose"
+elif [ "$CONTAINER_RUNTIME" = "podman" ] && command -v podman-compose &> /dev/null; then
+    COMPOSE_CMD="podman-compose"
+else
+    echo "Error: No compose command found"
+    exit 1
+fi
+
 # Default backup directory
 BACKUP_DIR="${1:-/backup/radicale-idp}"
 DATE=$(date +%Y%m%d_%H%M%S)
@@ -41,10 +63,8 @@ log_error() {
 
 # Check prerequisites
 check_prerequisites() {
-    if ! command -v docker-compose &> /dev/null; then
-        log_error "docker-compose is not installed"
-        exit 1
-    fi
+    log_info "Using container runtime: $CONTAINER_RUNTIME"
+    log_info "Using compose command: $COMPOSE_CMD"
 
     if [ ! -f "$PROJECT_ROOT/docker-compose.yml" ]; then
         log_error "docker-compose.yml not found in $PROJECT_ROOT"
@@ -69,13 +89,13 @@ backup_volumes() {
 
     cd "$PROJECT_ROOT"
 
-    # Get volume names from docker-compose
-    VOLUMES=$(docker-compose config --resolve-image-digests 2>/dev/null | grep -E "^\s+[a-z_]+:" | sed 's/.*\([a-z_]*\):.*/\1/' || echo "")
+    # Get volume names from compose
+    VOLUMES=$($COMPOSE_CMD config --resolve-image-digests 2>/dev/null | grep -E "^\s+[a-z_]+:" | sed 's/.*\([a-z_]*\):.*/\1/' || echo "")
 
     # Backup collections volume
-    if docker volume ls | grep -q "radicale.*collections"; then
+    if $CONTAINER_RUNTIME volume ls | grep -q "radicale.*collections"; then
         log_info "Backing up CalDAV/CardDAV collections..."
-        docker run --rm \
+        $CONTAINER_RUNTIME run --rm \
             -v radicale-idp_radicale_collections:/collections:ro \
             -v "$BACKUP_PATH":/backup \
             alpine tar czf /backup/collections-$DATE.tar.gz -C /collections . 2>/dev/null || true
@@ -86,9 +106,9 @@ backup_volumes() {
     fi
 
     # Backup Radicale data volume (privacy database, cache)
-    if docker volume ls | grep -q "radicale.*data"; then
+    if $CONTAINER_RUNTIME volume ls | grep -q "radicale.*data"; then
         log_info "Backing up Radicale data (privacy database)..."
-        docker run --rm \
+        $CONTAINER_RUNTIME run --rm \
             -v radicale-idp_radicale_data:/data:ro \
             -v "$BACKUP_PATH":/backup \
             alpine tar czf /backup/radicale-data-$DATE.tar.gz -C /data . 2>/dev/null || true
@@ -99,9 +119,9 @@ backup_volumes() {
     fi
 
     # Backup web data volume (SQLite database)
-    if docker volume ls | grep -q "web_data"; then
+    if $CONTAINER_RUNTIME volume ls | grep -q "web_data"; then
         log_info "Backing up web app data..."
-        docker run --rm \
+        $CONTAINER_RUNTIME run --rm \
             -v radicale-idp_web_data:/data:ro \
             -v "$BACKUP_PATH":/backup \
             alpine tar czf /backup/web-data-$DATE.tar.gz -C /data . 2>/dev/null || true
@@ -170,15 +190,15 @@ backup_databases() {
     cd "$PROJECT_ROOT"
 
     # Dump privacy database
-    if docker-compose ps radicale | grep -q "running"; then
+    if $COMPOSE_CMD ps radicale | grep -q "running"; then
         log_info "  Dumping privacy database..."
-        docker-compose exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > "$BACKUP_PATH/privacy-db-$DATE.sql" 2>/dev/null || log_warn "Failed to dump privacy database"
+        $COMPOSE_CMD exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > "$BACKUP_PATH/privacy-db-$DATE.sql" 2>/dev/null || log_warn "Failed to dump privacy database"
     fi
 
     # Dump web database
-    if docker-compose ps web | grep -q "running"; then
+    if $COMPOSE_CMD ps web | grep -q "running"; then
         log_info "  Dumping web app database..."
-        docker-compose exec web sqlite3 /data/local.db ".dump" > "$BACKUP_PATH/web-db-$DATE.sql" 2>/dev/null || log_warn "Failed to dump web database"
+        $COMPOSE_CMD exec web sqlite3 /data/local.db ".dump" > "$BACKUP_PATH/web-db-$DATE.sql" 2>/dev/null || log_warn "Failed to dump web database"
     fi
 }
 
