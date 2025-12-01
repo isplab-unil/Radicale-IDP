@@ -25,3 +25,11 @@ coverage.xml
 Gemfile.lock
 local.db
 .env
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+
