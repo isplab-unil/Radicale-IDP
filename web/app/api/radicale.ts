@@ -30,7 +30,9 @@ async function request<T = any>(path: string, init?: RequestInit): Promise<T> {
   let json: any = null;
   try {
     json = text ? JSON.parse(text) : null;
-  } catch {}
+  } catch {
+    // Continue with null json
+  }
 
   if (!resp.ok) {
     const message = json?.error || resp.statusText || 'Radicale request failed';

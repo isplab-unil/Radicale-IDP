@@ -1,13 +1,20 @@
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import type { ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { useSearchParams, useNavigate, Link as RouterLink } from 'react-router';
 
 interface TemplateContextType {
   version: string;
   defaultTemplate: string;
   enableTemplates: boolean;
-  setVersion: (version: string) => void;
-  navigateWithTemplate: (path: string) => void;
+  setVersion: (_: string) => void;
+  navigateWithTemplate: (_: string) => void;
 }
 
 const TemplateContext = createContext<TemplateContextType | undefined>(undefined);

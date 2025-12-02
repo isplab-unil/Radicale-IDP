@@ -1,7 +1,6 @@
 import { verifyAuth } from '~/lib/auth';
 import { getUserCards } from '~/api/radicale';
-import { getUserByContact } from '~/db/operations';
-import { getUserCardsCache, saveUserCardsCache } from '~/db/operations';
+import { getUserByContact, getUserCardsCache, saveUserCardsCache } from '~/db/operations';
 
 export async function loader({ request }: { request: Request }) {
   try {

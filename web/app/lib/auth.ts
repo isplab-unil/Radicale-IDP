@@ -187,6 +187,7 @@ export function getCurrentUser(): AuthUser | null {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
 
+    // eslint-disable-next-line no-undef
     const decoded = JSON.parse(atob(parts[1]));
     return {
       contact: decoded.contact,
