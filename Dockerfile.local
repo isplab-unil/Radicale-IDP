@@ -32,14 +32,27 @@ WORKDIR /app
 # Create radicale user and system user
 RUN addgroup -g 1000 radicale \
     && adduser radicale --home /var/lib/radicale --system --uid 1000 --disabled-password -G radicale \
-    && apk add --no-cache ca-certificates openssl
+    && apk add --no-cache ca-certificates openssl zip unzip apache2-utils
 
 # Copy virtual environment from builder
 COPY --chown=radicale:radicale --from=builder /app/venv /app
 
+# Copy default data and scripts
+COPY default-data /default-data
+COPY scripts/build-default-data.sh /scripts/
+COPY scripts/init-default-data.sh /scripts/
+RUN chmod 755 /scripts/build-default-data.sh /scripts/init-default-data.sh
+
+# Build zip archives from user directories
+RUN /scripts/build-default-data.sh
+
 # Create required directories
 RUN mkdir -p /var/lib/radicale/collections /var/lib/radicale/cache \
     && chown -R radicale:radicale /var/lib/radicale
+
+# Copy and set entrypoint script (must be before USER radicale)
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod 755 /docker-entrypoint.sh
 
 # Persistent storage for data
 VOLUME /var/lib/radicale
@@ -51,9 +64,8 @@ EXPOSE 5232
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
     CMD /app/bin/python -c "import urllib.request; urllib.request.urlopen('http://localhost:5232/')" || exit 1
 
-# Run Radicale
-ENTRYPOINT ["/app/bin/python", "-m", "radicale"]
-CMD ["--hosts", "0.0.0.0:5232,[::]:5232"]
-
 # Drop privileges
 USER radicale
+
+# Run Radicale via entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
