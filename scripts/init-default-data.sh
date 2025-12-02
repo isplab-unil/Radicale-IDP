@@ -10,7 +10,7 @@ set -e
 COLLECTIONS_DIR="/var/lib/radicale/collections/collection-root"
 HTPASSWD_FILE="/var/lib/radicale/htpasswd"
 DEFAULT_DATA_DIR="/default-data"
-DEFAULT_PASSWORD="password"
+DEFAULT_PASSWORD="${DEFAULT_USER_PASSWORD:-password}"
 
 # Check if collections directory is empty (first startup)
 if [ -d "$COLLECTIONS_DIR" ] && [ "$(ls -A "$COLLECTIONS_DIR" 2>/dev/null)" ]; then

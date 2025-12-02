@@ -18,6 +18,10 @@ services:
       # MUST match the web app's RADICALE_TOKEN
       - RADICALE_TOKEN=${RADICALE_TOKEN:-changeme}
 
+      # Default password for users created from zip files
+      # Override in .env file for security
+      - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD:-password}
+
     volumes:
       # Persistent storage for all Radicale data (collections, privacy db, htpasswd)
       - radicale_data:/var/lib/radicale
