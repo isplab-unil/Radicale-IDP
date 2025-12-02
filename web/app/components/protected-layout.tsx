@@ -58,7 +58,10 @@ export default function Layout() {
       <header className="bg-accent w-full">
         <div className="px-4 py-1">
           <nav className="flex items-center justify-between">
-            <div className="flex items-center space-x-1">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-1 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <img
                 src="/logo.svg"
                 alt="Logo"
@@ -69,7 +72,7 @@ export default function Layout() {
                   {subtitle}
                 </span>
               )}
-            </div>
+            </button>
 
             {/* Dropdown Navigation */}
             <DropdownMenu>
