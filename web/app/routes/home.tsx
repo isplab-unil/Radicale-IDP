@@ -13,7 +13,7 @@ export default function Home() {
             <h1 className="text-5xl font-medium text-gray-900 mb-6">
               Take control of your privacy
             </h1>
-            <p className="text-gray-400 text-lg leading-relaxed mb-6 max-w-4xl">
+            <p className="text-gray-500 text-lg leading-relaxed mb-6 max-w-4xl">
               Define your Subject Data Preferences for the contact management system without the
               need to create an account. Set your data handling preferences to control how your
               information is processed.
