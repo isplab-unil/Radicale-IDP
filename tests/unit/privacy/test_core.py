@@ -342,10 +342,14 @@ def test_validate_user_identifier_empty(core):
 
 
 def test_get_matching_cards_not_found(core):
-    """Test getting matching cards for a non-existent user."""
-    success, result = core.get_matching_cards("nonexistent@example.com")
-    assert not success
-    assert "User settings not found" in result
+    """Test getting matching cards for a first-time user auto-creates settings."""
+    # First-time users should have settings auto-created
+    success, result = core.get_matching_cards("firsttime@example.com")
+    assert success
+    assert "matches" in result
+    # Verify the settings were created in the database
+    settings = core._privacy_db.get_user_settings("firsttime@example.com")
+    assert settings is not None
 
 
 def test_get_matching_cards_unauthorized(core):

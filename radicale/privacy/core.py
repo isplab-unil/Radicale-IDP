@@ -273,10 +273,16 @@ class PrivacyCore:
             except Exception as e:
                 return False, str(e)
 
-        # Get user's privacy settings
+        # Get or auto-create user's privacy settings
         settings = self._privacy_db.get_user_settings(lookup_id)
         if not settings:
-            return False, "User settings not found"
+            logger.info("PRIVACY: Auto-creating default settings for first-time user: %s", lookup_id)
+            try:
+                # Create settings with defaults from configuration
+                settings = self._privacy_db.create_user_settings(lookup_id, {})
+            except Exception as e:
+                logger.error("PRIVACY: Failed to auto-create settings for %s: %s", lookup_id, str(e))
+                return False, f"Failed to initialize user settings: {str(e)}"
 
         # Find matching vCards
         try:

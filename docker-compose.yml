@@ -18,10 +18,12 @@ services:
       # MUST match the web app's RADICALE_TOKEN
       - RADICALE_TOKEN=${RADICALE_TOKEN:-changeme}
 
+      # Default password for users created from zip files
+      # Override in .env file for security
+      - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD:-password}
+
     volumes:
-      # Persistent storage for CalDAV/CardDAV collections
-      - radicale_collections:/var/lib/radicale/collections
-      # Persistent storage for privacy settings database
+      # Persistent storage for all Radicale data (collections, privacy db, htpasswd)
       - radicale_data:/var/lib/radicale
       # Read-only configuration
       - ./config/radicale.config:/etc/radicale/config:ro
@@ -32,7 +34,15 @@ services:
 
     # Health check to monitor service status
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5232/"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:5232/",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -86,6 +96,10 @@ services:
       - MOCK_EMAIL=${MOCK_EMAIL:-false}
       - MOCK_SMS=${MOCK_SMS:-false}
 
+      # Web application template configuration
+      - ENABLE_TEMPLATES=${ENABLE_TEMPLATES:-true}
+      - DEFAULT_TEMPLATE=${DEFAULT_TEMPLATE:-a}
+
     volumes:
       # Persistent storage for web app database
       - web_data:/data
@@ -101,7 +115,15 @@ services:
 
     # Health check - verify app is responding
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -161,7 +183,16 @@ services:
 
     # Health check to monitor nginx status
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:80/"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "--silent",
+          "--output",
+          "/dev/null",
+          "http://localhost:80/",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -183,7 +214,7 @@ services:
     container_name: radicale-idp-certbot
 
     environment:
-      - SELF_SIGNED_SSL=${SELF_SIGNED_SSL:-true}  # Default to self-signed for dev
+      - SELF_SIGNED_SSL=${SELF_SIGNED_SSL:-true} # Default to self-signed for dev
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
 
@@ -209,11 +240,7 @@ networks:
 
 # Named volumes for persistent data
 volumes:
-  # CalDAV/CardDAV collections storage
-  radicale_collections:
-    driver: local
-
-  # Radicale data (privacy database, cache, etc)
+  # Radicale data (collections, privacy database, htpasswd, cache, etc)
   radicale_data:
     driver: local
 
