@@ -1,51 +1,46 @@
 import { MoveUpRightIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { meta, handle } from './home-meta';
 import { LinkWithTemplate } from '~/lib/template-context';
 
 export { meta, handle };
 
 export default function Home() {
+  const { t } = useTranslation();
+
   return (
     <div className="py-30">
       <div className="container mx-auto max-w-8xl px-6">
         <div className="space-y-8">
           <div>
-            <h1 className="text-5xl font-medium text-gray-900 mb-6">
-              Take control of your privacy
-            </h1>
+            <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('home.title')}</h1>
             <p className="text-gray-500 text-lg leading-relaxed mb-6 max-w-4xl">
-              Define your Subject Data Preferences for the contact management system without the
-              need to create an account. Set your data handling preferences to control how your
-              information is processed.
+              {t('home.description')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-gray-100 p-6 rounded-2xl">
-              <h2 className="text-xl font-medium text-gray-900 mb-3">Subject Data Preferences</h2>
-              <p className="text-gray-600 mb-4">
-                Declare how you want your personal information to be handled when stored in the
-                contact management system with a one-time passcode.
-              </p>
+              <h2 className="text-xl font-medium text-gray-900 mb-3">
+                {t('home.preferences.title')}
+              </h2>
+              <p className="text-gray-600 mb-4">{t('home.preferences.description')}</p>
               <LinkWithTemplate
                 to="/subject-data-preferences"
                 className="inline-flex items-center text-blue-600 hover:text-blue-700 font-normal"
               >
-                Set Your Subject Data Preferences <MoveUpRightIcon className="w-4 h-4 ml-2" />
+                {t('home.preferences.button')} <MoveUpRightIcon className="w-4 h-4 ml-2" />
               </LinkWithTemplate>
             </div>
 
             <div className="bg-gray-100 p-6 rounded-2xl">
-              <h2 className="text-xl font-medium text-gray-900 mb-3">Subject Data Access</h2>
-              <p className="text-gray-600 mb-4">
-                See how your data is used in the contact management system and how other users are
-                using it. Make informed decisions about your privacy and data usage.
-              </p>
+              <h2 className="text-xl font-medium text-gray-900 mb-3">{t('home.access.title')}</h2>
+              <p className="text-gray-600 mb-4">{t('home.access.description')}</p>
               <LinkWithTemplate
                 to="/subject-data-access"
                 className="inline-flex items-center text-blue-600 hover:text-blue-700 font-normal"
               >
-                View Subject Subject Data Access <MoveUpRightIcon className="w-4 h-4 ml-2" />
+                {t('home.access.button')} <MoveUpRightIcon className="w-4 h-4 ml-2" />
               </LinkWithTemplate>
             </div>
           </div>

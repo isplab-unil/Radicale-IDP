@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { getCurrentUser } from '~/lib/auth';
 import { useCardData } from '~/lib/use-card-data';
 import type { CardMatch } from '~/lib/card-types';
 
 export function TemplateB() {
+  const { t } = useTranslation();
   const { cards, loading, syncing, syncCards } = useCardData();
 
   // Calculate field counts and collect values across all cards
@@ -82,11 +84,9 @@ export function TemplateB() {
         <div className="space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-5xl font-medium text-gray-900 mb-6">Data about you</h1>
+            <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('access.title')}</h1>
             <p className="text-gray-500 text-lg leading-relaxed mb-6 max-w-4xl">
-              See how your personal information is used in the contact provider system and how other
-              users are storing your data. This transparency helps you make informed decisions about
-              your Subject Data Preferences.
+              {t('access.description')}
             </p>
           </div>
 
@@ -95,59 +95,79 @@ export function TemplateB() {
             <div className="space-y-4">
               <div className="text-gray-900 text-lg">
                 <div className="mb-4">
-                  Pronoun: {fieldData.pronoun.length} contact cards{formatValues(fieldData.pronoun)}
+                  {t('access.fields.pronoun')}: {fieldData.pronoun.length}{' '}
+                  {fieldData.pronoun.length === 1
+                    ? t('access.cardCount', { count: fieldData.pronoun.length })
+                    : t('access.cardCountPlural', { count: fieldData.pronoun.length })}
+                  {formatValues(fieldData.pronoun)}
                 </div>
                 <div className="mb-4">
-                  Company: {fieldData.company.length} contact cards{formatValues(fieldData.company)}
+                  {t('access.fields.company')}: {fieldData.company.length}{' '}
+                  {fieldData.company.length === 1
+                    ? t('access.cardCount', { count: fieldData.company.length })
+                    : t('access.cardCountPlural', { count: fieldData.company.length })}
+                  {formatValues(fieldData.company)}
                 </div>
                 <div className="mb-4">
-                  Job title: {fieldData.jobTitle.length} contact cards
+                  {t('access.fields.jobTitle')}: {fieldData.jobTitle.length}{' '}
+                  {fieldData.jobTitle.length === 1
+                    ? t('access.cardCount', { count: fieldData.jobTitle.length })
+                    : t('access.cardCountPlural', { count: fieldData.jobTitle.length })}
                   {formatValues(fieldData.jobTitle)}
                 </div>
                 <div className="mb-4">
-                  Photo: {fieldData.photo.length} contact cards{formatValues(fieldData.photo)}
+                  {t('access.fields.photo')}: {fieldData.photo.length}{' '}
+                  {fieldData.photo.length === 1
+                    ? t('access.cardCount', { count: fieldData.photo.length })
+                    : t('access.cardCountPlural', { count: fieldData.photo.length })}
+                  {formatValues(fieldData.photo)}
                 </div>
                 <div className="mb-4">
-                  Birthday: {fieldData.birthday.length} contact card
-                  {fieldData.birthday.length !== 1 ? 's' : ''}
+                  {t('access.fields.birthday')}: {fieldData.birthday.length}{' '}
+                  {fieldData.birthday.length === 1
+                    ? t('access.cardCount', { count: fieldData.birthday.length })
+                    : t('access.cardCountPlural', { count: fieldData.birthday.length })}
                   {formatValues(fieldData.birthday)}
                 </div>
                 <div className="mb-4">
-                  Related person: {fieldData.relatedPerson.length} contact card
-                  {fieldData.relatedPerson.length !== 1 ? 's' : ''}
+                  {t('access.fields.relatedPerson')}: {fieldData.relatedPerson.length}{' '}
+                  {fieldData.relatedPerson.length === 1
+                    ? t('access.cardCount', { count: fieldData.relatedPerson.length })
+                    : t('access.cardCountPlural', { count: fieldData.relatedPerson.length })}
                   {formatValues(fieldData.relatedPerson)}
                 </div>
                 <div className="mb-4">
-                  Address: {fieldData.address.length} contact card
-                  {fieldData.address.length !== 1 ? 's' : ''}
+                  {t('access.fields.address')}: {fieldData.address.length}{' '}
+                  {fieldData.address.length === 1
+                    ? t('access.cardCount', { count: fieldData.address.length })
+                    : t('access.cardCountPlural', { count: fieldData.address.length })}
                   {formatValues(fieldData.address)}
                 </div>
               </div>
             </div>
           )}
 
-          {loading && <div className="text-gray-600">Loading cards...</div>}
+          {loading && <div className="text-gray-600">{t('access.loading')}</div>}
 
           {!loading && cards.length === 0 && (
-            <div className="text-gray-600">No contact records found.</div>
+            <div className="text-gray-600">{t('access.noRecords')}</div>
           )}
 
           {/* Contact Provider Synchronization */}
           <div className="bg-gray-100 p-6 rounded-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Contact Provider Status</h3>
-                <p className="text-sm text-gray-600">
-                  Synchronize with the contact provider to refresh the data shown on this page and
-                  ensure you see the most current information about how your data is being used.
-                </p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {t('access.providerStatus')}
+                </h3>
+                <p className="text-sm text-gray-600">{t('access.providerDescription')}</p>
               </div>
               <button
                 onClick={syncCards}
                 disabled={syncing}
                 className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {syncing ? 'Synchronizing...' : 'Synchronize Contact Provider'}
+                {syncing ? t('access.buttonSyncing') : t('access.buttonSync')}
               </button>
             </div>
           </div>

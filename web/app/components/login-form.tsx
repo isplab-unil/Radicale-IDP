@@ -1,5 +1,6 @@
 import { useState, useEffect, type ComponentProps, type FormEvent } from 'react';
 import { X, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
@@ -71,6 +72,7 @@ async function verifyOtp(
 
 export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
   const navigate = useNavigateWithTemplate();
+  const { t } = useTranslation();
   const [step, setStep] = useState<'identifier' | 'code'>('identifier');
   const [identifier, setIdentifier] = useState('');
   const [code, setCode] = useState('');
@@ -94,7 +96,7 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
       if (result.ok) {
         setStep('code');
       } else {
-        setError(result.error || 'Failed to send verification code.');
+        setError(result.error || t('login.errorSendingCode'));
       }
     }
   };
@@ -114,7 +116,7 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
         // Navigate to home page
         navigate('/');
       } else {
-        setError(result.error || 'Verification failed');
+        setError(result.error || t('login.errorVerifying'));
       }
     }
   };
@@ -150,11 +152,8 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
       </div>
 
       <div className="text-center mb-8 mt-8">
-        <h2 className="text-3xl font-medium text-gray-900 mb-2">Sign in with email or phone</h2>
-        <p className="text-gray-600">
-          Enter your email address or phone number to receive a one-time passcode. No account
-          creation required.
-        </p>
+        <h2 className="text-3xl font-medium text-gray-900 mb-2">{t('login.title')}</h2>
+        <p className="text-gray-600">{t('login.description')}</p>
       </div>
 
       {step === 'identifier' ? (
@@ -165,7 +164,7 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
                 type="text"
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                placeholder="Email or Phone Number"
+                placeholder={t('login.emailPlaceholder')}
                 className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 focus:border-gray-300 focus:ring-0"
                 required
                 disabled={loading}
@@ -217,7 +216,7 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
                 type="tel"
                 value={code}
                 onChange={e => setCode(e.target.value)}
-                placeholder="6-digit code"
+                placeholder={t('login.codePlaceholder')}
                 className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 focus:border-gray-300 focus:ring-0 tracking-widest"
                 required
                 autoComplete="one-time-code"

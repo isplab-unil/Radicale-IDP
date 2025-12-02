@@ -14,6 +14,9 @@ import { TemplateProvider } from '~/lib/template-context';
 import { getEnv } from '~/lib/env';
 import './app.css';
 import { links } from './root-links';
+import '~/i18n/config';
+import { I18nextProvider, useTranslation } from 'react-i18next';
+import i18next from '~/i18n/config';
 
 export { links };
 
@@ -53,21 +56,23 @@ export default function App() {
   const { enableTemplates, defaultTemplate } = useLoaderData<RootLoaderData>();
 
   return (
-    <TemplateProvider enableTemplates={enableTemplates} defaultTemplate={defaultTemplate}>
-      <Outlet />
-    </TemplateProvider>
+    <I18nextProvider i18n={i18next}>
+      <TemplateProvider enableTemplates={enableTemplates} defaultTemplate={defaultTemplate}>
+        <Outlet />
+      </TemplateProvider>
+    </I18nextProvider>
   );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'Oops!';
-  let details = 'An unexpected error occurred.';
+  const { t } = useTranslation();
+  let message = t('errors.oops');
+  let details = t('errors.unexpected');
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'Error';
-    details =
-      error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
+    message = error.status === 404 ? t('errors.notFound') : t('errors.error');
+    details = error.status === 404 ? t('errors.notFoundMessage') : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

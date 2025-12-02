@@ -1,0 +1,121 @@
+{
+  "home": {
+    "title": "Take control of your privacy",
+    "description": "Define your Subject Data Preferences for the contact management system without the need to create an account. Set your data handling preferences to control how your information is processed.",
+    "preferences": {
+      "title": "Subject Data Preferences",
+      "description": "Declare how you want your personal information to be handled when stored in the contact management system with a one-time passcode.",
+      "button": "Set Your Subject Data Preferences"
+    },
+    "access": {
+      "title": "Subject Data Access",
+      "description": "See how your data is used in the contact management system and how other users are using it. Make informed decisions about your privacy and data usage.",
+      "button": "View Subject Data Access"
+    }
+  },
+  "login": {
+    "title": "Sign in with email or phone",
+    "description": "Enter your email address or phone number to receive a one-time passcode. No account creation required.",
+    "emailPlaceholder": "Email or Phone Number",
+    "codePlaceholder": "6-digit code",
+    "errorSendingCode": "Failed to send verification code.",
+    "errorVerifying": "Verification failed"
+  },
+  "preferences": {
+    "title": "Subject Data Preferences",
+    "description": "Control how your personal information is handled in the contact management system. Select which contact fields you want to keep private and prevent from being synced.",
+    "explanation": "When someone creates a contact card with your information, the following fields will not be included if you've marked them as private:",
+    "loading": "Loading preferences...",
+    "keepPrivate": "Keep {{field}} private",
+    "fields": {
+      "photo": {
+        "label": "Photo",
+        "description": "Profile pictures and contact photos"
+      },
+      "gender": {
+        "label": "Gender/Pronoun",
+        "description": "Gender identity and preferred pronouns"
+      },
+      "birthday": {
+        "label": "Birthday",
+        "description": "Date of birth and age information"
+      },
+      "address": {
+        "label": "Address",
+        "description": "Home, work, and mailing addresses"
+      },
+      "company": {
+        "label": "Company",
+        "description": "Employer and organization information"
+      },
+      "title": {
+        "label": "Job Title",
+        "description": "Professional titles and positions"
+      }
+    },
+    "providerStatus": "Contact Provider Status",
+    "statusUnsaved": "You have unsaved changes. Save them to apply to the contact provider.",
+    "statusSynced": "Your privacy preferences are synchronized with the contact provider.",
+    "buttonCancel": "Cancel",
+    "buttonSave": "Save",
+    "buttonSaving": "Saving...",
+    "loadError": "Failed to load preferences",
+    "loadErrorDescription": "Unable to load your current privacy settings. Please refresh the page.",
+    "networkError": "Network error. Please check your connection and refresh the page.",
+    "saveSuccess": "Preferences saved successfully!",
+    "saveSuccessDescription": "Your privacy settings have been synchronized with the contact provider.",
+    "saveError": "Failed to save preferences",
+    "saveErrorDescription": "Please try again. If the problem persists, contact support.",
+    "saveNetworkError": "Network error. Please check your connection and try again."
+  },
+  "access": {
+    "title": "Data about you",
+    "description": "See how your personal information is used in the contact provider system and how other users are storing your data. This transparency helps you make informed decisions about your Subject Data Preferences.",
+    "loading": "Loading cards...",
+    "noRecords": "No contact records found.",
+    "contactRecords": "Contact Records",
+    "unknownContact": "Unknown",
+    "from": "From",
+    "fromIcon": "mail",
+    "mobile": "Mobile",
+    "mobileIcon": "phone",
+    "email": "Email",
+    "emailIcon": "mail",
+    "spouse": "Spouse",
+    "spouseIcon": "users",
+    "fields": {
+      "pronoun": "Pronoun",
+      "company": "Company",
+      "jobTitle": "Job title",
+      "photo": "Photo",
+      "birthday": "Birthday",
+      "relatedPerson": "Related person",
+      "address": "Address"
+    },
+    "cardCount": "{{count}} contact card",
+    "cardCountPlural": "{{count}} contact cards",
+    "providerStatus": "Contact Provider Status",
+    "providerDescription": "Synchronize with the contact provider to refresh the data shown on this page and ensure you see the most current information about how your data is being used.",
+    "buttonSync": "Synchronize Contact Provider",
+    "buttonSyncing": "Synchronizing...",
+    "fieldLabel": "{{field}}: {{count}}"
+  },
+  "navigation": {
+    "backToDashboard": "Back to Dashboard",
+    "backToDashboardIcon": "home",
+    "logout": "Logout",
+    "logoutIcon": "log-out",
+    "menuIcon": "ellipsis"
+  },
+  "footer": {
+    "privacyPolicy": "Privacy Policy",
+    "termsConditions": "Terms & Conditions"
+  },
+  "errors": {
+    "oops": "Oops!",
+    "unexpected": "An unexpected error occurred.",
+    "notFound": "404",
+    "notFoundMessage": "The requested page could not be found.",
+    "error": "Error"
+  }
+}
