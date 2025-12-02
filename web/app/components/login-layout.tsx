@@ -1,6 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 
 export default function LoginLayout() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -28,8 +31,8 @@ export default function LoginLayout() {
         <div className="container mx-auto max-w-8xl px-6">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
             <div className="flex flex-wrap justify-center sm:justify-start space-x-6 text-sm">
-              <span className="text-gray-400">Privacy Policy</span>
-              <span className="text-gray-400">Terms & Conditions</span>
+              <span className="text-gray-400">{t('footer.privacyPolicy')}</span>
+              <span className="text-gray-400">{t('footer.termsConditions')}</span>
             </div>
           </div>
         </div>

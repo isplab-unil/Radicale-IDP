@@ -1,4 +1,5 @@
-import { EllipsisIcon, HomeIcon, LogOutIcon, ShieldCheckIcon, DatabaseIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { Outlet, useMatches } from 'react-router';
 import {
   DropdownMenu,
@@ -15,23 +16,8 @@ interface RouteHandle {
   subtitle?: string;
 }
 
-const navigationItems = [
-  { to: '/', label: 'Subject Dashboard', icon: <HomeIcon />, protected: true },
-  {
-    to: '/subject-data-preferences',
-    label: 'Subject Data Preferences',
-    icon: <ShieldCheckIcon />,
-    protected: true,
-  },
-  {
-    to: '/subject-data-access',
-    label: 'Subject Data Access',
-    icon: <DatabaseIcon />,
-    protected: true,
-  },
-];
-
 export default function Layout() {
+  const { t } = useTranslation();
   const matches = useMatches();
   const navigate = useNavigateWithTemplate();
   const currentMatch = matches[matches.length - 1];
@@ -48,7 +34,14 @@ export default function Layout() {
   // Filter navigation items based on current page
   const visibleNavigationItems = isHomePage
     ? []
-    : [{ to: '/', label: 'Back to Dashboard', icon: <HomeIcon />, protected: true }];
+    : [
+        {
+          to: '/',
+          label: t('navigation.backToDashboard'),
+          iconName: t('navigation.backToDashboardIcon'),
+          protected: true,
+        },
+      ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -76,7 +69,7 @@ export default function Layout() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="flex items-center space-x-1">
-                  <EllipsisIcon className="size-6" />
+                  <DynamicIcon name={t('navigation.menuIcon')} className="size-6" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -87,7 +80,9 @@ export default function Layout() {
                       className="w-full justify-start text-left border-none focus:border-none focus-visible:border-none hover:border-none font-normal"
                       onClick={() => navigate(item.to)}
                     >
-                      <span className="text-blue-600 mr-2">{item.icon}</span>
+                      <span className="text-blue-600 mr-2">
+                        <DynamicIcon name={item.iconName} size={20} />
+                      </span>
                       {item.label}
                     </Button>
                   </DropdownMenuItem>
@@ -100,9 +95,9 @@ export default function Layout() {
                       onClick={handleLogout}
                     >
                       <span className="text-red-600 mr-2">
-                        <LogOutIcon />
+                        <DynamicIcon name={t('navigation.logoutIcon')} size={20} />
                       </span>
-                      Logout
+                      {t('navigation.logout')}
                     </Button>
                   </DropdownMenuItem>
                 )}
@@ -124,8 +119,8 @@ export default function Layout() {
         <div className="container mx-auto max-w-8xl px-6">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
             <div className="flex flex-wrap justify-center sm:justify-start space-x-6 text-sm">
-              <span className="text-gray-400">Privacy Policy</span>
-              <span className="text-gray-400">Terms & Conditions</span>
+              <span className="text-gray-400">{t('footer.privacyPolicy')}</span>
+              <span className="text-gray-400">{t('footer.termsConditions')}</span>
             </div>
           </div>
         </div>
