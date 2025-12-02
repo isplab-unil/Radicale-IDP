@@ -35,10 +35,10 @@ const fieldMapping = {
 
 export default function PreferencesPage() {
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
+  const [originalPreferences, setOriginalPreferences] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [contactProviderSynced, setContactProviderSynced] = useState(true);
-  const [syncing, setSyncing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   // Client-side authentication check
   useEffect(() => {
@@ -55,7 +55,8 @@ export default function PreferencesPage() {
         if (response.ok) {
           const data = await response.json();
           setPreferences(data.preferences);
-          setContactProviderSynced(data.contactProviderSynced);
+          setOriginalPreferences(data.preferences);
+          setHasChanges(false);
         } else {
           toast.error('Failed to load preferences', {
             description: 'Unable to load your current privacy settings. Please refresh the page.',
@@ -75,79 +76,49 @@ export default function PreferencesPage() {
     }
   }, []);
 
-  const handlePreferenceChange = async (fieldId: string, checked: boolean) => {
+  const handlePreferenceChange = (fieldId: string, checked: boolean) => {
     const newPreferences = {
       ...preferences,
       [fieldId]: checked,
     };
-
     setPreferences(newPreferences);
-    setContactProviderSynced(false); // Mark as out of sync when preferences change
+    setHasChanges(true);
+  };
+
+  const handleSavePreferences = async () => {
     setSaving(true);
 
     try {
       const response = await authFetch('/api/user/preferences', {
         method: 'PUT',
-        body: JSON.stringify({ preferences: newPreferences }),
+        body: JSON.stringify({ preferences }),
       });
 
       if (response.ok) {
+        setOriginalPreferences(preferences);
+        setHasChanges(false);
         toast.success('Preferences saved successfully!', {
-          description: `${fieldMapping[fieldId as keyof typeof fieldMapping].label} privacy setting updated`,
+          description: 'Your privacy settings have been synchronized with the contact provider.',
         });
       } else {
         toast.error('Failed to save preferences', {
           description: 'Please try again. If the problem persists, contact support.',
         });
-        // Revert the change on error
-        setPreferences(prev => ({
-          ...prev,
-          [fieldId]: !checked,
-        }));
-        setContactProviderSynced(true); // Revert sync state on error
       }
     } catch {
       toast.error('Failed to save preferences', {
         description: 'Network error. Please check your connection and try again.',
       });
-      // Revert the change on error
-      setPreferences(prev => ({
-        ...prev,
-        [fieldId]: !checked,
-      }));
-      setContactProviderSynced(true); // Revert sync state on error
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSyncContactProvider = async () => {
-    setSyncing(true);
-
-    try {
-      const response = await authFetch('/api/user/preferences', {
-        method: 'PUT',
-        body: JSON.stringify({ action: 'sync' }),
-      });
-
-      if (response.ok) {
-        setContactProviderSynced(true);
-        toast.success('Contact provider synchronized!', {
-          description: 'Your privacy preferences have been synchronized with the contact provider.',
-        });
-      } else {
-        toast.error('Failed to synchronize', {
-          description: 'Please try again. If the problem persists, contact support.',
-        });
-      }
-    } catch {
-      toast.error('Failed to synchronize', {
-        description: 'Network error. Please check your connection and try again.',
-      });
-    } finally {
-      setSyncing(false);
-    }
+  const handleCancel = () => {
+    setPreferences(originalPreferences);
+    setHasChanges(false);
   };
+
 
   if (loading) {
     return (
@@ -203,32 +174,33 @@ export default function PreferencesPage() {
             ))}
           </div>
 
-          {/* Contact Provider Synchronization */}
+          {/* Contact Provider Status */}
           <div className="bg-gray-100 p-6 rounded-2xl mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Contact Provider Status</h3>
                 <p className="text-sm text-gray-600">
-                  {contactProviderSynced
-                    ? 'Your privacy preferences are synchronized with the contact provider.'
-                    : 'Your privacy preferences need to be synchronized with the contact provider.'}
+                  {hasChanges
+                    ? 'You have unsaved changes. Save them to apply to the contact provider.'
+                    : 'Your privacy preferences are synchronized with the contact provider.'}
                 </p>
               </div>
-              <button
-                onClick={handleSyncContactProvider}
-                disabled={contactProviderSynced || syncing || saving}
-                className={`px-6 py-3 rounded-lg font-medium text-sm transition-colors ${
-                  contactProviderSynced
-                    ? 'bg-green-100 text-green-700 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
-                }`}
-              >
-                {syncing
-                  ? 'Synchronizing...'
-                  : contactProviderSynced
-                    ? 'Contact Provider Synchronized'
-                    : 'Synchronize Contact Provider'}
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleCancel}
+                  disabled={!hasChanges || saving}
+                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-gray-300 text-gray-900 hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSavePreferences}
+                  disabled={!hasChanges || saving}
+                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
