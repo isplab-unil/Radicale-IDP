@@ -23,7 +23,7 @@ interface AuthTokenPayload {
 export async function createAuthToken(
   contact: string,
   userId: number,
-  secret: string,
+  secret: string
 ): Promise<string> {
   const key = new TextEncoder().encode(secret);
   const now = Math.floor(Date.now() / 1000);
@@ -47,20 +47,14 @@ export async function createAuthToken(
 /**
  * Verify an authentication token
  */
-export async function verifyAuthToken(
-  token: string,
-  secret: string,
-): Promise<AuthTokenPayload> {
+export async function verifyAuthToken(token: string, secret: string): Promise<AuthTokenPayload> {
   const key = new TextEncoder().encode(secret);
 
   try {
     const { payload } = await jwtVerify(token, key);
 
     // Validate required properties
-    if (
-      typeof payload.contact !== 'string' ||
-      typeof payload.userId !== 'number'
-    ) {
+    if (typeof payload.contact !== 'string' || typeof payload.userId !== 'number') {
       throw new Error('Invalid token payload');
     }
 
@@ -116,10 +110,7 @@ export function extractAuthToken(request: Request): string | null {
 /**
  * Server-side: Verify auth token and return user info
  */
-export async function verifyAuth(
-  request: Request,
-  jwtSecret: string,
-): Promise<AuthUser | null> {
+export async function verifyAuth(request: Request, jwtSecret: string): Promise<AuthUser | null> {
   try {
     const token = extractAuthToken(request);
     if (!token) {
@@ -136,10 +127,7 @@ export async function verifyAuth(
 /**
  * Server-side: Require authentication middleware
  */
-export async function requireAuth(
-  request: Request,
-  jwtSecret: string,
-): Promise<AuthUser> {
+export async function requireAuth(request: Request, jwtSecret: string): Promise<AuthUser> {
   const user = await verifyAuth(request, jwtSecret);
   if (!user) {
     throw new Response('Unauthorized', { status: 401 });
@@ -163,10 +151,7 @@ export function createAuthHeaders(): HeadersInit {
 /**
  * Client-side: Authenticated fetch wrapper
  */
-export async function authFetch(
-  url: string,
-  options: RequestInit = {},
-): Promise<Response> {
+export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const authHeaders = createAuthHeaders();
 
   const response = await fetch(url, {
@@ -187,4 +172,27 @@ export async function authFetch(
   }
 
   return response;
+}
+
+/**
+ * Client-side: Get current authenticated user from token
+ */
+export function getCurrentUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null;
+  const token = getAuthToken();
+  if (!token) return null;
+
+  try {
+    // Decode JWT without verification (since we're on client)
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const decoded = JSON.parse(atob(parts[1]));
+    return {
+      contact: decoded.contact,
+      userId: decoded.userId,
+    };
+  } catch {
+    return null;
+  }
 }

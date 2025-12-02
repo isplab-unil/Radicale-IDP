@@ -1,10 +1,5 @@
 import type { Route } from './+types/api.auth.request-otp';
-import {
-  generateOtpCode,
-  sendOtpUnified,
-  isValidEmail,
-  isValidE164,
-} from '~/lib/otp';
+import { generateOtpCode, sendOtpUnified, isValidEmail, isValidE164 } from '~/lib/otp';
 import { storeOtp } from '~/db/operations';
 
 /**
@@ -22,10 +17,10 @@ export async function action({ request }: Route.ActionArgs) {
 
     // Validate input presence
     if (!identifier) {
-      return new Response(
-        JSON.stringify({ error: 'Email or phone number is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Email or phone number is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Validate identifier format (must be email OR E.164 phone)
@@ -34,10 +29,9 @@ export async function action({ request }: Route.ActionArgs) {
     if (!isEmail && !isPhone) {
       return new Response(
         JSON.stringify({
-          error:
-            'Provide a valid email or E.164 phone number (e.g. +14155550123)',
+          error: 'Provide a valid email or E.164 phone number (e.g. +14155550123)',
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -47,19 +41,16 @@ export async function action({ request }: Route.ActionArgs) {
     try {
       await storeOtp(identifier, otpCode);
     } catch {
-      return new Response(
-        JSON.stringify({ error: 'Failed to store verification code' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Failed to store verification code' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Send OTP via the appropriate channel with a 15s timeout
     const otpPromise = sendOtpUnified(identifier, otpCode);
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error('OTP sending timeout after 15 seconds')),
-        15000,
-      ),
+      setTimeout(() => reject(new Error('OTP sending timeout after 15 seconds')), 15000)
     );
 
     try {
@@ -74,14 +65,14 @@ export async function action({ request }: Route.ActionArgs) {
           JSON.stringify({
             error: otpResult?.error || 'Failed to send verification code',
           }),
-          { status: 500, headers: { 'Content-Type': 'application/json' } },
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
       }
     } catch {
-      return new Response(
-        JSON.stringify({ error: 'Failed to send verification code' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Failed to send verification code' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Return success response

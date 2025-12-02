@@ -12,7 +12,7 @@ export async function action({ request }: Route.ActionArgs) {
         JSON.stringify({
           error: 'Server configuration error: JWT_SECRET is not configured',
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } },
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -22,35 +22,31 @@ export async function action({ request }: Route.ActionArgs) {
 
     // Validate input
     if (!email || !code) {
-      return new Response(
-        JSON.stringify({ error: 'Email and verification code are required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Email and verification code are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid verification code format' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Invalid verification code format' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Verify OTP
     const result = await verifyOtp(email, code);
 
     if (!result.isValid || !result.user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired verification code' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Invalid or expired verification code' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Create authentication token
-    const authToken = await createAuthToken(
-      result.user.contact,
-      result.user.id,
-      JWT_SECRET,
-    );
+    const authToken = await createAuthToken(result.user.contact, result.user.id, JWT_SECRET);
     return new Response(
       JSON.stringify({
         authToken,
@@ -61,7 +57,7 @@ export async function action({ request }: Route.ActionArgs) {
           userId: result.user.id,
         },
       }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch {
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
