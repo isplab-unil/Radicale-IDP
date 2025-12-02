@@ -35,22 +35,20 @@ export default function Layout() {
   const matches = useMatches();
   const navigate = useNavigateWithTemplate();
   const currentMatch = matches[matches.length - 1];
+  const currentPath = currentMatch?.pathname || '/';
   const subtitle = (currentMatch?.handle as RouteHandle)?.subtitle || '';
   const authenticated = isAuthenticated();
+  const isHomePage = currentPath === '/';
 
   const handleLogout = () => {
     clearAuthToken();
     navigate('/login');
   };
 
-  // Filter navigation items based on authentication status
-  const visibleNavigationItems = navigationItems.filter(item => {
-    if (authenticated) {
-      return true; // Show all items when authenticated
-    } else {
-      return !item.protected; // Only show non-protected items when not authenticated
-    }
-  });
+  // Filter navigation items based on current page
+  const visibleNavigationItems = isHomePage
+    ? []
+    : [{ to: '/', label: 'Back to Dashboard', icon: <HomeIcon />, protected: true }];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
