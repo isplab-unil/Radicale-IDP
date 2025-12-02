@@ -23,7 +23,7 @@ function ContactCard({ contact }: { contact: CardMatch }) {
 
           {/* Contact Details */}
           <div className="flex-1">
-            <div className="text-sm text-gray-400 mb-2 font-medium tracking-wide">
+            <div className="text-sm text-gray-500 mb-2 font-medium tracking-wide">
               {contact.fields.org || ''}
             </div>
             <h3 className="text-2xl font-semibold text-gray-900 mb-1">
