@@ -174,6 +174,35 @@ export default function PreferencesPage() {
             </p>
           </div>
 
+          <div className="text-gray-600 text-lg leading-relaxed">
+            <p>
+              When someone creates a contact card with your information, the following fields will{' '}
+              <span className="font-medium">not</span> be included if you&apos;ve marked them as
+              private:
+            </p>
+          </div>
+
+          {/* Preferences Form */}
+          <div className="space-y-6">
+            {Object.entries(fieldMapping).map(([fieldId, fieldInfo]) => (
+              <div key={fieldId} className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  checked={preferences[fieldId] || false}
+                  onChange={e => handlePreferenceChange(fieldId, e.target.checked)}
+                  className="h-5 w-5 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                  disabled={saving}
+                />
+                <div className="flex-1">
+                  <label className="text-lg text-gray-900 cursor-pointer select-none font-medium">
+                    Keep {fieldInfo.label} private
+                  </label>
+                  <p className="text-sm text-gray-600 mt-1">{fieldInfo.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Contact Provider Synchronization */}
           <div className="bg-gray-100 p-6 rounded-2xl mb-6">
             <div className="flex items-center justify-between">
@@ -201,35 +230,6 @@ export default function PreferencesPage() {
                     : 'Synchronize Contact Provider'}
               </button>
             </div>
-          </div>
-
-          <div className="text-gray-700 text-base leading-relaxed">
-            <p>
-              When someone creates a contact card with your information, the following fields will{' '}
-              <span className="font-medium">not</span> be included if you&apos;ve marked them as
-              private:
-            </p>
-          </div>
-
-          {/* Preferences Form */}
-          <div className="space-y-6">
-            {Object.entries(fieldMapping).map(([fieldId, fieldInfo]) => (
-              <div key={fieldId} className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  checked={preferences[fieldId] || false}
-                  onChange={e => handlePreferenceChange(fieldId, e.target.checked)}
-                  className="h-5 w-5 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
-                  disabled={saving}
-                />
-                <div className="flex-1">
-                  <label className="text-lg text-gray-900 cursor-pointer select-none font-medium">
-                    Keep {fieldInfo.label} private
-                  </label>
-                  <p className="text-sm text-gray-600 mt-1">{fieldInfo.description}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
