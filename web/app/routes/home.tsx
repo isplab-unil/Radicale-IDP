@@ -49,17 +49,6 @@ export default function Home() {
               </LinkWithTemplate>
             </div>
           </div>
-
-          <div className="bg-blue-50 p-6 rounded-2xl">
-            <h3 className="text-xl font-medium text-gray-900 mb-3">
-              No accounts needed, just a one-time passcode
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Simply set your Subject Data Preferences and have them applied to the contact
-              management system. Your preferences are yours to control, without compromising your
-              privacy.
-            </p>
-          </div>
         </div>
       </div>
     </div>
