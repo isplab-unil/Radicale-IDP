@@ -19,9 +19,7 @@ services:
       - RADICALE_TOKEN=${RADICALE_TOKEN:-changeme}
 
     volumes:
-      # Persistent storage for CalDAV/CardDAV collections
-      - radicale_collections:/var/lib/radicale/collections
-      # Persistent storage for privacy settings database
+      # Persistent storage for all Radicale data (collections, privacy db, htpasswd)
       - radicale_data:/var/lib/radicale
       # Read-only configuration
       - ./config/radicale.config:/etc/radicale/config:ro
@@ -209,11 +207,7 @@ networks:
 
 # Named volumes for persistent data
 volumes:
-  # CalDAV/CardDAV collections storage
-  radicale_collections:
-    driver: local
-
-  # Radicale data (privacy database, cache, etc)
+  # Radicale data (collections, privacy database, htpasswd, cache, etc)
   radicale_data:
     driver: local
 
