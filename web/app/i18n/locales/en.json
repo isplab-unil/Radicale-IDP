@@ -19,7 +19,9 @@
     "emailPlaceholder": "Email or Phone Number",
     "codePlaceholder": "6-digit code",
     "errorSendingCode": "Failed to send verification code.",
-    "errorVerifying": "Verification failed"
+    "errorVerifying": "Verification failed",
+    "disclaimerTitle": "Disclamer",
+    "disclaimer": "Do not enter your real information"
   },
   "preferences": {
     "title": "Subject Data Preferences",
