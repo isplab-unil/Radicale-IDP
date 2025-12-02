@@ -28,3 +28,11 @@ pytestdebug.log
 uv.lock
 local.db
 .env
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+
