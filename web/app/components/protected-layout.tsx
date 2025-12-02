@@ -129,9 +129,6 @@ export default function Layout() {
               <span className="text-gray-400">Privacy Policy</span>
               <span className="text-gray-400">Terms & Conditions</span>
             </div>
-            <div className="text-gray-400 text-sm">
-              Copyright © 2025 Apple Inc. All rights reserved.
-            </div>
           </div>
         </div>
       </footer>
