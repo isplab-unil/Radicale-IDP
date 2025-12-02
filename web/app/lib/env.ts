@@ -28,6 +28,10 @@ export interface EnvConfig {
   MOCK_SMS?: boolean;
   MOCK_EMAIL?: boolean;
 
+  // Templates
+  ENABLE_TEMPLATES?: boolean;
+  DEFAULT_TEMPLATE?: string;
+
   // Environment
   NODE_ENV: string;
   DEV: boolean;
@@ -60,6 +64,10 @@ export function getEnv(): EnvConfig {
     // Mock Configuration
     MOCK_SMS: process.env.MOCK_SMS === 'true',
     MOCK_EMAIL: process.env.MOCK_EMAIL === 'true',
+
+    // Templates
+    ENABLE_TEMPLATES: process.env.ENABLE_TEMPLATES === 'true',
+    DEFAULT_TEMPLATE: process.env.DEFAULT_TEMPLATE || 'a',
 
     // Environment
     NODE_ENV: process.env.NODE_ENV || 'development',
