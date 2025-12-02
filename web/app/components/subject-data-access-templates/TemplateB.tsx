@@ -1,7 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { getCurrentUser } from '~/lib/auth';
 import { useCardData } from '~/lib/use-card-data';
-import type { CardMatch } from '~/lib/card-types';
 
 export function TemplateB() {
   const { t } = useTranslation();
@@ -73,10 +71,6 @@ export function TemplateB() {
     const last = values[values.length - 1];
     return ` (${allButLast}, and "${last}")`;
   };
-
-  const user = getCurrentUser();
-  const isPhoneContact = user?.contact && !user.contact.includes('@');
-  const contactLabel = isPhoneContact ? 'phone number' : 'email address';
 
   return (
     <div className="py-30">

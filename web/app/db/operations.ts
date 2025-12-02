@@ -1,8 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from './index';
-import { usersTable, userPreferencesTable } from './schema';
+import { usersTable, userPreferencesTable, userCardsTable } from './schema';
 import type { CardMatch } from '~/api/radicale';
-import { userCardsTable } from './schema';
 
 // User operations
 export async function createUser(contact: string) {

@@ -130,7 +130,8 @@ export default [
       prettier,
     },
     rules: {
-      // TypeScript rules
+      // Base and TypeScript unused vars rules
+      'no-unused-vars': 'off', // Use TypeScript version instead
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-var-requires': 'error',

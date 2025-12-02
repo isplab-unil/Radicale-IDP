@@ -14,9 +14,8 @@ import { TemplateProvider } from '~/lib/template-context';
 import { getEnv } from '~/lib/env';
 import './app.css';
 import { links } from './root-links';
-import '~/i18n/config';
-import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18next from '~/i18n/config';
+import { I18nextProvider, useTranslation } from 'react-i18next';
 
 export { links };
 
@@ -25,7 +24,7 @@ type RootLoaderData = {
   defaultTemplate: string;
 };
 
-export const loader: Route.LoaderFunction = async (): Promise<RootLoaderData> => {
+export const loader = async (): Promise<RootLoaderData> => {
   const env = getEnv();
   return {
     enableTemplates: env.ENABLE_TEMPLATES || false,
