@@ -112,6 +112,8 @@ def test_create_settings_success(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert success
@@ -148,6 +150,8 @@ def test_create_settings_invalid_types(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": "false",  # Should be boolean
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert not success
@@ -164,6 +168,8 @@ def test_update_settings_success(core):
         "disallow_birthday": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", initial_settings)
 
@@ -187,6 +193,8 @@ def test_update_settings_success(core):
     assert updated_settings["disallow_address"] is False  # Unchanged
     assert updated_settings["disallow_company"] is False  # Unchanged
     assert updated_settings["disallow_title"] is False  # Unchanged
+    assert updated_settings["disallow_nickname"] is False  # Unchanged
+    assert updated_settings["disallow_related"] is False  # Unchanged
 
 
 def test_update_settings_not_found(core):
@@ -235,6 +243,8 @@ def test_delete_settings_success(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -370,6 +380,8 @@ def test_get_matching_cards_no_matches(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -428,6 +440,8 @@ def test_get_matching_cards_recursive_discovery(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert success
@@ -492,6 +506,8 @@ def test_get_matching_cards_in_different_collections(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert success
@@ -531,6 +547,8 @@ def test_reprocess_cards_success(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -583,6 +601,8 @@ def test_reprocess_cards_multiple_collections(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -646,6 +666,8 @@ def test_reprocess_cards_after_settings_update(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", initial_settings)
 
@@ -721,6 +743,8 @@ def test_get_matching_cards_phone_formats(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     # Create privacy settings for the E.164 phone
     success, result = core.create_settings(phone_e164, settings)
@@ -791,6 +815,8 @@ def test_get_matching_cards_with_photo(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("photo@test.com", settings)
 
