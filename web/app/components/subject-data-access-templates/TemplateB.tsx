@@ -73,7 +73,7 @@ export function TemplateB() {
   };
 
   return (
-    <div className="py-30">
+    <div className="pt-6 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
         <div className="space-y-8">
           {/* Header */}

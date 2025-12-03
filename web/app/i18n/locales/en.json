@@ -109,6 +109,12 @@
     "logoutIcon": "log-out",
     "menuIcon": "ellipsis"
   },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "dataPreferences": "Data Preferences",
+    "dataAccess": "Data Access",
+    "navigationLabel": "Page navigation"
+  },
   "footer": {
     "privacyPolicy": "Privacy Policy",
     "termsConditions": "Terms & Conditions"
