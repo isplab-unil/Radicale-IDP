@@ -39,12 +39,8 @@ COPY --chown=radicale:radicale --from=builder /app/venv /app
 
 # Copy default data and scripts
 COPY default-data /default-data
-COPY scripts/build-default-data.sh /scripts/
 COPY scripts/init-default-data.sh /scripts/
-RUN chmod 755 /scripts/build-default-data.sh /scripts/init-default-data.sh
-
-# Build zip archives from user directories
-RUN /scripts/build-default-data.sh
+RUN chmod 755 /scripts/init-default-data.sh
 
 # Create required directories
 RUN mkdir -p /var/lib/radicale/collections /var/lib/radicale/cache \
