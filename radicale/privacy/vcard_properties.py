@@ -139,7 +139,6 @@ VCARD_PROPERTY_TYPES = {
     'clientpidmap': VCardPropertyType.LIST,
 
     # Presence-only properties
-    'photo': VCardPropertyType.PRESENCE,
     'logo': VCardPropertyType.PRESENCE,
     'sound': VCardPropertyType.PRESENCE,
     'key': VCardPropertyType.PRESENCE,
