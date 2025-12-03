@@ -89,49 +89,49 @@ export function TemplateB() {
             <div className="space-y-4">
               <div className="text-gray-900 text-lg">
                 <div className="mb-4">
-                  {t('access.fields.pronoun')}: {fieldData.pronoun.length}{' '}
+                  {t('access.fields.pronoun')}:{' '}
                   {fieldData.pronoun.length === 1
                     ? t('access.cardCount', { count: fieldData.pronoun.length })
                     : t('access.cardCountPlural', { count: fieldData.pronoun.length })}
                   {formatValues(fieldData.pronoun)}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.company')}: {fieldData.company.length}{' '}
+                  {t('access.fields.company')}:{' '}
                   {fieldData.company.length === 1
                     ? t('access.cardCount', { count: fieldData.company.length })
                     : t('access.cardCountPlural', { count: fieldData.company.length })}
                   {formatValues(fieldData.company)}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.jobTitle')}: {fieldData.jobTitle.length}{' '}
+                  {t('access.fields.jobTitle')}:{' '}
                   {fieldData.jobTitle.length === 1
                     ? t('access.cardCount', { count: fieldData.jobTitle.length })
                     : t('access.cardCountPlural', { count: fieldData.jobTitle.length })}
                   {formatValues(fieldData.jobTitle)}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.photo')}: {fieldData.photo.length}{' '}
+                  {t('access.fields.photo')}:{' '}
                   {fieldData.photo.length === 1
                     ? t('access.cardCount', { count: fieldData.photo.length })
                     : t('access.cardCountPlural', { count: fieldData.photo.length })}
                   {formatValues(fieldData.photo)}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.birthday')}: {fieldData.birthday.length}{' '}
+                  {t('access.fields.birthday')}:{' '}
                   {fieldData.birthday.length === 1
                     ? t('access.cardCount', { count: fieldData.birthday.length })
                     : t('access.cardCountPlural', { count: fieldData.birthday.length })}
                   {formatValues(fieldData.birthday)}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.relatedPerson')}: {fieldData.relatedPerson.length}{' '}
+                  {t('access.fields.relatedPerson')}:{' '}
                   {fieldData.relatedPerson.length === 1
                     ? t('access.cardCount', { count: fieldData.relatedPerson.length })
                     : t('access.cardCountPlural', { count: fieldData.relatedPerson.length })}
                   {formatValues(fieldData.relatedPerson)}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.address')}: {fieldData.address.length}{' '}
+                  {t('access.fields.address')}:{' '}
                   {fieldData.address.length === 1
                     ? t('access.cardCount', { count: fieldData.address.length })
                     : t('access.cardCountPlural', { count: fieldData.address.length })}
