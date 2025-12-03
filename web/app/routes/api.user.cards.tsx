@@ -1,6 +1,6 @@
 import { verifyAuth } from '~/lib/auth';
-import { getUserCards } from '~/api/radicale';
-import { getUserByContact, getUserCardsCache, saveUserCardsCache } from '~/db/operations';
+import { getUserCards, updatePrivacySettings, createPrivacySettings, reprocessUserCards } from '~/api/radicale';
+import { getUserByContact, getUserCardsCache, saveUserCardsCache, getUserPreferences } from '~/db/operations';
 
 export async function loader({ request }: { request: Request }) {
   try {
@@ -78,8 +78,38 @@ export async function action({ request }: { request: Request }) {
 
     const method = request.method.toUpperCase();
 
-    // Sync action: fetch from Radicale and update DB cache
+    // Sync action: update Radicale with privacy preferences, reprocess, fetch filtered cards, and update DB cache
     if (method === 'PUT') {
+      // Get current preferences from web database
+      const currentPreferences = await getUserPreferences(dbUser.id);
+
+      if (currentPreferences) {
+        // Convert database format to Radicale format
+        const radicalePreferences = {
+          disallow_photo: currentPreferences.disallowPhoto === 1,
+          disallow_gender: currentPreferences.disallowGender === 1,
+          disallow_birthday: currentPreferences.disallowBirthday === 1,
+          disallow_address: currentPreferences.disallowAddress === 1,
+          disallow_company: currentPreferences.disallowCompany === 1,
+          disallow_title: currentPreferences.disallowTitle === 1,
+        };
+
+        // Update Radicale with current preferences
+        try {
+          await updatePrivacySettings(user.contact, radicalePreferences);
+        } catch (err: any) {
+          if (err?.status === 400) {
+            await createPrivacySettings(user.contact, radicalePreferences);
+          } else {
+            throw err;
+          }
+        }
+
+        // Trigger reprocessing in Radicale
+        await reprocessUserCards(user.contact);
+      }
+
+      // Fetch filtered cards from Radicale
       const fresh = await getUserCards(user.contact);
       await saveUserCardsCache(dbUser.id, fresh);
       return new Response(JSON.stringify({ success: true }), {
