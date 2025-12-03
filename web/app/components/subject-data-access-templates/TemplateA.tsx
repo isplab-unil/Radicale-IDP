@@ -43,43 +43,43 @@ export function TemplateA() {
             <div className="space-y-4">
               <div className="text-gray-900 text-lg">
                 <div className="mb-4">
-                  {t('access.fields.pronoun')}: {fieldCounts.pronoun}{' '}
+                  {t('access.fields.pronoun')}:{' '}
                   {fieldCounts.pronoun === 1
                     ? t('access.cardCount', { count: fieldCounts.pronoun })
                     : t('access.cardCountPlural', { count: fieldCounts.pronoun })}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.company')}: {fieldCounts.company}{' '}
+                  {t('access.fields.company')}:{' '}
                   {fieldCounts.company === 1
                     ? t('access.cardCount', { count: fieldCounts.company })
                     : t('access.cardCountPlural', { count: fieldCounts.company })}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.jobTitle')}: {fieldCounts.jobTitle}{' '}
+                  {t('access.fields.jobTitle')}:{' '}
                   {fieldCounts.jobTitle === 1
                     ? t('access.cardCount', { count: fieldCounts.jobTitle })
                     : t('access.cardCountPlural', { count: fieldCounts.jobTitle })}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.photo')}: {fieldCounts.photo}{' '}
+                  {t('access.fields.photo')}:{' '}
                   {fieldCounts.photo === 1
                     ? t('access.cardCount', { count: fieldCounts.photo })
                     : t('access.cardCountPlural', { count: fieldCounts.photo })}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.birthday')}: {fieldCounts.birthday}{' '}
+                  {t('access.fields.birthday')}:{' '}
                   {fieldCounts.birthday === 1
                     ? t('access.cardCount', { count: fieldCounts.birthday })
                     : t('access.cardCountPlural', { count: fieldCounts.birthday })}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.relatedPerson')}: {fieldCounts.relatedPerson}{' '}
+                  {t('access.fields.relatedPerson')}:{' '}
                   {fieldCounts.relatedPerson === 1
                     ? t('access.cardCount', { count: fieldCounts.relatedPerson })
                     : t('access.cardCountPlural', { count: fieldCounts.relatedPerson })}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.address')}: {fieldCounts.address}{' '}
+                  {t('access.fields.address')}:{' '}
                   {fieldCounts.address === 1
                     ? t('access.cardCount', { count: fieldCounts.address })
                     : t('access.cardCountPlural', { count: fieldCounts.address })}
