@@ -1,6 +1,7 @@
 import type { Route } from './+types/api.auth.request-otp';
 import { generateOtpCode, sendOtpUnified, isValidEmail, isValidE164 } from '~/lib/otp';
 import { storeOtp } from '~/db/operations';
+import { env } from '~/lib/env';
 
 /**
  * Accepts either an email or an E.164 phone number and sends an OTP via
@@ -76,9 +77,17 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     // Return success response
+    // Determine if we're in mock mode (only include OTP when mock flags are true)
+    const isMockMode = (isEmail && env.MOCK_EMAIL) || (isPhone && env.MOCK_SMS);
+
     const responseData = {
       message: 'Verification code sent successfully',
       expiresIn: 300, // 5 minutes
+      // Only include OTP code in mock mode for development purposes
+      ...(isMockMode && {
+        mockOtp: otpCode,
+        isMockMode: true,
+      }),
     };
 
     return new Response(JSON.stringify(responseData), {
