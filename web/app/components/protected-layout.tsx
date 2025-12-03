@@ -25,7 +25,6 @@ export default function Layout() {
   const currentPath = currentMatch?.pathname || '/';
   const subtitle = (currentMatch?.handle as RouteHandle)?.subtitle || '';
   const authenticated = isAuthenticated();
-  const isHomePage = currentPath === '/';
 
   const handleLogout = () => {
     clearAuthToken();
@@ -38,18 +37,6 @@ export default function Layout() {
     { to: '/subject-data-preferences', translationKey: 'tabs.dataPreferences' },
     { to: '/subject-data-access', translationKey: 'tabs.dataAccess' },
   ];
-
-  // Filter navigation items based on current page
-  const visibleNavigationItems = isHomePage
-    ? []
-    : [
-        {
-          to: '/',
-          label: t('navigation.backToDashboard'),
-          iconName: t('navigation.backToDashboardIcon'),
-          protected: true,
-        },
-      ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -81,20 +68,6 @@ export default function Layout() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {visibleNavigationItems.map(item => (
-                  <DropdownMenuItem key={item.to} asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left border-none focus:border-none focus-visible:border-none hover:border-none font-normal"
-                      onClick={() => navigate(item.to)}
-                    >
-                      <span className="text-blue-600 mr-2">
-                        <DynamicIcon name={item.iconName} size={20} />
-                      </span>
-                      {item.label}
-                    </Button>
-                  </DropdownMenuItem>
-                ))}
                 {authenticated && (
                   <DropdownMenuItem asChild>
                     <Button
