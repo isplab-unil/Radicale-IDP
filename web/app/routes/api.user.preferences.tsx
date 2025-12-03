@@ -206,6 +206,23 @@ export async function action({ request }: { request: Request }) {
     // Save preferences to web database
     await saveUserPreferences(dbUser.id, dbPreferences);
 
+    // Sync with Radicale immediately after saving
+    try {
+      await updatePrivacySettings(user.contact, preferences);
+    } catch (err: any) {
+      if (err?.status === 400) {
+        await createPrivacySettings(user.contact, preferences);
+      } else {
+        throw err;
+      }
+    }
+
+    // Trigger reprocessing in Radicale
+    await reprocessUserCards(user.contact);
+
+    // Mark as synced in web database
+    await markContactProviderSynced(dbUser.id);
+
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
