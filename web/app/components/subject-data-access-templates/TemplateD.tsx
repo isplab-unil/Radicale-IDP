@@ -20,10 +20,18 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
       {/* Header Info */}
       <div className="p-6">
         <div className="flex items-start gap-6">
-          {/* Large Contact Icon */}
-          <div className="flex items-center justify-center w-16 h-16 bg-gray-300 rounded-full flex-shrink-0 mt-4">
-            <DynamicIcon name="user" size={32} className="text-white" />
-          </div>
+          {/* Large Contact Photo or Icon */}
+          {contact.fields.photo ? (
+            <img
+              src={contact.fields.photo}
+              alt="Contact"
+              className="w-16 h-16 rounded-full flex-shrink-0 mt-4 object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center w-16 h-16 bg-gray-300 rounded-full flex-shrink-0 mt-4">
+              <DynamicIcon name="user" size={32} className="text-white" />
+            </div>
+          )}
 
           {/* Contact Details */}
           <div className="flex-1">
@@ -90,6 +98,32 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
                 {Array.isArray(contact.fields.related)
                   ? contact.fields.related.join(', ')
                   : contact.fields.related}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {contact.fields.adr && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+              <DynamicIcon name="map-pin" size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-500 font-medium">{t('access.fields.address')}</div>
+              <div className="text-base text-gray-900 font-medium">
+                {typeof contact.fields.adr === 'object' && contact.fields.adr !== null
+                  ? [
+                      contact.fields.adr.street,
+                      contact.fields.adr.city,
+                      contact.fields.adr.region,
+                      contact.fields.adr.code,
+                      contact.fields.adr.country,
+                    ]
+                      .filter(Boolean)
+                      .join(', ')
+                  : Array.isArray(contact.fields.adr)
+                    ? contact.fields.adr.join(', ')
+                    : contact.fields.adr}
               </div>
             </div>
           </div>
