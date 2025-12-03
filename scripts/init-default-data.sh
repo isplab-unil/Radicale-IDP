@@ -1,9 +1,9 @@
 #!/bin/sh
-# Initialize default Radicale user data from zip files
+# Initialize default Radicale user data from directories or zip files
 # This script runs on container startup and:
 # 1. Checks if collections are empty (first startup)
-# 2. If empty, loops through all .zip files in /default-data/
-# 3. For each zip file, creates a user in htpasswd and extracts their data
+# 2. If empty, processes both directories and zip files in /default-data/
+# 3. For each user, creates a htpasswd entry and copies/extracts their data
 
 set -e
 
@@ -23,21 +23,36 @@ echo "Collections directory is empty. Initializing default data..."
 # Create collections directory if it doesn't exist
 mkdir -p "$COLLECTIONS_DIR"
 
-# Process all zip files in default-data directory
+# Check if default-data directory exists
 if [ ! -d "$DEFAULT_DATA_DIR" ]; then
     echo "Warning: $DEFAULT_DATA_DIR directory not found. Skipping data initialization."
     exit 0
 fi
 
-ZIP_COUNT=0
-for zipfile in "$DEFAULT_DATA_DIR"/*.zip; do
-    # Check if any zip files exist
-    [ -f "$zipfile" ] || continue
+USER_COUNT=0
 
-    ZIP_COUNT=$((ZIP_COUNT + 1))
-    username=$(basename "$zipfile" .zip)
+# Process all items in default-data directory
+cd "$DEFAULT_DATA_DIR"
 
-    echo "Processing user: $username"
+for item in *; do
+    # Skip if nothing found (glob didn't match anything)
+    [ -e "$item" ] || continue
+
+    # Determine username and type
+    if [ -d "$item" ]; then
+        # It's a directory
+        username="$item"
+        item_type="directory"
+    elif [ -f "$item" ] && [ "${item##*.}" = "zip" ]; then
+        # It's a zip file
+        username=$(basename "$item" .zip)
+        item_type="zipfile"
+    else
+        # Skip other file types
+        continue
+    fi
+
+    echo "Processing user: $username (from $item_type)"
 
     # Add user to htpasswd file with bcrypt encryption (-B flag)
     if [ ! -f "$HTPASSWD_FILE" ]; then
@@ -48,16 +63,25 @@ for zipfile in "$DEFAULT_DATA_DIR"/*.zip; do
         htpasswd -bB "$HTPASSWD_FILE" "$username" "$DEFAULT_PASSWORD"
     fi
 
-    # Extract user data to collections directory
-    unzip -q -o "$zipfile" -d "$COLLECTIONS_DIR/"
+    # Copy/extract user data to collections directory
+    if [ "$item_type" = "directory" ]; then
+        # Direct copy for directories (no compression needed)
+        echo "  - Copying directory: $item"
+        cp -r "$item" "$COLLECTIONS_DIR/"
+    else
+        # Unzip for pre-packaged zip files
+        echo "  - Extracting zip file: $item"
+        unzip -q -o "$item" -d "$COLLECTIONS_DIR/"
+    fi
 
     echo "  - User '$username' created with password '$DEFAULT_PASSWORD'"
+    USER_COUNT=$((USER_COUNT + 1))
 done
 
-if [ "$ZIP_COUNT" -eq 0 ]; then
-    echo "No zip files found in $DEFAULT_DATA_DIR. No users created."
+if [ "$USER_COUNT" -eq 0 ]; then
+    echo "No users found in $DEFAULT_DATA_DIR. No users created."
 else
-    echo "Initialized $ZIP_COUNT user(s) from zip files."
+    echo "Initialized $USER_COUNT user(s)."
 
     # Set proper ownership and permissions
     chown -R radicale:radicale /var/lib/radicale/collections
