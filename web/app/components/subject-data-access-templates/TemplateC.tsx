@@ -27,15 +27,15 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
             <div className="text-sm text-gray-500 mb-2 font-medium tracking-wide">
               {contact.fields.org || ''}
             </div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-1">
-              {contact.fields.fn || contact.fields.n || t('access.unknownContact')}
-            </h3>
             {contact.fields.title && (
               <div className="text-base text-gray-600 font-medium">{contact.fields.title}</div>
             )}
+            <h3 className="text-2xl font-semibold text-gray-900 mb-1">
+              {contact.fields.fn || contact.fields.n || t('access.unknownContact')}
+            </h3>
             {contact.fields.nickname && (
-              <div className="text-base text-gray-600 font-medium mt-1">
-                &quot;{contact.fields.nickname}&quot;
+              <div className="text-base text-gray-600 font-bold mt-1">
+                «{contact.fields.nickname}»
               </div>
             )}
           </div>
