@@ -20,6 +20,8 @@
     "codePlaceholder": "6-digit code",
     "errorSendingCode": "Failed to send verification code.",
     "errorVerifying": "Verification failed",
+    "mockModeLabel": "Demo Mode - Your verification code:",
+    "mockModeDescription": "This code is displayed because MOCK_SMS or MOCK_EMAIL is enabled.",
     "disclaimerTitle": "Disclamer",
     "disclaimer": "Do not enter your real information"
   },

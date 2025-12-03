@@ -8,8 +8,21 @@ import { Input } from '~/components/ui/input';
 import { isAuthenticated } from '~/lib/auth';
 import { useNavigateWithTemplate } from '~/lib/template-context';
 
+interface RequestOtpResponse {
+  message?: string;
+  error?: string;
+  expiresIn?: number;
+  isMockMode?: boolean;
+  mockOtp?: string;
+}
+
 // Helper to request OTP via new API
-async function requestOtp(identifier: string): Promise<{ ok: boolean; error?: string }> {
+async function requestOtp(identifier: string): Promise<{
+  ok: boolean;
+  error?: string;
+  mockOtp?: string;
+  isMockMode?: boolean;
+}> {
   try {
     const res = await fetch('/api/auth/request-otp', {
       method: 'POST',
@@ -19,10 +32,14 @@ async function requestOtp(identifier: string): Promise<{ ok: boolean; error?: st
       body: JSON.stringify({ email: identifier }),
     });
 
-    const data = (await res.json()) as { message?: string; error?: string };
+    const data = (await res.json()) as RequestOtpResponse;
 
     if (res.ok) {
-      return { ok: true };
+      return {
+        ok: true,
+        mockOtp: data.mockOtp,
+        isMockMode: data.isMockMode,
+      };
     } else {
       return {
         ok: false,
@@ -78,6 +95,8 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mockOtp, setMockOtp] = useState<string | null>(null);
+  const [isMockMode, setIsMockMode] = useState(false);
 
   // Redirect authenticated users away from login page
   useEffect(() => {
@@ -89,11 +108,17 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
   const handleIdentifierSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setMockOtp(null); // Clear previous mock OTP
     if (identifier.trim()) {
       setLoading(true);
       const result = await requestOtp(identifier.trim());
       setLoading(false);
       if (result.ok) {
+        // Store mock OTP if in mock mode
+        if (result.isMockMode && result.mockOtp) {
+          setMockOtp(result.mockOtp);
+          setIsMockMode(true);
+        }
         setStep('code');
       } else {
         setError(result.error || t('login.errorSendingCode'));
@@ -126,6 +151,8 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
     e.stopPropagation();
     setStep('identifier');
     setCode('');
+    setMockOtp(null); // Clear mock OTP
+    setIsMockMode(false);
   };
 
   return (
@@ -237,6 +264,21 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
             </div>
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
+          {step === 'code' && isMockMode && mockOtp && (
+            <div className="mt-4 p-4 bg-gray-100 rounded-2xl border-2 border-gray-200">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-2">
+                  {t('login.mockModeLabel')}
+                </p>
+                <div className="font-mono text-2xl font-bold text-gray-900 tracking-widest">
+                  {mockOtp}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {t('login.mockModeDescription')}
+                </p>
+              </div>
+            </div>
+          )}
         </form>
       )}
     </div>
