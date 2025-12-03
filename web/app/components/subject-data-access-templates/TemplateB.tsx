@@ -12,7 +12,7 @@ export function TemplateB() {
     jobTitle: [] as string[],
     photo: [] as string[],
     birthday: [] as string[],
-    relatedPerson: [] as string[],
+    related: [] as string[],
     address: [] as string[],
     nickname: [] as string[],
   };
@@ -54,7 +54,7 @@ export function TemplateB() {
     if (bday) fieldData.birthday.push(bday);
 
     const related = getFieldValue(contact.fields.related);
-    if (related) fieldData.relatedPerson.push(related);
+    if (related) fieldData.related.push(related);
 
     const adr = getFieldValue(contact.fields.adr);
     if (adr) fieldData.address.push(adr);
@@ -128,11 +128,11 @@ export function TemplateB() {
                   {formatValues(fieldData.birthday)}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.relatedPerson')}:{' '}
-                  {fieldData.relatedPerson.length === 1
-                    ? t('access.cardCount', { count: fieldData.relatedPerson.length })
-                    : t('access.cardCountPlural', { count: fieldData.relatedPerson.length })}
-                  {formatValues(fieldData.relatedPerson)}
+                  {t('access.fields.related')}:{' '}
+                  {fieldData.related.length === 1
+                    ? t('access.cardCount', { count: fieldData.related.length })
+                    : t('access.cardCountPlural', { count: fieldData.related.length })}
+                  {formatValues(fieldData.related)}
                 </div>
                 <div className="mb-4">
                   {t('access.fields.address')}:{' '}

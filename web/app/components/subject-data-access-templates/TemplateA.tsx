@@ -12,7 +12,7 @@ export function TemplateA() {
     jobTitle: 0,
     photo: 0,
     birthday: 0,
-    relatedPerson: 0,
+    related: 0,
     address: 0,
     nickname: 0,
   };
@@ -23,7 +23,7 @@ export function TemplateA() {
     if (contact.fields.title) fieldCounts.jobTitle++;
     if (contact.fields.photo) fieldCounts.photo++;
     if (contact.fields.bday) fieldCounts.birthday++;
-    if (contact.fields.related) fieldCounts.relatedPerson++;
+    if (contact.fields.related) fieldCounts.related++;
     if (contact.fields.adr) fieldCounts.address++;
     if (contact.fields.nickname) fieldCounts.nickname++;
   });
@@ -75,10 +75,10 @@ export function TemplateA() {
                     : t('access.cardCountPlural', { count: fieldCounts.birthday })}
                 </div>
                 <div className="mb-4">
-                  {t('access.fields.relatedPerson')}:{' '}
-                  {fieldCounts.relatedPerson === 1
-                    ? t('access.cardCount', { count: fieldCounts.relatedPerson })
-                    : t('access.cardCountPlural', { count: fieldCounts.relatedPerson })}
+                  {t('access.fields.related')}:{' '}
+                  {fieldCounts.related === 1
+                    ? t('access.cardCount', { count: fieldCounts.related })
+                    : t('access.cardCountPlural', { count: fieldCounts.related })}
                 </div>
                 <div className="mb-4">
                   {t('access.fields.address')}:{' '}
