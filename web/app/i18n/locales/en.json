@@ -103,8 +103,6 @@
     "fieldLabel": "{{field}}: {{count}}"
   },
   "navigation": {
-    "backToDashboard": "Back to Dashboard",
-    "backToDashboardIcon": "home",
     "logout": "Logout",
     "logoutIcon": "log-out",
     "menuIcon": "ellipsis"
