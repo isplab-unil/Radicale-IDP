@@ -107,7 +107,12 @@
   "navigation": {
     "logout": "Logout",
     "logoutIcon": "log-out",
-    "menuIcon": "ellipsis"
+    "menuIcon": "ellipsis",
+    "subtitles": {
+      "dashboard": "Contacts - Subject Dashboard",
+      "dataPreferences": "Contacts - Subject Data Preferences",
+      "dataAccess": "Contacts - Subject Data Access"
+    }
   },
   "tabs": {
     "dashboard": "Dashboard",

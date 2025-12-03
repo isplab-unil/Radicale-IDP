@@ -15,6 +15,7 @@ import { PageTabs } from './ui/page-tabs';
 
 interface RouteHandle {
   subtitle?: string;
+  subtitleKey?: string;
 }
 
 export default function Layout() {
@@ -23,7 +24,8 @@ export default function Layout() {
   const navigate = useNavigateWithTemplate();
   const currentMatch = matches[matches.length - 1];
   const currentPath = currentMatch?.pathname || '/';
-  const subtitle = (currentMatch?.handle as RouteHandle)?.subtitle || '';
+  const handle = currentMatch?.handle as RouteHandle;
+  const subtitle = handle?.subtitleKey ? t(handle.subtitleKey) : handle?.subtitle || '';
   const authenticated = isAuthenticated();
 
   const handleLogout = () => {

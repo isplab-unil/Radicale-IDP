@@ -21,5 +21,5 @@ export function meta() {
 }
 
 export const handle = {
-  subtitle: 'Subject Data Access',
+  subtitleKey: 'navigation.subtitles.dataAccess',
 };
