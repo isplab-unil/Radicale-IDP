@@ -778,3 +778,48 @@ def test_get_matching_cards_phone_formats(core):
         assert success
         found_uids_variant = {m["vcard_uid"] for m in result["matches"]}
         assert found_uids_variant == found_uids
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Problematic on Windows due to file locking")
+def test_get_matching_cards_with_photo(core):
+    """Test that photo field returns data URI string, not just True."""
+    # Create privacy settings for the user
+    settings = {
+        "disallow_photo": False,
+        "disallow_gender": False,
+        "disallow_birthday": False,
+        "disallow_address": False,
+        "disallow_company": False,
+        "disallow_title": False,
+    }
+    core.create_settings("photo@test.com", settings)
+
+    # Create a test vCard with a photo
+    vcard = vobject.vCard()
+    vcard.add('uid')
+    vcard.uid.value = "test-photo-uid"
+    vcard.add('fn')
+    vcard.fn.value = "Photo Test"
+    vcard.add('email')
+    vcard.email.value = "photo@test.com"
+    vcard.email.type_param = 'INTERNET'
+    vcard.add('photo')
+    vcard.photo.value = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAD0lEQVQIHQEEAPv/AP///wX+Av4DfRnGAAAAAElFTkSuQmCC'
+
+    # Create collection and upload vCard
+    collection = core._scanner._storage.create_collection("/photouser/contacts")
+    item = Item(vobject_item=vcard, collection_path="photouser/contacts", component_name="VCARD")
+    collection.upload("photo-card.vcf", item)
+
+    # Get matching cards
+    success, result = core.get_matching_cards("photo@test.com")
+
+    # Verify photo contains actual value, not True
+    assert success
+    assert "matches" in result
+    assert len(result["matches"]) == 1
+    match = result["matches"][0]
+    assert "photo" in match["fields"]
+    assert isinstance(match["fields"]["photo"], str)
+    assert match["fields"]["photo"].startswith('data:image/')
+    assert match["fields"]["photo"] != True
