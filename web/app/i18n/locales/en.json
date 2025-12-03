@@ -26,7 +26,7 @@
     "disclaimer": "Do not enter your real information"
   },
   "preferences": {
-    "title": "Subject Data Preferences",
+    "title": "Your Preferences",
     "description": "Control how your personal information is handled in the contact management system. Select which contact fields you want to keep private and prevent from being synced.",
     "explanation": "When someone creates a contact card with your information, the following fields will not be included if you've marked them as private:",
     "loading": "Loading preferences...",
