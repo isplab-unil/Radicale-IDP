@@ -471,6 +471,14 @@ DEFAULT_CONFIG_SCHEMA: types.CONFIG_SCHEMA = OrderedDict([
         ("default_disallow_title", {
             "value": "False",
             "help": "default value for disallowing title in privacy settings",
+            "type": bool}),
+        ("default_disallow_related", {
+            "value": "False",
+            "help": "default value for disallowing related person in privacy settings",
+            "type": bool}),
+        ("default_disallow_nickname", {
+            "value": "False",
+            "help": "default value for disallowing nickname in privacy settings",
             "type": bool})
         ])),
     ("hook", OrderedDict([

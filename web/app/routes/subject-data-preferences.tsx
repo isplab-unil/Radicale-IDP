@@ -20,6 +20,10 @@ export default function PreferencesPage() {
       label: t('preferences.fields.photo.label'),
       description: t('preferences.fields.photo.description'),
     },
+    disallow_nickname: {
+      label: t('preferences.fields.nickname.label'),
+      description: t('preferences.fields.nickname.description'),
+    },
     disallow_gender: {
       label: t('preferences.fields.gender.label'),
       description: t('preferences.fields.gender.description'),
@@ -31,6 +35,10 @@ export default function PreferencesPage() {
     disallow_address: {
       label: t('preferences.fields.address.label'),
       description: t('preferences.fields.address.description'),
+    },
+    disallow_related: {
+      label: t('preferences.fields.related.label'),
+      description: t('preferences.fields.related.description'),
     },
     disallow_company: {
       label: t('preferences.fields.company.label'),

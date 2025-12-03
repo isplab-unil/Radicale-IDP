@@ -58,6 +58,8 @@ export async function loader({ request }: { request: Request }) {
           disallow_address: preferences.disallowAddress === 1,
           disallow_company: preferences.disallowCompany === 1,
           disallow_title: preferences.disallowTitle === 1,
+          disallow_related: preferences.disallowRelated === 1,
+          disallow_nickname: preferences.disallowNickname === 1,
         }
       : {
           disallow_photo: false,
@@ -66,6 +68,8 @@ export async function loader({ request }: { request: Request }) {
           disallow_address: false,
           disallow_company: false,
           disallow_title: false,
+          disallow_related: false,
+          disallow_nickname: false,
         };
 
     const contactProviderSynced = preferences ? preferences.contactProviderSynced === 1 : true;
@@ -153,6 +157,8 @@ export async function action({ request }: { request: Request }) {
           disallow_address: currentPreferences.disallowAddress === 1,
           disallow_company: currentPreferences.disallowCompany === 1,
           disallow_title: currentPreferences.disallowTitle === 1,
+          disallow_related: currentPreferences.disallowRelated === 1,
+          disallow_nickname: currentPreferences.disallowNickname === 1,
         };
 
         // Update Radicale with current preferences
@@ -201,6 +207,8 @@ export async function action({ request }: { request: Request }) {
       disallowAddress: preferences.disallow_address ? 1 : 0,
       disallowCompany: preferences.disallow_company ? 1 : 0,
       disallowTitle: preferences.disallow_title ? 1 : 0,
+      disallowRelated: preferences.disallow_related ? 1 : 0,
+      disallowNickname: preferences.disallow_nickname ? 1 : 0,
     };
 
     // Save preferences to web database
