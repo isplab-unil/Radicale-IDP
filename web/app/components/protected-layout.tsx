@@ -11,6 +11,7 @@ import { Button } from '~/components/ui/button';
 import { ProtectedRoute } from './protected-route';
 import { isAuthenticated, clearAuthToken } from '~/lib/auth';
 import { useNavigateWithTemplate } from '~/lib/template-context';
+import { PageTabs } from './ui/page-tabs';
 
 interface RouteHandle {
   subtitle?: string;
@@ -30,6 +31,13 @@ export default function Layout() {
     clearAuthToken();
     navigate('/login');
   };
+
+  // Tab configuration for page navigation
+  const pageTabs = [
+    { to: '/', translationKey: 'tabs.dashboard' },
+    { to: '/subject-data-preferences', translationKey: 'tabs.dataPreferences' },
+    { to: '/subject-data-access', translationKey: 'tabs.dataAccess' },
+  ];
 
   // Filter navigation items based on current page
   const visibleNavigationItems = isHomePage
@@ -106,6 +114,9 @@ export default function Layout() {
           </nav>
         </div>
       </header>
+
+      {/* Page Navigation Tabs */}
+      <PageTabs tabs={pageTabs} />
 
       {/* Main content */}
       <main className="flex-1">
