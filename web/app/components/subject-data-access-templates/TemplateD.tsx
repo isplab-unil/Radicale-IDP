@@ -87,6 +87,30 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
           </div>
         )}
 
+        {contact.fields.bday && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+              <DynamicIcon name="cake" size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-500 font-medium">{t('access.fields.birthday')}</div>
+              <div className="text-base text-gray-900 font-medium">{contact.fields.bday}</div>
+            </div>
+          </div>
+        )}
+
+        {contact.fields.gender && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+              <DynamicIcon name="user-round" size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-500 font-medium">{t('access.fields.pronoun')}</div>
+              <div className="text-base text-gray-900 font-medium">{contact.fields.gender}</div>
+            </div>
+          </div>
+        )}
+
         {contact.fields.related && (
           <div className="flex items-center gap-4">
             <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
