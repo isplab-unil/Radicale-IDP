@@ -55,6 +55,14 @@
       "title": {
         "label": "Job Title",
         "description": "Professional titles and positions"
+      },
+      "related": {
+        "label": "Related Person",
+        "description": "Related contacts and relationships"
+      },
+      "nickname": {
+        "label": "Nickname",
+        "description": "Nicknames and alternate names"
       }
     },
     "providerStatus": "Contact Provider Status",
@@ -93,8 +101,9 @@
       "jobTitle": "Job title",
       "photo": "Photo",
       "birthday": "Birthday",
-      "relatedPerson": "Related person",
-      "address": "Address"
+      "related": "Related person",
+      "address": "Address",
+      "nickname": "Nickname"
     },
     "cardCount": "{{count}} contact card",
     "cardCountPlural": "{{count}} contact cards",
