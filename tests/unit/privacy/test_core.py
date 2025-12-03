@@ -822,4 +822,4 @@ def test_get_matching_cards_with_photo(core):
     assert "photo" in match["fields"]
     assert isinstance(match["fields"]["photo"], str)
     assert match["fields"]["photo"].startswith('data:image/')
-    assert match["fields"]["photo"] != True
+    assert match["fields"]["photo"] is not True
