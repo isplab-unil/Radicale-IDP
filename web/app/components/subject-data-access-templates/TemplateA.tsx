@@ -14,6 +14,7 @@ export function TemplateA() {
     birthday: 0,
     relatedPerson: 0,
     address: 0,
+    nickname: 0,
   };
 
   cards.forEach(contact => {
@@ -24,6 +25,7 @@ export function TemplateA() {
     if (contact.fields.bday) fieldCounts.birthday++;
     if (contact.fields.related) fieldCounts.relatedPerson++;
     if (contact.fields.adr) fieldCounts.address++;
+    if (contact.fields.nickname) fieldCounts.nickname++;
   });
 
   return (
@@ -83,6 +85,12 @@ export function TemplateA() {
                   {fieldCounts.address === 1
                     ? t('access.cardCount', { count: fieldCounts.address })
                     : t('access.cardCountPlural', { count: fieldCounts.address })}
+                </div>
+                <div className="mb-4">
+                  Nickname:{' '}
+                  {fieldCounts.nickname === 1
+                    ? t('access.cardCount', { count: fieldCounts.nickname })
+                    : t('access.cardCountPlural', { count: fieldCounts.nickname })}
                 </div>
               </div>
             </div>

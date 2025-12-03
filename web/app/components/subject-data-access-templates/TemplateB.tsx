@@ -14,6 +14,7 @@ export function TemplateB() {
     birthday: [] as string[],
     relatedPerson: [] as string[],
     address: [] as string[],
+    nickname: [] as string[],
   };
 
   cards.forEach(contact => {
@@ -57,6 +58,9 @@ export function TemplateB() {
 
     const adr = getFieldValue(contact.fields.adr);
     if (adr) fieldData.address.push(adr);
+
+    const nickname = getFieldValue(contact.fields.nickname);
+    if (nickname) fieldData.nickname.push(nickname);
   });
 
   const formatValues = (values: string[]) => {
@@ -136,6 +140,13 @@ export function TemplateB() {
                     ? t('access.cardCount', { count: fieldData.address.length })
                     : t('access.cardCountPlural', { count: fieldData.address.length })}
                   {formatValues(fieldData.address)}
+                </div>
+                <div className="mb-4">
+                  Nickname:{' '}
+                  {fieldData.nickname.length === 1
+                    ? t('access.cardCount', { count: fieldData.nickname.length })
+                    : t('access.cardCountPlural', { count: fieldData.nickname.length })}
+                  {formatValues(fieldData.nickname)}
                 </div>
               </div>
             </div>
