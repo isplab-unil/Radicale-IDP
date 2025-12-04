@@ -1,9 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useCardData } from '~/lib/use-card-data';
+import { getCurrentUser } from '~/lib/auth';
 
 export function TemplateA() {
   const { t } = useTranslation();
   const { cards, loading, syncing, syncCards } = useCardData();
+  const user = getCurrentUser();
+  const contact = user?.contact || 'your account';
 
   // Calculate field counts across all cards
   const fieldCounts = {
@@ -42,7 +45,7 @@ export function TemplateA() {
           <div>
             <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('access.title')}</h1>
             <p className="text-gray-500 text-lg leading-relaxed mb-6 max-w-4xl">
-              {t('access.description')}
+              {t('access.metaDescription', { contact })}
             </p>
           </div>
 
