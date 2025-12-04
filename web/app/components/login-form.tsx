@@ -109,20 +109,40 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
     e.preventDefault();
     setError(null);
     setMockOtp(null); // Clear previous mock OTP
-    if (identifier.trim()) {
-      setLoading(true);
-      const result = await requestOtp(identifier.trim());
-      setLoading(false);
-      if (result.ok) {
-        // Store mock OTP if in mock mode
-        if (result.isMockMode && result.mockOtp) {
-          setMockOtp(result.mockOtp);
-          setIsMockMode(true);
-        }
-        setStep('code');
-      } else {
-        setError(result.error || t('login.errorSendingCode'));
+
+    const trimmed = identifier.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    // Basic client-side validation
+    const hasAtSign = trimmed.includes('@');
+    const startsWithPlus = trimmed.startsWith('+');
+
+    // If it's not an email and doesn't start with +, show helpful message
+    if (!hasAtSign && !startsWithPlus) {
+      setError(t('login.errorInvalidIdentifier'));
+      return;
+    }
+
+    // If it starts with + but looks too short for a valid phone (less than 10 chars including +)
+    if (startsWithPlus && trimmed.length < 10) {
+      setError(t('login.errorInvalidPhoneFormat'));
+      return;
+    }
+
+    setLoading(true);
+    const result = await requestOtp(trimmed);
+    setLoading(false);
+    if (result.ok) {
+      // Store mock OTP if in mock mode
+      if (result.isMockMode && result.mockOtp) {
+        setMockOtp(result.mockOtp);
+        setIsMockMode(true);
       }
+      setStep('code');
+    } else {
+      setError(result.error || t('login.errorSendingCode'));
     }
   };
 

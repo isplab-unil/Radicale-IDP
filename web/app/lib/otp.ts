@@ -5,6 +5,7 @@
 import { SESClient, SendEmailCommand, type SendEmailCommandInput } from '@aws-sdk/client-ses';
 import { SNSClient, PublishCommand, type PublishCommandInput } from '@aws-sdk/client-sns';
 import { env } from '~/lib/env';
+import { normalizePhoneE164, isValidE164 } from './phone-utils';
 
 export interface AmazonSESConfig {
   accessKeyId: string;
@@ -36,10 +37,31 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
- * Validate E.164 phone format, e.g. +14155550123 (1–15 digits after +)
+ * Re-export phone validation and normalization from phone-utils.
+ * Uses libphonenumber-js for proper country-specific validation.
  */
-export function isValidE164(phone: string): boolean {
-  return /^\+[1-9]\d{1,14}$/.test(phone);
+export { isValidE164, normalizePhoneE164 } from './phone-utils';
+
+/**
+ * Normalize an identifier (email or phone) for consistent storage and lookup.
+ * - Emails are used as-is
+ * - Phone numbers are normalized to E.164 format
+ *
+ * @param identifier - Email or phone number
+ * @returns Normalized identifier
+ * @throws Error if phone number is invalid
+ */
+export function normalizeIdentifier(identifier: string): string {
+  const trimmed = identifier.trim();
+
+  if (isValidEmail(trimmed)) {
+    // Email: use as-is (could add toLowerCase() in future if needed)
+    return trimmed;
+  }
+
+  // Not an email, treat as phone and normalize to E.164
+  // This will throw if the phone number is invalid
+  return normalizePhoneE164(trimmed);
 }
 
 /**
