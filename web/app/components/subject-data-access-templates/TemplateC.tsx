@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
+import { getCurrentUser } from '~/lib/auth';
 import type { CardMatch } from '~/lib/card-types';
 
 function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
@@ -149,6 +150,8 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 export function TemplateC() {
   const { t } = useTranslation();
   const { cards, loading, syncing, syncCards } = useCardData();
+  const user = getCurrentUser();
+  const contact = user?.contact || 'your account';
 
   return (
     <div className="pt-6 pb-30">
@@ -158,7 +161,7 @@ export function TemplateC() {
           <div>
             <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('access.title')}</h1>
             <p className="text-gray-500 text-lg leading-relaxed mb-6 max-w-4xl">
-              {t('access.description')}
+              {t('access.metaDescription', { contact })}
             </p>
           </div>
 

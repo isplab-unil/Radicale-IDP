@@ -83,6 +83,7 @@
   "access": {
     "title": "Data about you",
     "description": "See how your personal information is used in the contact provider system and how other users are storing your data. This transparency helps you make informed decisions about your Subject Data Preferences.",
+    "metaDescription": "See how your personal information is used in the contact provider system and how other users are storing your data. Here is all data associated with {{contact}}.",
     "loading": "Loading cards...",
     "noRecords": "No contact records found.",
     "contactRecords": "Contact Records",
