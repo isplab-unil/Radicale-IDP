@@ -7,14 +7,17 @@ export function TemplateB() {
 
   // Calculate field counts and collect values across all cards
   const fieldData = {
-    pronoun: [] as string[],
+    name: [] as string[],
+    phone: [] as string[],
+    email: [] as string[],
     company: [] as string[],
     jobTitle: [] as string[],
     photo: [] as string[],
+    nickname: [] as string[],
     birthday: [] as string[],
+    pronoun: [] as string[],
     related: [] as string[],
     address: [] as string[],
-    nickname: [] as string[],
   };
 
   cards.forEach(contact => {
@@ -39,8 +42,14 @@ export function TemplateB() {
       return String(field);
     };
 
-    const gender = getFieldValue(contact.fields.gender);
-    if (gender) fieldData.pronoun.push(gender);
+    const fn = getFieldValue(contact.fields.fn);
+    if (fn) fieldData.name.push(fn);
+
+    const tel = getFieldValue(contact.fields.tel);
+    if (tel) fieldData.phone.push(tel);
+
+    const email = getFieldValue(contact.fields.email);
+    if (email) fieldData.email.push(email);
 
     const org = getFieldValue(contact.fields.org);
     if (org) fieldData.company.push(org);
@@ -50,17 +59,20 @@ export function TemplateB() {
 
     if (contact.fields.photo) fieldData.photo.push('Photo');
 
+    const nickname = getFieldValue(contact.fields.nickname);
+    if (nickname) fieldData.nickname.push(nickname);
+
     const bday = getFieldValue(contact.fields.bday);
     if (bday) fieldData.birthday.push(bday);
+
+    const gender = getFieldValue(contact.fields.gender);
+    if (gender) fieldData.pronoun.push(gender);
 
     const related = getFieldValue(contact.fields.related);
     if (related) fieldData.related.push(related);
 
     const adr = getFieldValue(contact.fields.adr);
     if (adr) fieldData.address.push(adr);
-
-    const nickname = getFieldValue(contact.fields.nickname);
-    if (nickname) fieldData.nickname.push(nickname);
   });
 
   const formatValues = (values: string[]) => {
@@ -93,11 +105,25 @@ export function TemplateB() {
             <div className="space-y-4">
               <div className="text-gray-900 text-lg">
                 <div className="mb-4">
-                  {t('access.fields.pronoun')}:{' '}
-                  {fieldData.pronoun.length === 1
-                    ? t('access.cardCount', { count: fieldData.pronoun.length })
-                    : t('access.cardCountPlural', { count: fieldData.pronoun.length })}
-                  {formatValues(fieldData.pronoun)}
+                  {t('access.fields.name')}:{' '}
+                  {fieldData.name.length === 1
+                    ? t('access.cardCount', { count: fieldData.name.length })
+                    : t('access.cardCountPlural', { count: fieldData.name.length })}
+                  {formatValues(fieldData.name)}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.phone')}:{' '}
+                  {fieldData.phone.length === 1
+                    ? t('access.cardCount', { count: fieldData.phone.length })
+                    : t('access.cardCountPlural', { count: fieldData.phone.length })}
+                  {formatValues(fieldData.phone)}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.email')}:{' '}
+                  {fieldData.email.length === 1
+                    ? t('access.cardCount', { count: fieldData.email.length })
+                    : t('access.cardCountPlural', { count: fieldData.email.length })}
+                  {formatValues(fieldData.email)}
                 </div>
                 <div className="mb-4">
                   {t('access.fields.company')}:{' '}
@@ -121,11 +147,25 @@ export function TemplateB() {
                   {formatValues(fieldData.photo)}
                 </div>
                 <div className="mb-4">
+                  {t('access.fields.nickname')}:{' '}
+                  {fieldData.nickname.length === 1
+                    ? t('access.cardCount', { count: fieldData.nickname.length })
+                    : t('access.cardCountPlural', { count: fieldData.nickname.length })}
+                  {formatValues(fieldData.nickname)}
+                </div>
+                <div className="mb-4">
                   {t('access.fields.birthday')}:{' '}
                   {fieldData.birthday.length === 1
                     ? t('access.cardCount', { count: fieldData.birthday.length })
                     : t('access.cardCountPlural', { count: fieldData.birthday.length })}
                   {formatValues(fieldData.birthday)}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.pronoun')}:{' '}
+                  {fieldData.pronoun.length === 1
+                    ? t('access.cardCount', { count: fieldData.pronoun.length })
+                    : t('access.cardCountPlural', { count: fieldData.pronoun.length })}
+                  {formatValues(fieldData.pronoun)}
                 </div>
                 <div className="mb-4">
                   {t('access.fields.related')}:{' '}
@@ -140,13 +180,6 @@ export function TemplateB() {
                     ? t('access.cardCount', { count: fieldData.address.length })
                     : t('access.cardCountPlural', { count: fieldData.address.length })}
                   {formatValues(fieldData.address)}
-                </div>
-                <div className="mb-4">
-                  Nickname:{' '}
-                  {fieldData.nickname.length === 1
-                    ? t('access.cardCount', { count: fieldData.nickname.length })
-                    : t('access.cardCountPlural', { count: fieldData.nickname.length })}
-                  {formatValues(fieldData.nickname)}
                 </div>
               </div>
             </div>

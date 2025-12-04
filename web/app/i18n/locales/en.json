@@ -96,6 +96,9 @@
     "spouse": "Spouse",
     "spouseIcon": "users",
     "fields": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
       "pronoun": "Pronoun",
       "company": "Company",
       "jobTitle": "Job title",

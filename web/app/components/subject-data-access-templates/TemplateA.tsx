@@ -7,25 +7,31 @@ export function TemplateA() {
 
   // Calculate field counts across all cards
   const fieldCounts = {
-    pronoun: 0,
+    name: 0,
+    phone: 0,
+    email: 0,
     company: 0,
     jobTitle: 0,
     photo: 0,
+    nickname: 0,
     birthday: 0,
+    pronoun: 0,
     related: 0,
     address: 0,
-    nickname: 0,
   };
 
   cards.forEach(contact => {
-    if (contact.fields.gender) fieldCounts.pronoun++;
+    if (contact.fields.fn) fieldCounts.name++;
+    if (contact.fields.tel) fieldCounts.phone++;
+    if (contact.fields.email) fieldCounts.email++;
     if (contact.fields.org) fieldCounts.company++;
     if (contact.fields.title) fieldCounts.jobTitle++;
     if (contact.fields.photo) fieldCounts.photo++;
+    if (contact.fields.nickname) fieldCounts.nickname++;
     if (contact.fields.bday) fieldCounts.birthday++;
+    if (contact.fields.gender) fieldCounts.pronoun++;
     if (contact.fields.related) fieldCounts.related++;
     if (contact.fields.adr) fieldCounts.address++;
-    if (contact.fields.nickname) fieldCounts.nickname++;
   });
 
   return (
@@ -45,10 +51,22 @@ export function TemplateA() {
             <div className="space-y-4">
               <div className="text-gray-900 text-lg">
                 <div className="mb-4">
-                  {t('access.fields.pronoun')}:{' '}
-                  {fieldCounts.pronoun === 1
-                    ? t('access.cardCount', { count: fieldCounts.pronoun })
-                    : t('access.cardCountPlural', { count: fieldCounts.pronoun })}
+                  {t('access.fields.name')}:{' '}
+                  {fieldCounts.name === 1
+                    ? t('access.cardCount', { count: fieldCounts.name })
+                    : t('access.cardCountPlural', { count: fieldCounts.name })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.phone')}:{' '}
+                  {fieldCounts.phone === 1
+                    ? t('access.cardCount', { count: fieldCounts.phone })
+                    : t('access.cardCountPlural', { count: fieldCounts.phone })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.email')}:{' '}
+                  {fieldCounts.email === 1
+                    ? t('access.cardCount', { count: fieldCounts.email })
+                    : t('access.cardCountPlural', { count: fieldCounts.email })}
                 </div>
                 <div className="mb-4">
                   {t('access.fields.company')}:{' '}
@@ -69,10 +87,22 @@ export function TemplateA() {
                     : t('access.cardCountPlural', { count: fieldCounts.photo })}
                 </div>
                 <div className="mb-4">
+                  {t('access.fields.nickname')}:{' '}
+                  {fieldCounts.nickname === 1
+                    ? t('access.cardCount', { count: fieldCounts.nickname })
+                    : t('access.cardCountPlural', { count: fieldCounts.nickname })}
+                </div>
+                <div className="mb-4">
                   {t('access.fields.birthday')}:{' '}
                   {fieldCounts.birthday === 1
                     ? t('access.cardCount', { count: fieldCounts.birthday })
                     : t('access.cardCountPlural', { count: fieldCounts.birthday })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.pronoun')}:{' '}
+                  {fieldCounts.pronoun === 1
+                    ? t('access.cardCount', { count: fieldCounts.pronoun })
+                    : t('access.cardCountPlural', { count: fieldCounts.pronoun })}
                 </div>
                 <div className="mb-4">
                   {t('access.fields.related')}:{' '}
@@ -85,12 +115,6 @@ export function TemplateA() {
                   {fieldCounts.address === 1
                     ? t('access.cardCount', { count: fieldCounts.address })
                     : t('access.cardCountPlural', { count: fieldCounts.address })}
-                </div>
-                <div className="mb-4">
-                  Nickname:{' '}
-                  {fieldCounts.nickname === 1
-                    ? t('access.cardCount', { count: fieldCounts.nickname })
-                    : t('access.cardCountPlural', { count: fieldCounts.nickname })}
                 </div>
               </div>
             </div>
