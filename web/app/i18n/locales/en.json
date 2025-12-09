@@ -25,7 +25,7 @@
     "errorInvalidIdentifier": "Please enter a valid email address or phone number in international format",
     "mockModeLabel": "Demo Mode - Your verification code:",
     "mockModeDescription": "This code is displayed because MOCK_SMS or MOCK_EMAIL is enabled.",
-    "disclaimerTitle": "Disclamer",
+    "disclaimerTitle": "Disclaimer",
     "disclaimer": "Do not enter your real information"
   },
   "preferences": {
@@ -138,7 +138,8 @@
   },
   "footer": {
     "privacyPolicy": "Privacy Policy",
-    "termsConditions": "Terms & Conditions"
+    "termsConditions": "Terms & Conditions",
+    "copyright": "© Cloud Provider"
   },
   "errors": {
     "oops": "Oops!",
