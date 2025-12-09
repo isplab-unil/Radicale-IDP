@@ -287,15 +287,11 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
           {step === 'code' && isMockMode && mockOtp && (
             <div className="mt-4 p-4 bg-gray-100 rounded-2xl border-2 border-gray-200">
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-2">
-                  {t('login.mockModeLabel')}
-                </p>
+                <p className="text-sm text-gray-600 mb-2">{t('login.mockModeLabel')}</p>
                 <div className="font-mono text-2xl font-bold text-gray-900 tracking-widest">
                   {mockOtp}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {t('login.mockModeDescription')}
-                </p>
+                <p className="text-xs text-gray-500 mt-2">{t('login.mockModeDescription')}</p>
               </div>
             </div>
           )}

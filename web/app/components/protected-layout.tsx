@@ -109,9 +109,7 @@ export default function Layout() {
               <span className="text-gray-400">{t('footer.termsConditions')}</span>
             </div>
             {t('footer.copyright') && (
-              <div className="text-sm text-gray-400">
-                {t('footer.copyright')}
-              </div>
+              <div className="text-sm text-gray-400">{t('footer.copyright')}</div>
             )}
           </div>
         </div>

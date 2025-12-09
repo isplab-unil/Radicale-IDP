@@ -37,7 +37,8 @@ export async function action({ request }: Route.ActionArgs) {
     if (!isEmail && !isPhone) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid identifier format. Please provide a valid email or phone number in E.164 format (e.g., +12345678901 for US numbers)',
+          error:
+            'Invalid identifier format. Please provide a valid email or phone number in E.164 format (e.g., +12345678901 for US numbers)',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
