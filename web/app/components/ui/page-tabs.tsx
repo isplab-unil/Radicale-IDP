@@ -27,27 +27,27 @@ export function PageTabs({ tabs, className }: PageTabsProps) {
               role="navigation"
               aria-label={t('tabs.navigationLabel')}
             >
-            {tabs.map((tab) => {
-              const isActive = location.pathname === tab.to;
+              {tabs.map(tab => {
+                const isActive = location.pathname === tab.to;
 
-              return (
-                <LinkWithTemplate
-                  key={tab.to}
-                  to={tab.to}
-                  className={cn(
-                    'inline-flex items-center px-6 py-4 text-lg font-medium leading-relaxed',
-                    'border-b-2 -mb-px transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    isActive
-                      ? 'border-blue-600 text-foreground'
-                      : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'
-                  )}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  {t(tab.translationKey)}
-                </LinkWithTemplate>
-              );
-            })}
+                return (
+                  <LinkWithTemplate
+                    key={tab.to}
+                    to={tab.to}
+                    className={cn(
+                      'inline-flex items-center px-6 py-4 text-lg font-medium leading-relaxed',
+                      'border-b-2 -mb-px transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      isActive
+                        ? 'border-blue-600 text-foreground'
+                        : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'
+                    )}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {t(tab.translationKey)}
+                  </LinkWithTemplate>
+                );
+              })}
             </nav>
           </div>
         </div>
