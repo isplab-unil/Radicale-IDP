@@ -24,6 +24,8 @@ export const userPreferencesTable = sqliteTable('user_preferences', {
   disallowAddress: int().notNull().default(0),
   disallowCompany: int().notNull().default(0),
   disallowTitle: int().notNull().default(0),
+  disallowRelated: int().notNull().default(0),
+  disallowNickname: int().notNull().default(0),
   contactProviderSynced: int().notNull().default(0), // 0 = false, 1 = true
   createdAt: text()
     .notNull()

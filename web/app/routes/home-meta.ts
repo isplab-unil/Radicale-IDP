@@ -21,5 +21,5 @@ export function meta() {
 }
 
 export const handle = {
-  subtitle: 'Subject Dashboard',
+  subtitleKey: 'navigation.subtitles.dashboard',
 };

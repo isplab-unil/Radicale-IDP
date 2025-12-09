@@ -1,6 +1,7 @@
 import type { Route } from './+types/api.auth.verify-otp';
 import { createAuthToken } from '~/lib/auth';
 import { verifyOtp } from '~/db/operations';
+import { normalizeIdentifier } from '~/lib/otp';
 import { env } from '~/lib/env';
 
 export async function action({ request }: Route.ActionArgs) {
@@ -16,16 +17,20 @@ export async function action({ request }: Route.ActionArgs) {
       );
     }
 
-    // Parse request body
-    const body = (await request.json()) as { email?: string; code?: string };
-    const { email, code } = body;
+    // Parse request body (supports legacy { email } and new { identifier })
+    const body = (await request.json()) as { email?: string; identifier?: string; code?: string };
+    const identifier = (body.identifier || body.email || '').trim();
+    const { code } = body;
 
     // Validate input
-    if (!email || !code) {
-      return new Response(JSON.stringify({ error: 'Email and verification code are required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    if (!identifier || !code) {
+      return new Response(
+        JSON.stringify({ error: 'Email or phone number and verification code are required' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
@@ -35,8 +40,21 @@ export async function action({ request }: Route.ActionArgs) {
       });
     }
 
-    // Verify OTP
-    const result = await verifyOtp(email, code);
+    // Normalize identifier the same way we did in request-otp
+    // This ensures we look up with the same key that was used to store the OTP
+    let normalizedIdentifier: string;
+    try {
+      normalizedIdentifier = normalizeIdentifier(identifier);
+    } catch {
+      // If normalization fails, return generic error (don't reveal whether identifier is invalid)
+      return new Response(JSON.stringify({ error: 'Invalid or expired verification code' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Verify OTP using normalized identifier
+    const result = await verifyOtp(normalizedIdentifier, code);
 
     if (!result.isValid || !result.user) {
       return new Response(JSON.stringify({ error: 'Invalid or expired verification code' }), {

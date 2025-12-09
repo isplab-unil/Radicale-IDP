@@ -112,6 +112,8 @@ def test_create_settings_success(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert success
@@ -148,6 +150,8 @@ def test_create_settings_invalid_types(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": "false",  # Should be boolean
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert not success
@@ -164,6 +168,8 @@ def test_update_settings_success(core):
         "disallow_birthday": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", initial_settings)
 
@@ -187,6 +193,8 @@ def test_update_settings_success(core):
     assert updated_settings["disallow_address"] is False  # Unchanged
     assert updated_settings["disallow_company"] is False  # Unchanged
     assert updated_settings["disallow_title"] is False  # Unchanged
+    assert updated_settings["disallow_nickname"] is False  # Unchanged
+    assert updated_settings["disallow_related"] is False  # Unchanged
 
 
 def test_update_settings_not_found(core):
@@ -235,6 +243,8 @@ def test_delete_settings_success(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -370,6 +380,8 @@ def test_get_matching_cards_no_matches(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -428,6 +440,8 @@ def test_get_matching_cards_recursive_discovery(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert success
@@ -492,6 +506,8 @@ def test_get_matching_cards_in_different_collections(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     success, result = core.create_settings("test@example.com", settings)
     assert success
@@ -531,6 +547,8 @@ def test_reprocess_cards_success(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -583,6 +601,8 @@ def test_reprocess_cards_multiple_collections(core):
         "disallow_address": True,
         "disallow_company": True,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", settings)
 
@@ -646,6 +666,8 @@ def test_reprocess_cards_after_settings_update(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     core.create_settings("test@example.com", initial_settings)
 
@@ -721,6 +743,8 @@ def test_get_matching_cards_phone_formats(core):
         "disallow_address": False,
         "disallow_company": False,
         "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
     }
     # Create privacy settings for the E.164 phone
     success, result = core.create_settings(phone_e164, settings)
@@ -778,3 +802,50 @@ def test_get_matching_cards_phone_formats(core):
         assert success
         found_uids_variant = {m["vcard_uid"] for m in result["matches"]}
         assert found_uids_variant == found_uids
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Problematic on Windows due to file locking")
+def test_get_matching_cards_with_photo(core):
+    """Test that photo field returns data URI string, not just True."""
+    # Create privacy settings for the user
+    settings = {
+        "disallow_photo": False,
+        "disallow_gender": False,
+        "disallow_birthday": False,
+        "disallow_address": False,
+        "disallow_company": False,
+        "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
+    }
+    core.create_settings("photo@test.com", settings)
+
+    # Create a test vCard with a photo
+    vcard = vobject.vCard()
+    vcard.add('uid')
+    vcard.uid.value = "test-photo-uid"
+    vcard.add('fn')
+    vcard.fn.value = "Photo Test"
+    vcard.add('email')
+    vcard.email.value = "photo@test.com"
+    vcard.email.type_param = 'INTERNET'
+    vcard.add('photo')
+    vcard.photo.value = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAD0lEQVQIHQEEAPv/AP///wX+Av4DfRnGAAAAAElFTkSuQmCC'
+
+    # Create collection and upload vCard
+    collection = core._scanner._storage.create_collection("/photouser/contacts")
+    item = Item(vobject_item=vcard, collection_path="photouser/contacts", component_name="VCARD")
+    collection.upload("photo-card.vcf", item)
+
+    # Get matching cards
+    success, result = core.get_matching_cards("photo@test.com")
+
+    # Verify photo contains actual value, not True
+    assert success
+    assert "matches" in result
+    assert len(result["matches"]) == 1
+    match = result["matches"][0]
+    assert "photo" in match["fields"]
+    assert isinstance(match["fields"]["photo"], str)
+    assert match["fields"]["photo"].startswith('data:image/')
+    assert match["fields"]["photo"] is not True

@@ -1,6 +1,13 @@
 import type { Route } from './+types/api.auth.request-otp';
-import { generateOtpCode, sendOtpUnified, isValidEmail, isValidE164 } from '~/lib/otp';
+import {
+  generateOtpCode,
+  sendOtpUnified,
+  isValidEmail,
+  isValidE164,
+  normalizeIdentifier,
+} from '~/lib/otp';
 import { storeOtp } from '~/db/operations';
+import { env } from '~/lib/env';
 
 /**
  * Accepts either an email or an E.164 phone number and sends an OTP via
@@ -23,23 +30,38 @@ export async function action({ request }: Route.ActionArgs) {
       });
     }
 
-    // Validate identifier format (must be email OR E.164 phone)
+    // Validate identifier format (must be email OR valid E.164 phone)
     const isEmail = isValidEmail(identifier);
     const isPhone = isValidE164(identifier);
+
     if (!isEmail && !isPhone) {
       return new Response(
         JSON.stringify({
-          error: 'Provide a valid email or E.164 phone number (e.g. +14155550123)',
+          error:
+            'Invalid identifier format. Please provide a valid email or phone number in E.164 format (e.g., +12345678901 for US numbers)',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Generate and store OTP under the identifier key
+    // Normalize identifier (emails stay as-is, phones normalized to E.164)
+    let normalizedIdentifier: string;
+    try {
+      normalizedIdentifier = normalizeIdentifier(identifier);
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: `Invalid phone number: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Generate and store OTP under the normalized identifier key
     const otpCode = generateOtpCode();
 
     try {
-      await storeOtp(identifier, otpCode);
+      await storeOtp(normalizedIdentifier, otpCode);
     } catch {
       return new Response(JSON.stringify({ error: 'Failed to store verification code' }), {
         status: 500,
@@ -48,7 +70,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     // Send OTP via the appropriate channel with a 15s timeout
-    const otpPromise = sendOtpUnified(identifier, otpCode);
+    const otpPromise = sendOtpUnified(normalizedIdentifier, otpCode);
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('OTP sending timeout after 15 seconds')), 15000)
     );
@@ -76,9 +98,17 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     // Return success response
+    // Determine if we're in mock mode (only include OTP when mock flags are true)
+    const isMockMode = (isEmail && env.MOCK_EMAIL) || (isPhone && env.MOCK_SMS);
+
     const responseData = {
       message: 'Verification code sent successfully',
       expiresIn: 300, // 5 minutes
+      // Only include OTP code in mock mode for development purposes
+      ...(isMockMode && {
+        mockOtp: otpCode,
+        isMockMode: true,
+      }),
     };
 
     return new Response(JSON.stringify(responseData), {

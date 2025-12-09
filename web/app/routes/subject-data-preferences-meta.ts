@@ -21,5 +21,5 @@ export function meta() {
 }
 
 export const handle = {
-  subtitle: 'Subject Data Preferences',
+  subtitleKey: 'navigation.subtitles.dataPreferences',
 };

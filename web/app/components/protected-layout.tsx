@@ -11,9 +11,11 @@ import { Button } from '~/components/ui/button';
 import { ProtectedRoute } from './protected-route';
 import { isAuthenticated, clearAuthToken } from '~/lib/auth';
 import { useNavigateWithTemplate } from '~/lib/template-context';
+import { PageTabs } from './ui/page-tabs';
 
 interface RouteHandle {
   subtitle?: string;
+  subtitleKey?: string;
 }
 
 export default function Layout() {
@@ -22,26 +24,21 @@ export default function Layout() {
   const navigate = useNavigateWithTemplate();
   const currentMatch = matches[matches.length - 1];
   const currentPath = currentMatch?.pathname || '/';
-  const subtitle = (currentMatch?.handle as RouteHandle)?.subtitle || '';
+  const handle = currentMatch?.handle as RouteHandle;
+  const subtitle = handle?.subtitleKey ? t(handle.subtitleKey) : handle?.subtitle || '';
   const authenticated = isAuthenticated();
-  const isHomePage = currentPath === '/';
 
   const handleLogout = () => {
     clearAuthToken();
     navigate('/login');
   };
 
-  // Filter navigation items based on current page
-  const visibleNavigationItems = isHomePage
-    ? []
-    : [
-        {
-          to: '/',
-          label: t('navigation.backToDashboard'),
-          iconName: t('navigation.backToDashboardIcon'),
-          protected: true,
-        },
-      ];
+  // Tab configuration for page navigation
+  const pageTabs = [
+    { to: '/', translationKey: 'tabs.dashboard' },
+    { to: '/subject-data-preferences', translationKey: 'tabs.dataPreferences' },
+    { to: '/subject-data-access', translationKey: 'tabs.dataAccess' },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -73,20 +70,6 @@ export default function Layout() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {visibleNavigationItems.map(item => (
-                  <DropdownMenuItem key={item.to} asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left border-none focus:border-none focus-visible:border-none hover:border-none font-normal"
-                      onClick={() => navigate(item.to)}
-                    >
-                      <span className="text-blue-600 mr-2">
-                        <DynamicIcon name={item.iconName} size={20} />
-                      </span>
-                      {item.label}
-                    </Button>
-                  </DropdownMenuItem>
-                ))}
                 {authenticated && (
                   <DropdownMenuItem asChild>
                     <Button
@@ -107,6 +90,9 @@ export default function Layout() {
         </div>
       </header>
 
+      {/* Page Navigation Tabs */}
+      <PageTabs tabs={pageTabs} />
+
       {/* Main content */}
       <main className="flex-1">
         <ProtectedRoute>
@@ -122,6 +108,9 @@ export default function Layout() {
               <span className="text-gray-400">{t('footer.privacyPolicy')}</span>
               <span className="text-gray-400">{t('footer.termsConditions')}</span>
             </div>
+            {t('footer.copyright') && (
+              <div className="text-sm text-gray-400">{t('footer.copyright')}</div>
+            )}
           </div>
         </div>
       </footer>

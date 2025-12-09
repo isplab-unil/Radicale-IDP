@@ -37,6 +37,8 @@ class UserSettings(Base):
     disallow_address = Column(Boolean, default=False)
     disallow_company = Column(Boolean, default=False)
     disallow_title = Column(Boolean, default=False)
+    disallow_related = Column(Boolean, default=False)
+    disallow_nickname = Column(Boolean, default=False)
 
 
 class PrivacyLog(Base):
@@ -103,6 +105,8 @@ class PrivacyDatabase:
                     "disallow_address": self._configuration.get("privacy", "default_disallow_address"),
                     "disallow_company": self._configuration.get("privacy", "default_disallow_company"),
                     "disallow_title": self._configuration.get("privacy", "default_disallow_title"),
+                    "disallow_related": self._configuration.get("privacy", "default_disallow_related"),
+                    "disallow_nickname": self._configuration.get("privacy", "default_disallow_nickname"),
                 }
 
             user_settings = UserSettings(

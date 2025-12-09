@@ -80,6 +80,8 @@ PRIVACY_TO_VCARD_MAP = {
     'disallow_address': ['adr', 'label'],
     'disallow_company': ['org', 'logo'],
     'disallow_title': ['title', 'role'],
+    'disallow_related': ['related'],
+    'disallow_nickname': ['nickname'],
 }
 
 # List of public vCard properties that should never be filtered
@@ -139,7 +141,6 @@ VCARD_PROPERTY_TYPES = {
     'clientpidmap': VCardPropertyType.LIST,
 
     # Presence-only properties
-    'photo': VCardPropertyType.PRESENCE,
     'logo': VCardPropertyType.PRESENCE,
     'sound': VCardPropertyType.PRESENCE,
     'key': VCardPropertyType.PRESENCE,

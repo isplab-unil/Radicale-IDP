@@ -20,11 +20,16 @@
     "codePlaceholder": "6-digit code",
     "errorSendingCode": "Failed to send verification code.",
     "errorVerifying": "Verification failed",
-    "disclaimerTitle": "Disclamer",
+    "errorInvalidPhone": "Invalid phone number. Please use international format (e.g., +1 234 567 8901 for US)",
+    "errorInvalidPhoneFormat": "Phone numbers must be in E.164 format (e.g., +12345678901 for US numbers)",
+    "errorInvalidIdentifier": "Please enter a valid email address or phone number in international format",
+    "mockModeLabel": "Demo Mode - Your verification code:",
+    "mockModeDescription": "This code is displayed because MOCK_SMS or MOCK_EMAIL is enabled.",
+    "disclaimerTitle": "Disclaimer",
     "disclaimer": "Do not enter your real information"
   },
   "preferences": {
-    "title": "Subject Data Preferences",
+    "title": "Your Preferences",
     "description": "Control how your personal information is handled in the contact management system. Select which contact fields you want to keep private and prevent from being synced.",
     "explanation": "When someone creates a contact card with your information, the following fields will not be included if you've marked them as private:",
     "loading": "Loading preferences...",
@@ -53,6 +58,14 @@
       "title": {
         "label": "Job Title",
         "description": "Professional titles and positions"
+      },
+      "related": {
+        "label": "Related Person",
+        "description": "Related contacts and relationships"
+      },
+      "nickname": {
+        "label": "Nickname",
+        "description": "Nicknames and alternate names"
       }
     },
     "providerStatus": "Contact Provider Status",
@@ -73,6 +86,7 @@
   "access": {
     "title": "Data about you",
     "description": "See how your personal information is used in the contact provider system and how other users are storing your data. This transparency helps you make informed decisions about your Subject Data Preferences.",
+    "metaDescription": "See how your personal information is used in the contact provider system and how other users are storing your data. Here is all data associated with {{contact}}.",
     "loading": "Loading cards...",
     "noRecords": "No contact records found.",
     "contactRecords": "Contact Records",
@@ -86,13 +100,17 @@
     "spouse": "Spouse",
     "spouseIcon": "users",
     "fields": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
       "pronoun": "Pronoun",
       "company": "Company",
       "jobTitle": "Job title",
       "photo": "Photo",
       "birthday": "Birthday",
-      "relatedPerson": "Related person",
-      "address": "Address"
+      "related": "Related person",
+      "address": "Address",
+      "nickname": "Nickname"
     },
     "cardCount": "{{count}} contact card",
     "cardCountPlural": "{{count}} contact cards",
@@ -103,15 +121,25 @@
     "fieldLabel": "{{field}}: {{count}}"
   },
   "navigation": {
-    "backToDashboard": "Back to Dashboard",
-    "backToDashboardIcon": "home",
     "logout": "Logout",
     "logoutIcon": "log-out",
-    "menuIcon": "ellipsis"
+    "menuIcon": "ellipsis",
+    "subtitles": {
+      "dashboard": "Contacts - Subject Dashboard",
+      "dataPreferences": "Contacts - Subject Data Preferences",
+      "dataAccess": "Contacts - Subject Data Access"
+    }
+  },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "dataPreferences": "Data Preferences",
+    "dataAccess": "Data Access",
+    "navigationLabel": "Page navigation"
   },
   "footer": {
     "privacyPolicy": "Privacy Policy",
-    "termsConditions": "Terms & Conditions"
+    "termsConditions": "Terms & Conditions",
+    "copyright": "© Cloud Provider"
   },
   "errors": {
     "oops": "Oops!",
