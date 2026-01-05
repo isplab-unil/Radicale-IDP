@@ -250,7 +250,7 @@ properties to enforce user privacy.
   - `TEL` (Telephone)
 
 For a full list and mapping, see
-[`radicale/privacy/vcard_properties.py`](radicale/privacy/vcard_properties.py).
+[`radicale/privacy/vcard_properties.py`](../radicale/privacy/vcard_properties.py).
 
 This design ensures that essential contact information (name, email, phone) is
 always available, while sensitive fields can be restricted according to user
