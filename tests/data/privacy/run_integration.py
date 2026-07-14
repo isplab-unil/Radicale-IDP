@@ -17,6 +17,12 @@ VCF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vcf")
 SETTINGS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings")
 
 
+def get_privacy_headers() -> Dict[str, str]:
+    """Return Authorization header for privacy API."""
+    token = os.environ.get("RADICALE_TOKEN", "")
+    return {"Authorization": f"Bearer {token}"}
+
+
 def read_vcf_file(file_path: str) -> str:
     """Read a VCF file and return its contents."""
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -69,25 +75,40 @@ def upload_settings(user: str, settings: Dict[str, bool]) -> Tuple[bool, str]:
     settings_url = f"{API_BASE_URL}/privacy/settings/{user}"
 
     try:
+        headers = get_privacy_headers()
         # Check if settings exist
-        response_get: requests.Response = requests.get(settings_url, auth=(user, ""))
+        response_get: requests.Response = requests.get(settings_url, headers=headers)
 
         if response_get.status_code == 404:
             # Create new settings
-            response_post: requests.Response = requests.post(settings_url, json=settings, auth=(user, ""))
+            response_post: requests.Response = requests.post(settings_url, json=settings, headers=headers)
             if response_post.status_code != 201:
                 return False, f"Failed to create settings: {response_post.text}"
             return True, "Settings created successfully"
 
         elif response_get.status_code == 200:
             # Update existing settings
-            response_put: requests.Response = requests.put(settings_url, json=settings, auth=(user, ""))
+            response_put: requests.Response = requests.put(settings_url, json=settings, headers=headers)
             if response_put.status_code != 200:
                 return False, f"Failed to update settings: {response_put.text}"
             return True, "Settings updated successfully"
 
         return False, f"Unexpected status code: {response_get.status_code}"
 
+    except requests.exceptions.RequestException as e:
+        return False, f"Request failed: {str(e)}"
+
+
+def reprocess_cards(user: str) -> Tuple[bool, str]:
+    """Trigger reprocessing of all vCards for a user."""
+    reprocess_url = f"{API_BASE_URL}/privacy/cards/{user}/reprocess"
+    headers = get_privacy_headers()
+
+    try:
+        response: requests.Response = requests.post(reprocess_url, headers=headers)
+        if response.status_code != 200:
+            return False, f"Failed to reprocess cards: HTTP {response.status_code}: {response.text}"
+        return True, "Cards reprocessed successfully"
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {str(e)}"
 
@@ -128,9 +149,10 @@ def verify_card(user: str) -> Tuple[bool, str]:
     3. Card has at least one identifier (email or phone) that matches the user
     """
     try:
+        headers = get_privacy_headers()
         cards_url = f"{API_BASE_URL}/privacy/cards/{user}"
         print(f"\nVerifying at URL: {cards_url}")
-        response_get: requests.Response = requests.get(cards_url, auth=(user, ""))
+        response_get: requests.Response = requests.get(cards_url, headers=headers)
 
         if response_get.status_code != 200:
             return False, f"Failed to retrieve cards: {response_get.text}"
@@ -209,9 +231,10 @@ def verify_filtered_content(user: str, settings: Dict[str, bool]) -> Tuple[bool,
     3. Basic fields (fn, n, email/tel) are public and should never be filtered if original card had them
     """
     try:
+        headers = get_privacy_headers()
         # Get the filtered cards
         cards_url = f"{API_BASE_URL}/privacy/cards/{user}"
-        response_get: requests.Response = requests.get(cards_url, auth=(user, ""))
+        response_get: requests.Response = requests.get(cards_url, headers=headers)
 
         if response_get.status_code != 200:
             return False, f"Failed to get filtered cards: HTTP {response_get.status_code}: {response_get.text}"
@@ -270,8 +293,9 @@ def verify_settings(user: str, expected_settings: Optional[Dict[str, bool]]) -> 
         Tuple of (success, message)
     """
     try:
+        headers = get_privacy_headers()
         settings_url = f"{API_BASE_URL}/privacy/settings/{user}"
-        response: requests.Response = requests.get(settings_url, auth=(user, ""))
+        response: requests.Response = requests.get(settings_url, headers=headers)
 
         if expected_settings is None:
             # We expect no settings to exist
@@ -423,6 +447,12 @@ END:VCARD"""
 
     success, msg = verify_settings(target_user, restricted_settings)
     messages.append(f"Restricted settings verification: {msg}")
+    if not success:
+        return False, messages
+
+    # Step 4b: Reprocess vCards so the new settings are applied
+    success, msg = reprocess_cards(target_user)
+    messages.append(f"Reprocess cards: {msg}")
     if not success:
         return False, messages
 
