@@ -6,6 +6,7 @@ This guide explains the key features and customization options for the Radicale 
 
 - [Accessing the Application](#accessing-the-application)
 - [Environment Variables](#environment-variables)
+- [Privacy Database Logging](#privacy-database-logging)
 - [Adding Default User Data](#adding-default-user-data)
 - [Redeploying and Updating](#redeploying-and-updating)
 - [Template Versions](#template-versions)
@@ -65,6 +66,83 @@ For production deployment using Docker Compose (recommended), environment variab
 | `DEFAULT_TEMPLATE`      | Default template version                                       | `a`, `b`, `c`, or `d`       |
 
 > **Note:** When `MOCK_SMS` or `MOCK_EMAIL` is set to `true`, the OTP (one-time password) will be displayed directly on the login page instead of being sent via SMS or email. This is useful for testing and development without requiring AWS credentials.
+
+---
+
+## Privacy Database Logging
+
+In addition to the regular server logs, the Radicale privacy extension can write privacy-related events to a SQLite database. This creates an audit trail that you can query directly.
+
+### What is logged
+
+When database logging is enabled, the following actions are recorded in the `privacy_logs` table:
+
+- Privacy settings are retrieved, created, updated, or deleted
+- vCards are processed, reprocessed, or found by the privacy scanner
+- Authentication events on the privacy API succeed or fail
+
+Each log entry contains a timestamp, the user identifier, the action type, a message, optional JSON details, and a log level.
+
+### Enable database logging
+
+Add the following to your Radicale configuration file (`config/radicale.config` for Docker, or `~/.config/radicale/config` for local development):
+
+```ini
+[privacy]
+type = database
+database_path = /var/lib/radicale/privacy.db
+database_logging = true
+```
+
+The default value is `false`. The database path is the same SQLite file that stores user privacy settings.
+
+### Viewing server logs
+
+**Docker Compose:**
+
+```bash
+# Follow Radicale server logs in real time
+docker compose logs -f radicale
+
+# Show the last 100 lines
+docker compose logs --tail=100 radicale
+```
+
+**Local server:**
+
+When running `python -m radicale` directly, logs are written to stdout/stderr. Use the logging level to control verbosity:
+
+```ini
+[logging]
+level = debug
+```
+
+With `level = debug` you will see privacy enforcement details such as which vCard properties were removed.
+
+### Querying the privacy database logs
+
+The privacy database is a standard SQLite file. You can query it from inside the running container or after copying it to your host.
+
+**From inside the container:**
+
+```bash
+docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db \
+  "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC LIMIT 20;"
+```
+
+**Copy to host and query:**
+
+```bash
+docker cp radicale-idp-server:/var/lib/radicale/privacy.db ./privacy.db
+sqlite3 ./privacy.db \
+  "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC;"
+```
+
+### Important notes
+
+- Database logging is **separate** from the normal server logs. Normal logs always go to the configured logger, regardless of `database_logging`.
+- The `privacy_logs` table is stored in the same SQLite file as `user_settings`, so it is included when you back up the privacy database.
+- On first deployment the privacy database is empty until a privacy setting is created or a vCard is processed.
 
 ---
 
