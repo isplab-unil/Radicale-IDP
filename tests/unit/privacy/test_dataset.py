@@ -238,7 +238,7 @@ class TestPrivacyDataset(unittest.TestCase):
                     self.assertEqual(vcard.email.value, 'john.doe@example.com')
                 elif uid == 'test2':
                     self.assertEqual(vcard.fn.value, 'John Doe (Work)')
-                    self.assertEqual(vcard.email.value, 'john.doe@example.com')
+                    self.assertEqual(vcard.email.value, 'john.doe.work@example.com')
                 elif uid == 'test3':
                     self.assertEqual(vcard.fn.value, 'John Doe (Personal)')
                     self.assertEqual(vcard.email.value, 'john.doe.personal@example.com')
