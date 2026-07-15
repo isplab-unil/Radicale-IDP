@@ -193,6 +193,16 @@ The system supports two formats for default data:
    └── user2@example.com.zip
    ```
 
+> ⚠️ **vCards must contain a `UID` field.** Radicale skips any `.vcf` file that does not have a `UID:` line and logs a warning such as `VCARD object without UID`. The contact will not appear in the address book. Make sure each `.vcf` file includes a unique `UID` before the closing `END:VCARD`:
+>
+> ```vcard
+> BEGIN:VCARD
+> VERSION:3.0
+> FN:John Doe
+> UID:john-doe-unique-id
+> END:VCARD
+> ```
+
 ### Adding a New User
 
 1. Create a directory in `default-data/` with the user's email address as the name:
