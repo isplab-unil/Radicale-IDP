@@ -24,6 +24,17 @@ Once the Docker Compose deployment is running, you can access the services at:
 
 Replace `YOUR_DOMAIN` with your configured domain name.
 
+### Default Login Credentials
+
+When the deployment is initialized with the sample data from `default-data/`, the following default accounts are available:
+
+| User                  | Password          |
+| --------------------- | ----------------- |
+| `user1@example.com`   | `password123abc`  |
+| `user2@example.com`   | `password123abc`  |
+
+The password is controlled by the `DEFAULT_USER_PASSWORD` variable in the root `.env` file. For local development it defaults to `password123abc`; change it before deploying to production.
+
 ---
 
 ## Environment Variables
@@ -225,7 +236,7 @@ The system supports two formats for default data:
 
 - ⚠️ **The `DEFAULT_USER_PASSWORD` applies to ALL users** created from `default-data/`
 - Change this password BEFORE deploying to production
-- The default password `password` is INSECURE and only for local development
+- The default password `password123abc` is INSECURE and only for local development
 - Avoid shell special characters (!, $, `, \, ", ') in passwords
 - Generate a strong password: `openssl rand -base64 16 | tr -d '/+='`
 
