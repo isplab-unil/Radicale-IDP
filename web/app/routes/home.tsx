@@ -27,7 +27,7 @@ export default function Home() {
               <p className="text-gray-600 mb-4">{t('home.preferences.description')}</p>
               <LinkWithTemplate
                 to="/subject-data-preferences"
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-normal"
+                className="inline-flex items-center text-brand-blue hover:text-brand-blue-hover font-normal"
               >
                 {t('home.preferences.button')} <MoveUpRightIcon className="w-4 h-4 ml-2" />
               </LinkWithTemplate>
@@ -38,7 +38,7 @@ export default function Home() {
               <p className="text-gray-600 mb-4">{t('home.access.description')}</p>
               <LinkWithTemplate
                 to="/subject-data-access"
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-normal"
+                className="inline-flex items-center text-brand-blue hover:text-brand-blue-hover font-normal"
               >
                 {t('home.access.button')} <MoveUpRightIcon className="w-4 h-4 ml-2" />
               </LinkWithTemplate>

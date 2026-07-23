@@ -39,7 +39,7 @@ export function PageTabs({ tabs, className }: PageTabsProps) {
                       'border-b-2 -mb-px transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       isActive
-                        ? 'border-blue-600 text-foreground'
+                        ? 'border-brand-blue text-foreground'
                         : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'
                     )}
                     aria-current={isActive ? 'page' : undefined}

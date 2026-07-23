@@ -72,7 +72,7 @@ export function TemplateProvider({
   // Initialize with default template if needed and sync with URL changes
   useEffect(() => {
     const urlVersion = searchParams.get('v');
-    const validVersions = ['a', 'b', 'c', 'd'];
+    const validVersions = ['a', 'b', 'c', 'd', 'e', 'f'];
     const isValidVersion = urlVersion && validVersions.includes(urlVersion.toLowerCase());
 
     if (!enableTemplates) {
