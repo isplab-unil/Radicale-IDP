@@ -118,7 +118,13 @@
     "providerDescription": "Synchronize with the contact provider to refresh the data shown on this page and ensure you see the most current information about how your data is being used.",
     "buttonSync": "Synchronize Contact Provider",
     "buttonSyncing": "Synchronizing...",
-    "fieldLabel": "{{field}}: {{count}}"
+    "fieldLabel": "{{field}}: {{count}}",
+    "templates": {
+      "a": {
+        "none": "No contact record containing your information was found.",
+        "found": "Contact records containing your information were found."
+      }
+    }
   },
   "navigation": {
     "logout": "Logout",

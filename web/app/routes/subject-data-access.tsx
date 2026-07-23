@@ -4,6 +4,8 @@ import { TemplateA } from '~/components/subject-data-access-templates/TemplateA'
 import { TemplateB } from '~/components/subject-data-access-templates/TemplateB';
 import { TemplateC } from '~/components/subject-data-access-templates/TemplateC';
 import { TemplateD } from '~/components/subject-data-access-templates/TemplateD';
+import { TemplateE } from '~/components/subject-data-access-templates/TemplateE';
+import { TemplateF } from '~/components/subject-data-access-templates/TemplateF';
 
 export { meta, handle };
 
@@ -21,12 +23,18 @@ export default function DataAccessPage() {
       return <TemplateC />;
     case 'd':
       return <TemplateD />;
+    case 'e':
+      return <TemplateE />;
+    case 'f':
+      return <TemplateF />;
     default: {
       // If somehow an invalid template gets here, render the default
       const defaultLower = defaultTemplate.toLowerCase();
       if (defaultLower === 'b') return <TemplateB />;
       if (defaultLower === 'c') return <TemplateC />;
       if (defaultLower === 'd') return <TemplateD />;
+      if (defaultLower === 'e') return <TemplateE />;
+      if (defaultLower === 'f') return <TemplateF />;
       return <TemplateA />;
     }
   }

@@ -1,157 +1,41 @@
 import { useTranslation } from 'react-i18next';
-import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
 import { getCurrentUser } from '~/lib/auth';
-import type { CardMatch } from '~/lib/card-types';
-
-function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
-  return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-300">
-      {/* Header Info */}
-      <div className="p-6">
-        <div className="flex items-start gap-6">
-          {/* Large Contact Photo or Icon */}
-          {contact.fields.photo ? (
-            <img
-              src={contact.fields.photo}
-              alt="Contact"
-              className="w-16 h-16 rounded-full flex-shrink-0 mt-4 object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center w-16 h-16 bg-gray-300 rounded-full flex-shrink-0 mt-4">
-              <DynamicIcon name="user" size={32} className="text-white" />
-            </div>
-          )}
-
-          {/* Contact Details */}
-          <div className="flex-1">
-            <div className="text-sm text-gray-500 mb-2 font-medium tracking-wide">
-              {contact.fields.org || ''}
-            </div>
-            {contact.fields.title && (
-              <div className="text-base text-gray-600 font-medium">{contact.fields.title}</div>
-            )}
-            <h3 className="text-2xl font-semibold text-gray-900 mb-1">
-              {contact.fields.fn || contact.fields.n || t('access.unknownContact')}
-            </h3>
-            {contact.fields.nickname && (
-              <div className="text-base text-gray-600 font-bold mt-1">
-                «{contact.fields.nickname}»
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Details */}
-      <div className="px-6 pb-6 space-y-4">
-        {contact.fields.tel && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name={t('access.mobileIcon')} size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 font-medium">{t('access.mobile')}</div>
-              <div className="text-base text-gray-900 font-medium">
-                {Array.isArray(contact.fields.tel)
-                  ? contact.fields.tel.join(', ')
-                  : contact.fields.tel}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {contact.fields.email && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name={t('access.emailIcon')} size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 font-medium">{t('access.email')}</div>
-              <div className="text-base text-gray-900 font-medium">
-                {Array.isArray(contact.fields.email)
-                  ? contact.fields.email.join(', ')
-                  : contact.fields.email}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {contact.fields.bday && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name="cake" size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 font-medium">{t('access.fields.birthday')}</div>
-              <div className="text-base text-gray-900 font-medium">{contact.fields.bday}</div>
-            </div>
-          </div>
-        )}
-
-        {contact.fields.gender && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name="user-round" size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 font-medium">{t('access.fields.pronoun')}</div>
-              <div className="text-base text-gray-900 font-medium">{contact.fields.gender}</div>
-            </div>
-          </div>
-        )}
-
-        {contact.fields.related && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name={t('access.spouseIcon')} size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 font-medium">{t('access.spouse')}</div>
-              <div className="text-base text-gray-900 font-medium">
-                {Array.isArray(contact.fields.related)
-                  ? contact.fields.related.join(', ')
-                  : contact.fields.related}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {contact.fields.adr && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name="map-pin" size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm text-gray-500 font-medium">{t('access.fields.address')}</div>
-              <div className="text-base text-gray-900 font-medium">
-                {typeof contact.fields.adr === 'object' && contact.fields.adr !== null
-                  ? [
-                      contact.fields.adr.street,
-                      contact.fields.adr.city,
-                      contact.fields.adr.region,
-                      contact.fields.adr.code,
-                      contact.fields.adr.country,
-                    ]
-                      .filter(Boolean)
-                      .join(', ')
-                  : Array.isArray(contact.fields.adr)
-                    ? contact.fields.adr.join(', ')
-                    : contact.fields.adr}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export function TemplateC() {
   const { t } = useTranslation();
   const { cards, loading, syncing, syncCards } = useCardData();
   const user = getCurrentUser();
   const contact = user?.contact || 'your account';
+
+  // Calculate field counts across all cards
+  const fieldCounts = {
+    name: 0,
+    phone: 0,
+    email: 0,
+    company: 0,
+    jobTitle: 0,
+    photo: 0,
+    nickname: 0,
+    birthday: 0,
+    pronoun: 0,
+    related: 0,
+    address: 0,
+  };
+
+  cards.forEach(contact => {
+    if (contact.fields.fn) fieldCounts.name++;
+    if (contact.fields.tel) fieldCounts.phone++;
+    if (contact.fields.email) fieldCounts.email++;
+    if (contact.fields.org) fieldCounts.company++;
+    if (contact.fields.title) fieldCounts.jobTitle++;
+    if (contact.fields.photo) fieldCounts.photo++;
+    if (contact.fields.nickname) fieldCounts.nickname++;
+    if (contact.fields.bday) fieldCounts.birthday++;
+    if (contact.fields.gender) fieldCounts.pronoun++;
+    if (contact.fields.related) fieldCounts.related++;
+    if (contact.fields.adr) fieldCounts.address++;
+  });
 
   return (
     <div className="pt-6 pb-30">
@@ -165,23 +49,85 @@ export function TemplateC() {
             </p>
           </div>
 
-          {/* Contact Cards */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-medium text-gray-900">{t('access.contactRecords')}</h2>
-            {loading ? (
-              <div className="text-gray-600">{t('access.loading')}</div>
-            ) : cards.length === 0 ? (
-              <div className="text-gray-600">{t('access.noRecords')}</div>
-            ) : (
-              cards.map(contact => (
-                <ContactCard
-                  key={`${contact.collection_path}-${contact.vcard_uid}`}
-                  contact={contact}
-                  t={t}
-                />
-              ))
-            )}
-          </div>
+          {/* Field Counts Summary */}
+          {!loading && cards.length > 0 && (
+            <div className="space-y-4">
+              <div className="text-gray-900 text-lg">
+                <div className="mb-4">
+                  {t('access.fields.name')}:{' '}
+                  {fieldCounts.name === 1
+                    ? t('access.cardCount', { count: fieldCounts.name })
+                    : t('access.cardCountPlural', { count: fieldCounts.name })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.phone')}:{' '}
+                  {fieldCounts.phone === 1
+                    ? t('access.cardCount', { count: fieldCounts.phone })
+                    : t('access.cardCountPlural', { count: fieldCounts.phone })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.email')}:{' '}
+                  {fieldCounts.email === 1
+                    ? t('access.cardCount', { count: fieldCounts.email })
+                    : t('access.cardCountPlural', { count: fieldCounts.email })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.company')}:{' '}
+                  {fieldCounts.company === 1
+                    ? t('access.cardCount', { count: fieldCounts.company })
+                    : t('access.cardCountPlural', { count: fieldCounts.company })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.jobTitle')}:{' '}
+                  {fieldCounts.jobTitle === 1
+                    ? t('access.cardCount', { count: fieldCounts.jobTitle })
+                    : t('access.cardCountPlural', { count: fieldCounts.jobTitle })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.photo')}:{' '}
+                  {fieldCounts.photo === 1
+                    ? t('access.cardCount', { count: fieldCounts.photo })
+                    : t('access.cardCountPlural', { count: fieldCounts.photo })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.nickname')}:{' '}
+                  {fieldCounts.nickname === 1
+                    ? t('access.cardCount', { count: fieldCounts.nickname })
+                    : t('access.cardCountPlural', { count: fieldCounts.nickname })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.birthday')}:{' '}
+                  {fieldCounts.birthday === 1
+                    ? t('access.cardCount', { count: fieldCounts.birthday })
+                    : t('access.cardCountPlural', { count: fieldCounts.birthday })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.pronoun')}:{' '}
+                  {fieldCounts.pronoun === 1
+                    ? t('access.cardCount', { count: fieldCounts.pronoun })
+                    : t('access.cardCountPlural', { count: fieldCounts.pronoun })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.related')}:{' '}
+                  {fieldCounts.related === 1
+                    ? t('access.cardCount', { count: fieldCounts.related })
+                    : t('access.cardCountPlural', { count: fieldCounts.related })}
+                </div>
+                <div className="mb-4">
+                  {t('access.fields.address')}:{' '}
+                  {fieldCounts.address === 1
+                    ? t('access.cardCount', { count: fieldCounts.address })
+                    : t('access.cardCountPlural', { count: fieldCounts.address })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loading && <div className="text-gray-600">{t('access.loading')}</div>}
+
+          {!loading && cards.length === 0 && (
+            <div className="text-gray-600">{t('access.noRecords')}</div>
+          )}
 
           {/* Contact Provider Synchronization */}
           <div className="bg-gray-100 p-6 rounded-2xl">

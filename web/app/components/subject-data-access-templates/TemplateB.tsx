@@ -8,89 +8,6 @@ export function TemplateB() {
   const user = getCurrentUser();
   const contact = user?.contact || 'your account';
 
-  // Calculate field counts and collect values across all cards
-  const fieldData = {
-    name: [] as string[],
-    phone: [] as string[],
-    email: [] as string[],
-    company: [] as string[],
-    jobTitle: [] as string[],
-    photo: [] as string[],
-    nickname: [] as string[],
-    birthday: [] as string[],
-    pronoun: [] as string[],
-    related: [] as string[],
-    address: [] as string[],
-  };
-
-  cards.forEach(contact => {
-    // Helper to extract string value from field (handles arrays and objects)
-    const getFieldValue = (field: any): string | null => {
-      if (!field) return null;
-
-      if (typeof field === 'string') return field;
-
-      if (Array.isArray(field)) return field.join(', ');
-
-      if (typeof field === 'object') {
-        // For address objects, format nicely
-        if (field.street || field.city || field.region || field.code || field.country) {
-          return [field.street, field.city, field.region, field.code, field.country]
-            .filter(Boolean)
-            .join(', ');
-        }
-        return JSON.stringify(field);
-      }
-
-      return String(field);
-    };
-
-    const fn = getFieldValue(contact.fields.fn);
-    if (fn) fieldData.name.push(fn);
-
-    const tel = getFieldValue(contact.fields.tel);
-    if (tel) fieldData.phone.push(tel);
-
-    const email = getFieldValue(contact.fields.email);
-    if (email) fieldData.email.push(email);
-
-    const org = getFieldValue(contact.fields.org);
-    if (org) fieldData.company.push(org);
-
-    const title = getFieldValue(contact.fields.title);
-    if (title) fieldData.jobTitle.push(title);
-
-    if (contact.fields.photo) fieldData.photo.push('Photo');
-
-    const nickname = getFieldValue(contact.fields.nickname);
-    if (nickname) fieldData.nickname.push(nickname);
-
-    const bday = getFieldValue(contact.fields.bday);
-    if (bday) fieldData.birthday.push(bday);
-
-    const gender = getFieldValue(contact.fields.gender);
-    if (gender) fieldData.pronoun.push(gender);
-
-    const related = getFieldValue(contact.fields.related);
-    if (related) fieldData.related.push(related);
-
-    const adr = getFieldValue(contact.fields.adr);
-    if (adr) fieldData.address.push(adr);
-  });
-
-  const formatValues = (values: string[]) => {
-    if (values.length === 0) return '';
-    if (values.length === 1) return ` ("${values[0]}")`;
-    if (values.length === 2) return ` ("${values[0]}" and "${values[1]}")`;
-
-    const allButLast = values
-      .slice(0, -1)
-      .map(v => `"${v}"`)
-      .join(', ');
-    const last = values[values.length - 1];
-    return ` (${allButLast}, and "${last}")`;
-  };
-
   return (
     <div className="pt-6 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
@@ -103,95 +20,15 @@ export function TemplateB() {
             </p>
           </div>
 
-          {/* Field Counts Summary */}
-          {!loading && cards.length > 0 && (
-            <div className="space-y-4">
-              <div className="text-gray-900 text-lg">
-                <div className="mb-4">
-                  {t('access.fields.name')}:{' '}
-                  {fieldData.name.length === 1
-                    ? t('access.cardCount', { count: fieldData.name.length })
-                    : t('access.cardCountPlural', { count: fieldData.name.length })}
-                  {formatValues(fieldData.name)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.phone')}:{' '}
-                  {fieldData.phone.length === 1
-                    ? t('access.cardCount', { count: fieldData.phone.length })
-                    : t('access.cardCountPlural', { count: fieldData.phone.length })}
-                  {formatValues(fieldData.phone)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.email')}:{' '}
-                  {fieldData.email.length === 1
-                    ? t('access.cardCount', { count: fieldData.email.length })
-                    : t('access.cardCountPlural', { count: fieldData.email.length })}
-                  {formatValues(fieldData.email)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.company')}:{' '}
-                  {fieldData.company.length === 1
-                    ? t('access.cardCount', { count: fieldData.company.length })
-                    : t('access.cardCountPlural', { count: fieldData.company.length })}
-                  {formatValues(fieldData.company)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.jobTitle')}:{' '}
-                  {fieldData.jobTitle.length === 1
-                    ? t('access.cardCount', { count: fieldData.jobTitle.length })
-                    : t('access.cardCountPlural', { count: fieldData.jobTitle.length })}
-                  {formatValues(fieldData.jobTitle)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.photo')}:{' '}
-                  {fieldData.photo.length === 1
-                    ? t('access.cardCount', { count: fieldData.photo.length })
-                    : t('access.cardCountPlural', { count: fieldData.photo.length })}
-                  {formatValues(fieldData.photo)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.nickname')}:{' '}
-                  {fieldData.nickname.length === 1
-                    ? t('access.cardCount', { count: fieldData.nickname.length })
-                    : t('access.cardCountPlural', { count: fieldData.nickname.length })}
-                  {formatValues(fieldData.nickname)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.birthday')}:{' '}
-                  {fieldData.birthday.length === 1
-                    ? t('access.cardCount', { count: fieldData.birthday.length })
-                    : t('access.cardCountPlural', { count: fieldData.birthday.length })}
-                  {formatValues(fieldData.birthday)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.pronoun')}:{' '}
-                  {fieldData.pronoun.length === 1
-                    ? t('access.cardCount', { count: fieldData.pronoun.length })
-                    : t('access.cardCountPlural', { count: fieldData.pronoun.length })}
-                  {formatValues(fieldData.pronoun)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.related')}:{' '}
-                  {fieldData.related.length === 1
-                    ? t('access.cardCount', { count: fieldData.related.length })
-                    : t('access.cardCountPlural', { count: fieldData.related.length })}
-                  {formatValues(fieldData.related)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.address')}:{' '}
-                  {fieldData.address.length === 1
-                    ? t('access.cardCount', { count: fieldData.address.length })
-                    : t('access.cardCountPlural', { count: fieldData.address.length })}
-                  {formatValues(fieldData.address)}
-                </div>
-              </div>
+          {/* Count */}
+          {loading ? (
+            <div className="text-gray-600">{t('access.loading')}</div>
+          ) : (
+            <div className="text-gray-900 text-lg">
+              {cards.length === 1
+                ? t('access.cardCount', { count: cards.length })
+                : t('access.cardCountPlural', { count: cards.length })}
             </div>
-          )}
-
-          {loading && <div className="text-gray-600">{t('access.loading')}</div>}
-
-          {!loading && cards.length === 0 && (
-            <div className="text-gray-600">{t('access.noRecords')}</div>
           )}
 
           {/* Contact Provider Synchronization */}
