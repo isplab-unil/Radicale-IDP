@@ -4,14 +4,45 @@ This guide explains the key features and customization options for the Radicale 
 
 ## Table of Contents
 
+- [Deploying the Fork](#deploying-the-fork)
 - [Accessing the Application](#accessing-the-application)
 - [Environment Variables](#environment-variables)
 - [Privacy Database Logging](#privacy-database-logging)
 - [Adding Default User Data](#adding-default-user-data)
 - [Redeploying and Updating](#redeploying-and-updating)
+- [Auto-start on Boot](#auto-start-on-boot)
 - [Template Versions](#template-versions)
 - [Disclaimer Box](#disclaimer-box)
 - [Changing Text & Translations](#changing-text--translations)
+
+---
+
+## Deploying the Fork
+
+This fork ships with two Compose files:
+
+- **`docker-compose.yml`** — the fork's full stack: Radicale backend, React web app, nginx reverse proxy, and certbot. Use this file for the privacy IDP deployment.
+- **`compose.yaml`** — the upstream Radicale-only compose file. It starts only the CalDAV/CardDAV backend and does **not** include the privacy web interface.
+
+To deploy the full fork, run from the repository root:
+
+```bash
+docker compose -f docker-compose.yml up --build -d
+```
+
+To stop it:
+
+```bash
+docker compose -f docker-compose.yml down
+```
+
+To view logs:
+
+```bash
+docker compose -f docker-compose.yml logs -f
+```
+
+All further `docker compose` commands in this guide assume you are using `-f docker-compose.yml`.
 
 ---
 
@@ -53,7 +84,7 @@ For production deployment using Docker Compose (recommended), environment variab
 4. Save the file
 5. Restart the Docker containers for changes to take effect:
    ```bash
-   docker-compose restart
+   docker compose -f docker-compose.yml restart
    ```
 
 > **Note:** The `web/.env` file exists for local development only (running the web app without Docker). For production with Docker Compose, always use the root `.env` file.
@@ -113,10 +144,10 @@ The default value is `false`. The database path is the same SQLite file that sto
 
 ```bash
 # Follow Radicale server logs in real time
-docker compose logs -f radicale
+docker compose -f docker-compose.yml logs -f radicale
 
 # Show the last 100 lines
-docker compose logs --tail=100 radicale
+docker compose -f docker-compose.yml logs --tail=100 radicale
 ```
 
 **Local server:**
@@ -137,7 +168,7 @@ The privacy database is a standard SQLite file. You can query it from inside the
 **From inside the container:**
 
 ```bash
-docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db \
+docker compose -f docker-compose.yml exec radicale sqlite3 /var/lib/radicale/privacy.db \
   "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC LIMIT 20;"
 ```
 
@@ -222,8 +253,8 @@ The system supports two formats for default data:
 
 4. **Important:** Remove any existing Docker volumes to reload the data:
    ```bash
-   docker-compose down -v
-   docker-compose up -d
+   docker compose -f docker-compose.yml down -v
+   docker compose -f docker-compose.yml up --build -d
    ```
 
    > ⚠️ **WARNING:** The `-v` flag will delete ALL volume data, including:
@@ -270,22 +301,22 @@ When you need to update your deployment to the latest version or apply configura
 
 3. **Stop the current containers:**
    ```bash
-   podman compose down
+   docker compose -f docker-compose.yml down
    ```
 
-   Or if using Docker:
+   Or if using Podman:
    ```bash
-   docker-compose down
+   podman compose -f docker-compose.yml down
    ```
 
 4. **Rebuild and start the containers:**
    ```bash
-   podman compose up --build -d
+   docker compose -f docker-compose.yml up --build -d
    ```
 
-   Or if using Docker:
+   Or if using Podman:
    ```bash
-   docker-compose up --build -d
+   podman compose -f docker-compose.yml up --build -d
    ```
 
 The `--build` flag ensures that Docker/Podman rebuilds the images with the latest code changes, and `-d` runs the containers in detached mode (in the background).
@@ -302,13 +333,68 @@ You should redeploy when:
 
 ### Preserving Data During Redeployment
 
-The standard redeployment process (`podman compose down` without the `-v` flag) **preserves all your data**:
+The standard redeployment process (`docker compose -f docker-compose.yml down` without the `-v` flag) **preserves all your data**:
 
 - User collections (contacts, calendars) are kept
 - Privacy database and logs are kept
 - Web application database is kept
 
-Only use `podman compose down -v` if you intentionally want to delete all data and start fresh (see the warning in the [Adding Default User Data](#adding-default-user-data) section).
+Only use `docker compose -f docker-compose.yml down -v` if you intentionally want to delete all data and start fresh (see the warning in the [Adding Default User Data](#adding-default-user-data) section).
+
+---
+
+## Auto-start on Boot
+
+To ensure the Radicale IDP containers start automatically after the host machine reboots, create a systemd service that wraps `podman compose`.
+
+### Create the systemd service file
+
+Create `/etc/systemd/system/radicale-idp.service` with the following contents:
+
+```ini
+[Unit]
+Description=Radicale IDP privacy web application
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/path/to/Radicale-IDP
+ExecStart=/usr/bin/podman compose up -d
+ExecStop=/usr/bin/podman compose down
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Replace `/path/to/Radicale-IDP` with the absolute path to your project directory (the directory containing `docker-compose.yml`).
+
+> **Note:** If `podman` is installed somewhere other than `/usr/bin/podman`, use the output of `which podman` for `ExecStart` and `ExecStop`.
+
+### Enable and start the service
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now radicale-idp.service
+```
+
+### Verify the service is running
+
+```bash
+sudo systemctl status radicale-idp.service
+```
+
+After enabling, the containers will start automatically on every boot.
+
+### Updating the service
+
+If you change the service file, reload systemd and restart the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart radicale-idp.service
+```
 
 ---
 
