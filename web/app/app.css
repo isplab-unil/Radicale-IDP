@@ -8,6 +8,10 @@
     'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
     'Segoe UI Symbol', 'Noto Color Emoji';
 
+  /* Brand blue: light #0071E3, dark #009AFF */
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-hover: var(--brand-blue-hover);
+
   /* Apple-style shadows with color tinting and layered depth */
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow: 0 1px 6px 0 rgb(0 0 0 / 0.12), 0 2px 4px 0 rgb(0 0 0 / 0.06);
@@ -69,6 +73,8 @@ body {
 
 :root {
   --radius: 2rem;
+  --brand-blue: #0071e3;
+  --brand-blue-hover: #005bb5;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -103,6 +109,8 @@ body {
 }
 
 .dark {
+  --brand-blue: #009aff;
+  --brand-blue-hover: #007acc;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -134,6 +142,13 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-blue: #009aff;
+    --brand-blue-hover: #007acc;
+  }
 }
 
 @layer base {

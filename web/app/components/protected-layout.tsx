@@ -56,7 +56,7 @@ export default function Layout() {
                 style={{ width: '82px', height: '31px', marginTop: '-1px' }}
               />
               {subtitle && (
-                <span className="text-blue-600 text-xl font-medium hidden sm:block">
+                <span className="text-brand-blue text-xl font-medium hidden sm:block">
                   {subtitle}
                 </span>
               )}

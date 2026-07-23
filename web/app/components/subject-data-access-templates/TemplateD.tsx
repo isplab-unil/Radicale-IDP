@@ -11,7 +11,7 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-300">
       {/* From Section */}
-      <div className="px-6 py-2 bg-blue-600 flex items-center gap-2">
+      <div className="px-6 py-2 bg-brand-blue flex items-center gap-2">
         <DynamicIcon name={t('access.fromIcon')} size={16} className="text-white" />
         <div className="text-sm text-white font-medium">
           {t('access.from')}: {email}
@@ -58,7 +58,7 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
       <div className="px-6 pb-6 space-y-4">
         {contact.fields.tel && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name={t('access.mobileIcon')} size={20} className="text-white" />
             </div>
             <div className="flex-1">
@@ -74,7 +74,7 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 
         {contact.fields.email && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name={t('access.emailIcon')} size={20} className="text-white" />
             </div>
             <div className="flex-1">
@@ -90,7 +90,7 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 
         {contact.fields.bday && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name="cake" size={20} className="text-white" />
             </div>
             <div className="flex-1">
@@ -102,7 +102,7 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 
         {contact.fields.gender && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name="user-round" size={20} className="text-white" />
             </div>
             <div className="flex-1">
@@ -114,7 +114,7 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 
         {contact.fields.related && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name={t('access.spouseIcon')} size={20} className="text-white" />
             </div>
             <div className="flex-1">
@@ -130,7 +130,7 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 
         {contact.fields.adr && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full ml-4 mr-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name="map-pin" size={20} className="text-white" />
             </div>
             <div className="flex-1">
@@ -206,7 +206,7 @@ export function TemplateD() {
               <button
                 onClick={syncCards}
                 disabled={syncing}
-                className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-brand-blue text-white hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {syncing ? t('access.buttonSyncing') : t('access.buttonSync')}
               </button>

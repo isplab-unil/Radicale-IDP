@@ -165,7 +165,7 @@ export default function PreferencesPage() {
                   type="checkbox"
                   checked={preferences[fieldId] || false}
                   onChange={e => handlePreferenceChange(fieldId, e.target.checked)}
-                  className="h-5 w-5 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                  className="h-5 w-5 mt-1 rounded border-gray-300 text-brand-blue focus:ring-brand-blue disabled:opacity-50"
                   disabled={saving}
                 />
                 <div className="flex-1">
@@ -200,7 +200,7 @@ export default function PreferencesPage() {
                 <button
                   onClick={handleSavePreferences}
                   disabled={!hasChanges || saving}
-                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-brand-blue text-white hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? t('preferences.buttonSaving') : t('preferences.buttonSave')}
                 </button>
