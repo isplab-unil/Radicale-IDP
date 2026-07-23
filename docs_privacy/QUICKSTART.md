@@ -10,6 +10,7 @@ This guide explains the key features and customization options for the Radicale 
 - [Privacy Database Logging](#privacy-database-logging)
 - [Adding Default User Data](#adding-default-user-data)
 - [Redeploying and Updating](#redeploying-and-updating)
+- [Auto-start on Boot](#auto-start-on-boot)
 - [Template Versions](#template-versions)
 - [Disclaimer Box](#disclaimer-box)
 - [Changing Text & Translations](#changing-text--translations)
@@ -339,6 +340,61 @@ The standard redeployment process (`docker compose -f docker-compose.yml down` w
 - Web application database is kept
 
 Only use `docker compose -f docker-compose.yml down -v` if you intentionally want to delete all data and start fresh (see the warning in the [Adding Default User Data](#adding-default-user-data) section).
+
+---
+
+## Auto-start on Boot
+
+To ensure the Radicale IDP containers start automatically after the host machine reboots, create a systemd service that wraps `podman compose`.
+
+### Create the systemd service file
+
+Create `/etc/systemd/system/radicale-idp.service` with the following contents:
+
+```ini
+[Unit]
+Description=Radicale IDP privacy web application
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/path/to/Radicale-IDP
+ExecStart=/usr/bin/podman compose up -d
+ExecStop=/usr/bin/podman compose down
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Replace `/path/to/Radicale-IDP` with the absolute path to your project directory (the directory containing `docker-compose.yml`).
+
+> **Note:** If `podman` is installed somewhere other than `/usr/bin/podman`, use the output of `which podman` for `ExecStart` and `ExecStop`.
+
+### Enable and start the service
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now radicale-idp.service
+```
+
+### Verify the service is running
+
+```bash
+sudo systemctl status radicale-idp.service
+```
+
+After enabling, the containers will start automatically on every boot.
+
+### Updating the service
+
+If you change the service file, reload systemd and restart the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart radicale-idp.service
+```
 
 ---
 
