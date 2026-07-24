@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import (Boolean, Column, DateTime, Integer, String, Text,
                         create_engine)
 from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from radicale import config
 
@@ -71,8 +72,9 @@ class PrivacyDatabase:
         # Ensure the directory exists
         os.makedirs(os.path.dirname(os.path.abspath(self._database_path)), exist_ok=True)
 
-        # Create engine with SQLite
-        self.engine = create_engine(f'sqlite:///{self._database_path}')
+        # Create engine with SQLite (no connection pooling to avoid leaks)
+        self.engine = create_engine(f'sqlite:///{self._database_path}',
+                                    poolclass=NullPool)
         self.Session = scoped_session(sessionmaker(bind=self.engine))
 
     def close(self):
