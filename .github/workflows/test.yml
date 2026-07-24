@@ -241,6 +241,8 @@ jobs:
         run: pip install tox
       - name: Test with older Python
         run: tox -c pyproject.toml -e py
+        env:
+          PYTEST_ADDOPTS: ${{ startsWith(matrix.python-version, 'pypy') && '-p no:unraisableexception' || '' }}
 
   coveralls-test:
     name: Coveralls:Test
