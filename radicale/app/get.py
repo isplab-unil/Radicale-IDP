@@ -87,8 +87,7 @@ class ApplicationPartGet(ApplicationBase):
                 from radicale.privacy.http import PrivacyHTTP
 
                 self._privacy_http = PrivacyHTTP(self.configuration)
-            status, headers, answer = self._privacy_http.do_GET(environ, path)
-            return status, headers, answer, None
+            return self._privacy_http.do_GET(environ, path)
         # Redirect to /.web if the root path is requested
         if not pathutils.strip_path(path):
             return httputils.redirect(base_prefix + "/.web")

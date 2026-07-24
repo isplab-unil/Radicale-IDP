@@ -74,8 +74,7 @@ class ApplicationPartDelete(ApplicationBase):
             if not hasattr(self, '_privacy_http'):
                 from radicale.privacy.http import PrivacyHTTP
                 self._privacy_http = PrivacyHTTP(self.configuration)
-            status, headers, answer = self._privacy_http.do_DELETE(environ, path)
-            return status, headers, answer, None
+            return self._privacy_http.do_DELETE(environ, path)
 
         actor = user
         permissions_filter = None

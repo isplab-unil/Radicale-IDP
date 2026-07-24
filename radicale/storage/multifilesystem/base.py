@@ -22,7 +22,8 @@ import sys
 from tempfile import TemporaryDirectory
 from typing import IO, AnyStr, ClassVar, Iterator, Optional, Type
 
-from radicale import config, logger, pathutils, storage, types, utils
+from radicale import config, pathutils, storage, types, utils
+from radicale.log import logger
 from radicale.storage import multifilesystem  # noqa:F401
 
 

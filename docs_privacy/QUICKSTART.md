@@ -6,6 +6,7 @@ This guide explains the key features and customization options for the Radicale 
 
 - [Accessing the Application](#accessing-the-application)
 - [Environment Variables](#environment-variables)
+- [Privacy Database Logging](#privacy-database-logging)
 - [Adding Default User Data](#adding-default-user-data)
 - [Redeploying and Updating](#redeploying-and-updating)
 - [Template Versions](#template-versions)
@@ -22,6 +23,17 @@ Once the Docker Compose deployment is running, you can access the services at:
 - **Radicale Server:** `http://YOUR_DOMAIN/radicale/`
 
 Replace `YOUR_DOMAIN` with your configured domain name.
+
+### Default Login Credentials
+
+When the deployment is initialized with the sample data from `default-data/`, the following default accounts are available:
+
+| User                  | Password          |
+| --------------------- | ----------------- |
+| `user1@example.com`   | `password123abc`  |
+| `user2@example.com`   | `password123abc`  |
+
+The password is controlled by the `DEFAULT_USER_PASSWORD` variable in the root `.env` file. For local development it defaults to `password123abc`; change it before deploying to production.
 
 ---
 
@@ -68,6 +80,83 @@ For production deployment using Docker Compose (recommended), environment variab
 
 ---
 
+## Privacy Database Logging
+
+In addition to the regular server logs, the Radicale privacy extension can write privacy-related events to a SQLite database. This creates an audit trail that you can query directly.
+
+### What is logged
+
+When database logging is enabled, the following actions are recorded in the `privacy_logs` table:
+
+- Privacy settings are retrieved, created, updated, or deleted
+- vCards are processed, reprocessed, or found by the privacy scanner
+- Authentication events on the privacy API succeed or fail
+
+Each log entry contains a timestamp, the user identifier, the action type, a message, optional JSON details, and a log level.
+
+### Enable database logging
+
+Add the following to your Radicale configuration file (`config/radicale.config` for Docker, or `~/.config/radicale/config` for local development):
+
+```ini
+[privacy]
+type = database
+database_path = /var/lib/radicale/privacy.db
+database_logging = true
+```
+
+The default value is `false`. The database path is the same SQLite file that stores user privacy settings.
+
+### Viewing server logs
+
+**Docker Compose:**
+
+```bash
+# Follow Radicale server logs in real time
+docker compose logs -f radicale
+
+# Show the last 100 lines
+docker compose logs --tail=100 radicale
+```
+
+**Local server:**
+
+When running `python -m radicale` directly, logs are written to stdout/stderr. Use the logging level to control verbosity:
+
+```ini
+[logging]
+level = debug
+```
+
+With `level = debug` you will see privacy enforcement details such as which vCard properties were removed.
+
+### Querying the privacy database logs
+
+The privacy database is a standard SQLite file. You can query it from inside the running container or after copying it to your host.
+
+**From inside the container:**
+
+```bash
+docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db \
+  "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC LIMIT 20;"
+```
+
+**Copy to host and query:**
+
+```bash
+docker cp radicale-idp-server:/var/lib/radicale/privacy.db ./privacy.db
+sqlite3 ./privacy.db \
+  "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC;"
+```
+
+### Important notes
+
+- Database logging is **separate** from the normal server logs. Normal logs always go to the configured logger, regardless of `database_logging`.
+- The `privacy_logs` table is stored in the same SQLite file as `user_settings`, so it is included when you back up the privacy database.
+- On first deployment the privacy database is empty until a privacy setting is created or a vCard is processed.
+
+---
+
 ## Adding Default User Data
 
 You can pre-populate the Radicale server with user data (contacts, calendars) that will be automatically loaded when the Docker container starts for the first time.
@@ -103,6 +192,16 @@ The system supports two formats for default data:
    ├── user1@example.com.zip
    └── user2@example.com.zip
    ```
+
+> ⚠️ **vCards must contain a `UID` field.** Radicale skips any `.vcf` file that does not have a `UID:` line and logs a warning such as `VCARD object without UID`. The contact will not appear in the address book. Make sure each `.vcf` file includes a unique `UID` before the closing `END:VCARD`:
+>
+> ```vcard
+> BEGIN:VCARD
+> VERSION:3.0
+> FN:John Doe
+> UID:john-doe-unique-id
+> END:VCARD
+> ```
 
 ### Adding a New User
 
@@ -147,7 +246,7 @@ The system supports two formats for default data:
 
 - ⚠️ **The `DEFAULT_USER_PASSWORD` applies to ALL users** created from `default-data/`
 - Change this password BEFORE deploying to production
-- The default password `password` is INSECURE and only for local development
+- The default password `password123abc` is INSECURE and only for local development
 - Avoid shell special characters (!, $, `, \, ", ') in passwords
 - Generate a strong password: `openssl rand -base64 16 | tr -d '/+='`
 

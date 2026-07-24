@@ -67,7 +67,7 @@ def test_unauthenticated_request(http_app):
         "PATH_INFO": "/privacy/settings/test@example.com"
     }
 
-    status, headers, body = http_app.do_GET(environ, "/privacy/settings/test@example.com")
+    status, headers, body, _ = http_app.do_GET(environ, "/privacy/settings/test@example.com")
 
     assert status == client.UNAUTHORIZED
     assert headers["Content-Type"] == "application/json"
@@ -85,7 +85,7 @@ def test_invalid_token_request(http_app):
         "HTTP_AUTHORIZATION": "Bearer invalid-token"
     }
 
-    status, headers, body = http_app.do_GET(environ, "/privacy/settings/test@example.com")
+    status, headers, body, _ = http_app.do_GET(environ, "/privacy/settings/test@example.com")
 
     assert status == client.UNAUTHORIZED
     assert headers["Content-Type"] == "application/json"
@@ -103,7 +103,7 @@ def test_malformed_auth_header(http_app):
         "HTTP_AUTHORIZATION": "Basic invalid"  # Not Bearer token
     }
 
-    status, headers, body = http_app.do_GET(environ, "/privacy/settings/test@example.com")
+    status, headers, body, _ = http_app.do_GET(environ, "/privacy/settings/test@example.com")
 
     assert status == client.UNAUTHORIZED
     assert headers["Content-Type"] == "application/json"
@@ -121,7 +121,7 @@ def test_empty_bearer_token(http_app):
         "HTTP_AUTHORIZATION": "Bearer "  # Empty token
     }
 
-    status, headers, body = http_app.do_GET(environ, "/privacy/settings/test@example.com")
+    status, headers, body, _ = http_app.do_GET(environ, "/privacy/settings/test@example.com")
 
     assert status == client.UNAUTHORIZED
     assert headers["Content-Type"] == "application/json"
@@ -152,7 +152,7 @@ def test_get_settings_success(http_app):
         }
 
         # Call the handler
-        status, headers, body = http_app.do_GET(environ, "/privacy/settings/test@example.com")
+        status, headers, body, _ = http_app.do_GET(environ, "/privacy/settings/test@example.com")
 
         # Verify response
         assert status == client.OK
@@ -181,7 +181,7 @@ def test_get_settings_error(http_app):
         }
 
         # Call the handler
-        status, headers, body = http_app.do_GET(environ, "/privacy/settings/nonexistent@example.com")
+        status, headers, body, _ = http_app.do_GET(environ, "/privacy/settings/nonexistent@example.com")
 
         # Verify response
         assert status == client.BAD_REQUEST
@@ -216,7 +216,7 @@ def test_get_matching_cards_success(http_app):
         }
 
         # Call the handler
-        status, headers, body = http_app.do_GET(environ, "/privacy/cards/test@example.com")
+        status, headers, body, _ = http_app.do_GET(environ, "/privacy/cards/test@example.com")
 
         # Verify response
         assert status == client.OK
@@ -254,7 +254,7 @@ def test_create_settings_success(http_app):
         }
 
         # Call the handler
-        status, headers, body = http_app.do_POST(environ, "/privacy/settings/test@example.com")
+        status, headers, body, _ = http_app.do_POST(environ, "/privacy/settings/test@example.com")
 
         # Verify response
         assert status == client.CREATED
@@ -286,7 +286,7 @@ def test_update_settings_success(http_app):
         }
 
         # Call the handler
-        status, headers, body = http_app.do_PUT(environ, "/privacy/settings/test@example.com")
+        status, headers, body, _ = http_app.do_PUT(environ, "/privacy/settings/test@example.com")
 
         # Verify response
         assert status == client.OK
@@ -310,7 +310,7 @@ def test_delete_settings_success(http_app):
         }
 
         # Call the handler
-        status, headers, body = http_app.do_DELETE(environ, "/privacy/settings/test@example.com")
+        status, headers, body, _ = http_app.do_DELETE(environ, "/privacy/settings/test@example.com")
 
         # Verify response
         assert status == client.OK
@@ -338,7 +338,7 @@ def test_reprocess_cards_success(http_app):
         }
 
         # Call the handler
-        status, headers, body = http_app.do_POST(environ, "/privacy/cards/test@example.com/reprocess")
+        status, headers, body, _ = http_app.do_POST(environ, "/privacy/cards/test@example.com/reprocess")
 
         # Verify response
         assert status == client.OK
@@ -360,7 +360,7 @@ def test_invalid_path(http_app):
     }
 
     # Call the handler
-    status, headers, body = http_app.do_GET(environ, "/privacy/invalid/test@example.com")
+    status, headers, body, _ = http_app.do_GET(environ, "/privacy/invalid/test@example.com")
 
     # Verify response
     assert status == client.NOT_FOUND  # Updated expected status
@@ -378,7 +378,7 @@ def test_missing_content_length(http_app):
     }
 
     # Call the handler
-    status, headers, body = http_app.do_POST(environ, "/privacy/settings/test@example.com")
+    status, headers, body, _ = http_app.do_POST(environ, "/privacy/settings/test@example.com")
 
     # Verify response
     assert status == client.BAD_REQUEST
@@ -402,7 +402,7 @@ def test_invalid_json(http_app):
     }
 
     # Call the handler
-    status, headers, body = http_app.do_POST(environ, "/privacy/settings/test@example.com")
+    status, headers, body, _ = http_app.do_POST(environ, "/privacy/settings/test@example.com")
 
     # Verify response
     assert status == client.BAD_REQUEST

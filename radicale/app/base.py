@@ -114,6 +114,7 @@ def _check_path_format(self: storage.BaseStorage,
                              validation_type,
                              )
 
+
 # Define the possible result types
 SettingsResult = Union[Dict[str, bool], Dict[str, str]]
 CardsResult = Dict[str, List[Dict[str, Any]]]
@@ -240,8 +241,8 @@ class ApplicationBase:
         headers = {"Content-Type": "application/json"}
         if isinstance(result, str):
             # Error message
-            return client.BAD_REQUEST, headers, json.dumps({"error": result}).encode()
-        return client.OK, headers, json.dumps(result).encode()
+            return client.BAD_REQUEST, headers, json.dumps({"error": result}).encode(), None
+        return client.OK, headers, json.dumps(result).encode(), None
 
 
 class Access:

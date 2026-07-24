@@ -52,7 +52,6 @@ class CollectionPartUpload(CollectionPartGet, CollectionPartCache,
         logger.debug("Item name: %r", item.name)
         logger.debug("Item type: %r", type(item))
 
-
         try:
             # Get privacy enforcement instance
             privacy_enforcement = PrivacyEnforcement.get_instance(self._storage.configuration)

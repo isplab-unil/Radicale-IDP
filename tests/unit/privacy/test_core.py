@@ -386,7 +386,7 @@ def test_get_matching_cards_no_matches(core):
     core.create_settings("test@example.com", settings)
 
     # Create a collection using the storage core
-    collection = core._scanner._storage.create_collection("/testuser/contacts/")
+    collection, _, _ = core._scanner._storage.create_collection("/testuser/contacts/")
     assert collection is not None
 
     # Upload a minimal vCard to ensure the collection is recognized
@@ -426,7 +426,7 @@ def test_get_matching_cards_recursive_discovery(core):
     vcard.email.type_param = 'INTERNET'
 
     # Create a nested collection structure: user1/contacts/personal
-    collection = core._scanner._storage.create_collection("/user1/contacts")
+    collection, _, _ = core._scanner._storage.create_collection("/user1/contacts")
 
     # Upload the vCard
     item = Item(vobject_item=vcard, collection_path="user1/contacts", component_name="VCARD")
@@ -488,8 +488,8 @@ def test_get_matching_cards_in_different_collections(core):
     vcard2.tel.type_param = 'CELL'
 
     # Create collections and add vCards
-    collection1 = core._scanner._storage.create_collection("/user1/contacts")
-    collection2 = core._scanner._storage.create_collection("/user2/contacts")
+    collection1, _, _ = core._scanner._storage.create_collection("/user1/contacts")
+    collection2, _, _ = core._scanner._storage.create_collection("/user2/contacts")
 
     item1 = Item(vobject_item=vcard1, collection_path="user1/contacts", component_name="VCARD")
     item2 = Item(vobject_item=vcard2, collection_path="user2/contacts", component_name="VCARD")
@@ -567,7 +567,7 @@ def test_reprocess_cards_success(core):
     vcard.title.value = "Test Title"
 
     # Create collection and upload vCard
-    collection = core._scanner._storage.create_collection("/testuser/contacts")
+    collection, _, _ = core._scanner._storage.create_collection("/testuser/contacts")
     item = Item(vobject_item=vcard, collection_path="testuser/contacts", component_name="VCARD")
     collection.upload("test-card.vcf", item)
 
@@ -630,8 +630,8 @@ def test_reprocess_cards_multiple_collections(core):
     vcard2.org.value = "Company 2"
 
     # Create collections and upload vCards
-    collection1 = core._scanner._storage.create_collection("/user1/contacts")
-    collection2 = core._scanner._storage.create_collection("/user2/contacts")
+    collection1, _, _ = core._scanner._storage.create_collection("/user1/contacts")
+    collection2, _, _ = core._scanner._storage.create_collection("/user2/contacts")
 
     item1 = Item(vobject_item=vcard1, collection_path="user1/contacts", component_name="VCARD")
     item2 = Item(vobject_item=vcard2, collection_path="user2/contacts", component_name="VCARD")
@@ -686,7 +686,7 @@ def test_reprocess_cards_after_settings_update(core):
     vcard.title.value = "Test Title"
 
     # Create collection and upload vCard
-    collection = core._scanner._storage.create_collection("/testuser/contacts")
+    collection, _, _ = core._scanner._storage.create_collection("/testuser/contacts")
     item = Item(vobject_item=vcard, collection_path="testuser/contacts", component_name="VCARD")
     collection.upload("test-card.vcf", item)
 
@@ -752,7 +752,7 @@ def test_get_matching_cards_phone_formats(core):
     assert result == {"status": "created"}
 
     # Create a collection
-    collection = core._scanner._storage.create_collection("/testuser/contacts/")
+    collection, _, _ = core._scanner._storage.create_collection("/testuser/contacts/")
     assert collection is not None
 
     # List of phone number formats that should all normalize to +14155552671
@@ -833,7 +833,7 @@ def test_get_matching_cards_with_photo(core):
     vcard.photo.value = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAD0lEQVQIHQEEAPv/AP///wX+Av4DfRnGAAAAAElFTkSuQmCC'
 
     # Create collection and upload vCard
-    collection = core._scanner._storage.create_collection("/photouser/contacts")
+    collection, _, _ = core._scanner._storage.create_collection("/photouser/contacts")
     item = Item(vobject_item=vcard, collection_path="photouser/contacts", component_name="VCARD")
     collection.upload("photo-card.vcf", item)
 

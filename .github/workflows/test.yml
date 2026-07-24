@@ -161,7 +161,7 @@ jobs:
       - name: Test with 32-bit Python on latest Ubuntu
         run: |
           . venv/bin/activate
-          tox -c /__w/Radicale/Radicale/pyproject.toml -e py
+          tox -c pyproject.toml -e py
 
   test-ubuntu-python-oldest:
     name: Test Python:oldest Ubuntu:latest
@@ -241,6 +241,8 @@ jobs:
         run: pip install tox
       - name: Test with older Python
         run: tox -c pyproject.toml -e py
+        env:
+          PYTEST_ADDOPTS: ${{ startsWith(matrix.python-version, 'pypy') && '-p no:unraisableexception' || '' }}
 
   coveralls-test:
     name: Coveralls:Test

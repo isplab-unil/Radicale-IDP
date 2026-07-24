@@ -91,7 +91,7 @@ def generate_test_cards() -> List[Dict]:
             'title': 'Software Engineer'
         },
 
-        # Test case 2: Contact with same email as test1
+        # Test case 2: Contact with work email
         {
             'uid': 'test2',
             'name': 'John Doe (Work)',
