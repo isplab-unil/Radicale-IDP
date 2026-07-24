@@ -105,6 +105,7 @@ class PrivacyHTTP:
                 client.UNAUTHORIZED,
                 {"Content-Type": "application/json", "WWW-Authenticate": "Bearer"},
                 json.dumps({"error": "Unauthorized. Bearer token required."}).encode(),
+                None,
             )
 
         adapter = self.url_map.bind("")
@@ -125,6 +126,7 @@ class PrivacyHTTP:
                 httputils.NOT_FOUND[0],
                 {"Content-Type": "application/json"},
                 json.dumps({"error": "Route not found"}).encode(),
+                None,
             )
         except MethodNotAllowed:
             logger.warning("Method not allowed: %s %s", method, path)
@@ -132,6 +134,7 @@ class PrivacyHTTP:
                 httputils.METHOD_NOT_ALLOWED[0],
                 {"Content-Type": "application/json"},
                 json.dumps({"error": "Method not allowed"}).encode(),
+                None,
             )
 
     def _get_request_json(
@@ -153,6 +156,7 @@ class PrivacyHTTP:
                     httputils.BAD_REQUEST[0],
                     {"Content-Type": "application/json"},
                     json.dumps({"error": "Missing or invalid JSON body"}).encode(),
+                    None,
                 )
             return json_data
         except Exception as e:
@@ -161,6 +165,7 @@ class PrivacyHTTP:
                 httputils.BAD_REQUEST[0],
                 {"Content-Type": "application/json"},
                 json.dumps({"error": "Invalid JSON"}).encode(),
+                None,
             )
 
     def _to_wsgi_response(self, success: bool, result: APIResult) -> types.WSGIResponse:
@@ -177,8 +182,8 @@ class PrivacyHTTP:
 
         if not success or isinstance(result, str):
             # Error message - either explicit failure or string result indicates error
-            return client.BAD_REQUEST, headers, json.dumps({"error": result}).encode()
-        return client.OK, headers, json.dumps(result).encode()
+            return client.BAD_REQUEST, headers, json.dumps({"error": result}).encode(), None
+        return client.OK, headers, json.dumps(result).encode(), None
 
     # Route handler methods
     def _handle_get_settings(
@@ -219,6 +224,7 @@ class PrivacyHTTP:
                 client.CREATED,
                 {"Content-Type": "application/json"},
                 json.dumps(result).encode(),
+                None,
             )
 
         return self._to_wsgi_response(success, result)
