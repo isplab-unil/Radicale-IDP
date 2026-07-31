@@ -1,15 +1,21 @@
-import { useLocation } from 'react-router';
+import { useLoaderData, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { LoginForm } from '~/components/login-form';
+import { getEnv } from '~/lib/env';
 import { meta, handle } from './login-meta';
 
 export { meta, handle };
 
+export const loader = async () => {
+  return { showDisclaimer: getEnv().SHOW_DISCLAIMER || false };
+};
+
 export default function LoginPage() {
   const location = useLocation();
   const { t } = useTranslation();
+  const { showDisclaimer: envDisclaimer } = useLoaderData<typeof loader>();
   const searchParams = new URLSearchParams(location.search);
-  const showDisclaimer = searchParams.get('disclaimer') === 'true';
+  const showDisclaimer = envDisclaimer || searchParams.get('disclaimer') === 'true';
 
   return (
     <div className="py-30">
