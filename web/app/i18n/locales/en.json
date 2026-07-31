@@ -113,9 +113,9 @@
     }
   },
   "navigation": {
-    "logout": "Logout",
-    "logoutIcon": "log-out",
-    "menuIcon": "ellipsis",
+    "logout": "Sign Out",
+    "logoutIcon": "circle-x",
+    "menuLabel": "User menu",
     "subtitles": {
       "dataPreferences": "Contacts - Subject Data Preferences",
       "dataAccess": "Contacts - Subject Data Access"

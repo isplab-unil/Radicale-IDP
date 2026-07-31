@@ -515,8 +515,8 @@ Icons are stored directly in the JSON file as text values. They use icon names f
 | Disclaimer message | `login.disclaimer`               | Text | "Do not enter your real information"   |
 | Back button label  | `navigation.backToDashboard`     | Text | "Back to Dashboard"                    |
 | Back button icon   | `navigation.backToDashboardIcon` | Icon | "home"                                 |
-| Logout label       | `navigation.logout`              | Text | "Logout"                               |
-| Logout icon        | `navigation.logoutIcon`          | Icon | "log-out"                              |
+| Logout label       | `navigation.logout`              | Text | "Sign Out"                             |
+| Logout icon        | `navigation.logoutIcon`          | Icon | "circle-x"                             |
 | Field icon         | `access.fromIcon`                | Icon | "mail"                                 |
 | Footer links       | `footer.*`                       | Text | "Privacy Policy", "Terms & Conditions" |
 

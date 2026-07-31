@@ -5,11 +5,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { Button } from '~/components/ui/button';
 import { ProtectedRoute } from './protected-route';
-import { isAuthenticated, clearAuthToken } from '~/lib/auth';
+import { isAuthenticated, clearAuthToken, getCurrentUser } from '~/lib/auth';
 import { useNavigateWithTemplate } from '~/lib/template-context';
 import { PageTabs } from './ui/page-tabs';
 
@@ -26,6 +28,7 @@ export default function Layout() {
   const handle = currentMatch?.handle as RouteHandle;
   const subtitle = handle?.subtitleKey ? t(handle.subtitleKey) : handle?.subtitle || '';
   const authenticated = isAuthenticated();
+  const user = getCurrentUser();
 
   const handleLogout = () => {
     clearAuthToken();
@@ -63,24 +66,37 @@ export default function Layout() {
             {/* Dropdown Navigation */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="flex items-center space-x-1">
-                  <DynamicIcon name={t('navigation.menuIcon')} className="size-6" />
-                </Button>
+                <button
+                  aria-label={t('navigation.menuLabel')}
+                  className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full hover:bg-gray-400 transition-colors cursor-pointer"
+                >
+                  <DynamicIcon name="user" size={20} className="text-white" />
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 {authenticated && (
-                  <DropdownMenuItem asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left border-none focus:border-none focus-visible:border-none hover:border-none font-normal"
-                      onClick={handleLogout}
-                    >
-                      <span className="text-red-600 mr-2">
-                        <DynamicIcon name={t('navigation.logoutIcon')} size={20} />
-                      </span>
-                      {t('navigation.logout')}
-                    </Button>
-                  </DropdownMenuItem>
+                  <>
+                    {user?.contact && (
+                      <>
+                        <DropdownMenuLabel className="font-normal text-gray-500 truncate">
+                          {user.contact}
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left border-none focus:border-none focus-visible:border-none hover:border-none font-normal"
+                        onClick={handleLogout}
+                      >
+                        <span className="text-red-600 mr-2">
+                          <DynamicIcon name={t('navigation.logoutIcon')} size={20} />
+                        </span>
+                        {t('navigation.logout')}
+                      </Button>
+                    </DropdownMenuItem>
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
