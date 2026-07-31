@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
 import { getCurrentUser } from '~/lib/auth';
 
@@ -37,6 +38,20 @@ export function TemplateC() {
     if (contact.fields.adr) fieldCounts.address++;
   });
 
+  const rows = [
+    { labelKey: 'access.fields.name', icon: 'user', count: fieldCounts.name },
+    { labelKey: 'access.fields.phone', icon: t('access.mobileIcon'), count: fieldCounts.phone },
+    { labelKey: 'access.fields.email', icon: t('access.emailIcon'), count: fieldCounts.email },
+    { labelKey: 'access.fields.company', icon: 'building-2', count: fieldCounts.company },
+    { labelKey: 'access.fields.jobTitle', icon: 'briefcase', count: fieldCounts.jobTitle },
+    { labelKey: 'access.fields.photo', icon: 'image', count: fieldCounts.photo },
+    { labelKey: 'access.fields.nickname', icon: 'at-sign', count: fieldCounts.nickname },
+    { labelKey: 'access.fields.birthday', icon: 'cake', count: fieldCounts.birthday },
+    { labelKey: 'access.fields.pronoun', icon: 'user-round', count: fieldCounts.pronoun },
+    { labelKey: 'access.fields.related', icon: t('access.spouseIcon'), count: fieldCounts.related },
+    { labelKey: 'access.fields.address', icon: 'map-pin', count: fieldCounts.address },
+  ];
+
   return (
     <div className="pt-6 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
@@ -53,72 +68,19 @@ export function TemplateC() {
           {!loading && cards.length > 0 && (
             <div className="space-y-4">
               <div className="text-gray-900 text-lg">
-                <div className="mb-4">
-                  {t('access.fields.name')}:{' '}
-                  {fieldCounts.name === 1
-                    ? t('access.cardCount', { count: fieldCounts.name })
-                    : t('access.cardCountPlural', { count: fieldCounts.name })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.phone')}:{' '}
-                  {fieldCounts.phone === 1
-                    ? t('access.cardCount', { count: fieldCounts.phone })
-                    : t('access.cardCountPlural', { count: fieldCounts.phone })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.email')}:{' '}
-                  {fieldCounts.email === 1
-                    ? t('access.cardCount', { count: fieldCounts.email })
-                    : t('access.cardCountPlural', { count: fieldCounts.email })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.company')}:{' '}
-                  {fieldCounts.company === 1
-                    ? t('access.cardCount', { count: fieldCounts.company })
-                    : t('access.cardCountPlural', { count: fieldCounts.company })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.jobTitle')}:{' '}
-                  {fieldCounts.jobTitle === 1
-                    ? t('access.cardCount', { count: fieldCounts.jobTitle })
-                    : t('access.cardCountPlural', { count: fieldCounts.jobTitle })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.photo')}:{' '}
-                  {fieldCounts.photo === 1
-                    ? t('access.cardCount', { count: fieldCounts.photo })
-                    : t('access.cardCountPlural', { count: fieldCounts.photo })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.nickname')}:{' '}
-                  {fieldCounts.nickname === 1
-                    ? t('access.cardCount', { count: fieldCounts.nickname })
-                    : t('access.cardCountPlural', { count: fieldCounts.nickname })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.birthday')}:{' '}
-                  {fieldCounts.birthday === 1
-                    ? t('access.cardCount', { count: fieldCounts.birthday })
-                    : t('access.cardCountPlural', { count: fieldCounts.birthday })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.pronoun')}:{' '}
-                  {fieldCounts.pronoun === 1
-                    ? t('access.cardCount', { count: fieldCounts.pronoun })
-                    : t('access.cardCountPlural', { count: fieldCounts.pronoun })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.related')}:{' '}
-                  {fieldCounts.related === 1
-                    ? t('access.cardCount', { count: fieldCounts.related })
-                    : t('access.cardCountPlural', { count: fieldCounts.related })}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.address')}:{' '}
-                  {fieldCounts.address === 1
-                    ? t('access.cardCount', { count: fieldCounts.address })
-                    : t('access.cardCountPlural', { count: fieldCounts.address })}
-                </div>
+                {rows.map(row => (
+                  <div key={row.labelKey} className="mb-4 flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full flex-shrink-0">
+                      <DynamicIcon name={row.icon} size={20} className="text-white" />
+                    </div>
+                    <span>
+                      {t(row.labelKey)}:{' '}
+                      {row.count === 1
+                        ? t('access.cardCount', { count: row.count })
+                        : t('access.cardCountPlural', { count: row.count })}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}

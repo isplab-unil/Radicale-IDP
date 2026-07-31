@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
 import { getCurrentUser } from '~/lib/auth';
 
@@ -91,6 +92,20 @@ export function TemplateD() {
     return ` (${allButLast}, and "${last}")`;
   };
 
+  const rows = [
+    { labelKey: 'access.fields.name', icon: 'user', values: fieldData.name },
+    { labelKey: 'access.fields.phone', icon: t('access.mobileIcon'), values: fieldData.phone },
+    { labelKey: 'access.fields.email', icon: t('access.emailIcon'), values: fieldData.email },
+    { labelKey: 'access.fields.company', icon: 'building-2', values: fieldData.company },
+    { labelKey: 'access.fields.jobTitle', icon: 'briefcase', values: fieldData.jobTitle },
+    { labelKey: 'access.fields.photo', icon: 'image', values: fieldData.photo },
+    { labelKey: 'access.fields.nickname', icon: 'at-sign', values: fieldData.nickname },
+    { labelKey: 'access.fields.birthday', icon: 'cake', values: fieldData.birthday },
+    { labelKey: 'access.fields.pronoun', icon: 'user-round', values: fieldData.pronoun },
+    { labelKey: 'access.fields.related', icon: t('access.spouseIcon'), values: fieldData.related },
+    { labelKey: 'access.fields.address', icon: 'map-pin', values: fieldData.address },
+  ];
+
   return (
     <div className="pt-6 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
@@ -107,83 +122,20 @@ export function TemplateD() {
           {!loading && cards.length > 0 && (
             <div className="space-y-4">
               <div className="text-gray-900 text-lg">
-                <div className="mb-4">
-                  {t('access.fields.name')}:{' '}
-                  {fieldData.name.length === 1
-                    ? t('access.cardCount', { count: fieldData.name.length })
-                    : t('access.cardCountPlural', { count: fieldData.name.length })}
-                  {formatValues(fieldData.name)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.phone')}:{' '}
-                  {fieldData.phone.length === 1
-                    ? t('access.cardCount', { count: fieldData.phone.length })
-                    : t('access.cardCountPlural', { count: fieldData.phone.length })}
-                  {formatValues(fieldData.phone)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.email')}:{' '}
-                  {fieldData.email.length === 1
-                    ? t('access.cardCount', { count: fieldData.email.length })
-                    : t('access.cardCountPlural', { count: fieldData.email.length })}
-                  {formatValues(fieldData.email)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.company')}:{' '}
-                  {fieldData.company.length === 1
-                    ? t('access.cardCount', { count: fieldData.company.length })
-                    : t('access.cardCountPlural', { count: fieldData.company.length })}
-                  {formatValues(fieldData.company)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.jobTitle')}:{' '}
-                  {fieldData.jobTitle.length === 1
-                    ? t('access.cardCount', { count: fieldData.jobTitle.length })
-                    : t('access.cardCountPlural', { count: fieldData.jobTitle.length })}
-                  {formatValues(fieldData.jobTitle)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.photo')}:{' '}
-                  {fieldData.photo.length === 1
-                    ? t('access.cardCount', { count: fieldData.photo.length })
-                    : t('access.cardCountPlural', { count: fieldData.photo.length })}
-                  {formatValues(fieldData.photo)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.nickname')}:{' '}
-                  {fieldData.nickname.length === 1
-                    ? t('access.cardCount', { count: fieldData.nickname.length })
-                    : t('access.cardCountPlural', { count: fieldData.nickname.length })}
-                  {formatValues(fieldData.nickname)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.birthday')}:{' '}
-                  {fieldData.birthday.length === 1
-                    ? t('access.cardCount', { count: fieldData.birthday.length })
-                    : t('access.cardCountPlural', { count: fieldData.birthday.length })}
-                  {formatValues(fieldData.birthday)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.pronoun')}:{' '}
-                  {fieldData.pronoun.length === 1
-                    ? t('access.cardCount', { count: fieldData.pronoun.length })
-                    : t('access.cardCountPlural', { count: fieldData.pronoun.length })}
-                  {formatValues(fieldData.pronoun)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.related')}:{' '}
-                  {fieldData.related.length === 1
-                    ? t('access.cardCount', { count: fieldData.related.length })
-                    : t('access.cardCountPlural', { count: fieldData.related.length })}
-                  {formatValues(fieldData.related)}
-                </div>
-                <div className="mb-4">
-                  {t('access.fields.address')}:{' '}
-                  {fieldData.address.length === 1
-                    ? t('access.cardCount', { count: fieldData.address.length })
-                    : t('access.cardCountPlural', { count: fieldData.address.length })}
-                  {formatValues(fieldData.address)}
-                </div>
+                {rows.map(row => (
+                  <div key={row.labelKey} className="mb-4 flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full flex-shrink-0">
+                      <DynamicIcon name={row.icon} size={20} className="text-white" />
+                    </div>
+                    <span>
+                      {t(row.labelKey)}:{' '}
+                      {row.values.length === 1
+                        ? t('access.cardCount', { count: row.values.length })
+                        : t('access.cardCountPlural', { count: row.values.length })}
+                      {formatValues(row.values)}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
