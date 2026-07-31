@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import { meta, handle } from './subject-data-access-meta';
 import { useTemplateConfig } from '~/lib/template-context';
+import { TemplateSwitcher } from '~/components/template-switcher';
 import { TemplateA } from '~/components/subject-data-access-templates/TemplateA';
 import { TemplateB } from '~/components/subject-data-access-templates/TemplateB';
 import { TemplateC } from '~/components/subject-data-access-templates/TemplateC';
@@ -14,28 +16,42 @@ export default function DataAccessPage() {
 
   const template = enableTemplates ? templateVersion || defaultTemplate : defaultTemplate;
 
+  let content: ReactNode;
   switch (template.toLowerCase()) {
     case 'a':
-      return <TemplateA />;
+      content = <TemplateA />;
+      break;
     case 'b':
-      return <TemplateB />;
+      content = <TemplateB />;
+      break;
     case 'c':
-      return <TemplateC />;
+      content = <TemplateC />;
+      break;
     case 'd':
-      return <TemplateD />;
+      content = <TemplateD />;
+      break;
     case 'e':
-      return <TemplateE />;
+      content = <TemplateE />;
+      break;
     case 'f':
-      return <TemplateF />;
+      content = <TemplateF />;
+      break;
     default: {
       // If somehow an invalid template gets here, render the default
       const defaultLower = defaultTemplate.toLowerCase();
-      if (defaultLower === 'b') return <TemplateB />;
-      if (defaultLower === 'c') return <TemplateC />;
-      if (defaultLower === 'd') return <TemplateD />;
-      if (defaultLower === 'e') return <TemplateE />;
-      if (defaultLower === 'f') return <TemplateF />;
-      return <TemplateA />;
+      if (defaultLower === 'b') content = <TemplateB />;
+      else if (defaultLower === 'c') content = <TemplateC />;
+      else if (defaultLower === 'd') content = <TemplateD />;
+      else if (defaultLower === 'e') content = <TemplateE />;
+      else if (defaultLower === 'f') content = <TemplateF />;
+      else content = <TemplateA />;
     }
   }
+
+  return (
+    <>
+      <TemplateSwitcher />
+      {content}
+    </>
+  );
 }

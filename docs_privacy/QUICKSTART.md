@@ -428,20 +428,34 @@ https://yoursite.com/?v=a
 
 ## Disclaimer Box
 
-Show a warning message on the login page to inform users not to enter real information:
-
-```
-https://yoursite.com/login?disclaimer=true
-```
+Show a warning message on the login page to inform users not to enter real information.
 
 **What it does:** Displays a red warning box at the top of the login page that says "Disclaimer — Do not enter your real information"
 
 **Use case:** When you want to set up a test or demo environment and need to warn users that this isn't the real system.
 
+### Always on (environment variable)
+
+Set `SHOW_DISCLAIMER=true` in the root `.env` file and restart the containers:
+
+```bash
+docker compose -f docker-compose.yml restart web
+```
+
+The disclaimer is then displayed on every visit to the login page, regardless of the URL.
+
+### One-off (query parameter)
+
+Alternatively, append `?disclaimer=true` to the login URL to show the box for that visit only:
+
+```
+https://yoursite.com/login?disclaimer=true
+```
+
 **Example:**
 
 - Production login: `https://contact.example.com/login`
-- Test login: `https://test.contact.example.com/login?disclaimer=true`
+- Test deployment: `SHOW_DISCLAIMER=true` in `.env`, or ad-hoc via `https://test.contact.example.com/login?disclaimer=true`
 
 ---
 
@@ -496,15 +510,13 @@ Icons are stored directly in the JSON file as text values. They use icon names f
 
 | What to Change     | Location                         | Type | Example                                |
 | ------------------ | -------------------------------- | ---- | -------------------------------------- |
-| Home page title    | `home.title`                     | Text | "Take control of your privacy"         |
 | Login instructions | `login.description`              | Text | "Enter your email address..."          |
-| Button labels      | `home.preferences.button`        | Text | "Set Your Subject Data Preferences"    |
 | Error messages     | `login.errorSendingCode`         | Text | "Failed to send verification code."    |
 | Disclaimer message | `login.disclaimer`               | Text | "Do not enter your real information"   |
 | Back button label  | `navigation.backToDashboard`     | Text | "Back to Dashboard"                    |
 | Back button icon   | `navigation.backToDashboardIcon` | Icon | "home"                                 |
-| Logout label       | `navigation.logout`              | Text | "Logout"                               |
-| Logout icon        | `navigation.logoutIcon`          | Icon | "log-out"                              |
+| Logout label       | `navigation.logout`              | Text | "Sign Out"                             |
+| Logout icon        | `navigation.logoutIcon`          | Icon | "circle-x"                             |
 | Field icon         | `access.fromIcon`                | Icon | "mail"                                 |
 | Footer links       | `footer.*`                       | Text | "Privacy Policy", "Terms & Conditions" |
 

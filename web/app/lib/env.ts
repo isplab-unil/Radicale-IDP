@@ -32,6 +32,9 @@ export interface EnvConfig {
   ENABLE_TEMPLATES?: boolean;
   DEFAULT_TEMPLATE?: string;
 
+  // Login page
+  SHOW_DISCLAIMER?: boolean;
+
   // Environment
   NODE_ENV: string;
   DEV: boolean;
@@ -68,6 +71,9 @@ export function getEnv(): EnvConfig {
     // Templates
     ENABLE_TEMPLATES: process.env.ENABLE_TEMPLATES === 'true',
     DEFAULT_TEMPLATE: process.env.DEFAULT_TEMPLATE || 'a',
+
+    // Login page
+    SHOW_DISCLAIMER: process.env.SHOW_DISCLAIMER === 'true',
 
     // Environment
     NODE_ENV: process.env.NODE_ENV || 'development',

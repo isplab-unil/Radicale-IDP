@@ -92,13 +92,10 @@ export function TemplateProvider({
       if (urlVersion !== version) {
         setVersionState(urlVersion);
       }
-    } else if (!version || !validVersions.includes(version)) {
-      // No version, invalid version, or version not in state/URL - use default
-      setVersionState(defaultTemplate);
-      // Update URL to reflect the default
-      const params = new URLSearchParams(searchParams);
-      params.set('v', defaultTemplate);
-      setSearchParams(params);
+    } else if (version) {
+      // No (valid) version in the URL - clear any stale selection. The
+      // default template applies implicitly without writing ?v= to the URL.
+      setVersionState('');
     }
   }, [searchParams, defaultTemplate, enableTemplates]); // Minimal dependencies to avoid loops
 

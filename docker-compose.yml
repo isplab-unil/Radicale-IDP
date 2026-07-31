@@ -100,6 +100,9 @@ services:
       - ENABLE_TEMPLATES=${ENABLE_TEMPLATES:-true}
       - DEFAULT_TEMPLATE=${DEFAULT_TEMPLATE:-a}
 
+      # Show disclaimer box on the login page (for demo/test deployments)
+      - SHOW_DISCLAIMER=${SHOW_DISCLAIMER:-false}
+
     volumes:
       # Persistent storage for web app database
       - web_data:/data
