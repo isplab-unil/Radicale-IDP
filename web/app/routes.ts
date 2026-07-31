@@ -6,7 +6,7 @@ export default [
 
   // Protected routes (authentication required)
   layout('components/protected-layout.tsx', [
-    index('routes/home.tsx'),
+    index('routes/index-redirect.tsx'),
     route('/subject-data-preferences', 'routes/subject-data-preferences.tsx'),
     route('/subject-data-access', 'routes/subject-data-access.tsx'),
   ]),

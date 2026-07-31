@@ -23,7 +23,6 @@ export default function Layout() {
   const matches = useMatches();
   const navigate = useNavigateWithTemplate();
   const currentMatch = matches[matches.length - 1];
-  const currentPath = currentMatch?.pathname || '/';
   const handle = currentMatch?.handle as RouteHandle;
   const subtitle = handle?.subtitleKey ? t(handle.subtitleKey) : handle?.subtitle || '';
   const authenticated = isAuthenticated();
@@ -35,7 +34,6 @@ export default function Layout() {
 
   // Tab configuration for page navigation
   const pageTabs = [
-    { to: '/', translationKey: 'tabs.dashboard' },
     { to: '/subject-data-preferences', translationKey: 'tabs.dataPreferences' },
     { to: '/subject-data-access', translationKey: 'tabs.dataAccess' },
   ];

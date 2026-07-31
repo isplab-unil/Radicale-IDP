@@ -1,18 +1,4 @@
 {
-  "home": {
-    "title": "Take control of your privacy",
-    "description": "Define your Subject Data Preferences for the contact management system without the need to create an account. Set your data handling preferences to control how your information is processed.",
-    "preferences": {
-      "title": "Subject Data Preferences",
-      "description": "Declare how you want your personal information to be handled when stored in the contact management system with a one-time passcode.",
-      "button": "Set Your Subject Data Preferences"
-    },
-    "access": {
-      "title": "Subject Data Access",
-      "description": "See how your data is used in the contact management system and how other users are using it. Make informed decisions about your privacy and data usage.",
-      "button": "View Subject Data Access"
-    }
-  },
   "login": {
     "title": "Sign in with email or phone",
     "description": "Enter your email address or phone number to receive a one-time passcode. No account creation required.",
@@ -131,13 +117,11 @@
     "logoutIcon": "log-out",
     "menuIcon": "ellipsis",
     "subtitles": {
-      "dashboard": "Contacts - Subject Dashboard",
       "dataPreferences": "Contacts - Subject Data Preferences",
       "dataAccess": "Contacts - Subject Data Access"
     }
   },
   "tabs": {
-    "dashboard": "Dashboard",
     "dataPreferences": "Data Preferences",
     "dataAccess": "Data Access",
     "navigationLabel": "Page navigation"

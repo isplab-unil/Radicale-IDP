@@ -510,9 +510,7 @@ Icons are stored directly in the JSON file as text values. They use icon names f
 
 | What to Change     | Location                         | Type | Example                                |
 | ------------------ | -------------------------------- | ---- | -------------------------------------- |
-| Home page title    | `home.title`                     | Text | "Take control of your privacy"         |
 | Login instructions | `login.description`              | Text | "Enter your email address..."          |
-| Button labels      | `home.preferences.button`        | Text | "Set Your Subject Data Preferences"    |
 | Error messages     | `login.errorSendingCode`         | Text | "Failed to send verification code."    |
 | Disclaimer message | `login.disclaimer`               | Text | "Do not enter your real information"   |
 | Back button label  | `navigation.backToDashboard`     | Text | "Back to Dashboard"                    |
