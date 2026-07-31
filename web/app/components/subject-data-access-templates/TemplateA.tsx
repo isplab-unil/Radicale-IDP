@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
 import { getCurrentUser } from '~/lib/auth';
 
@@ -24,10 +25,17 @@ export function TemplateA() {
           {loading ? (
             <div className="text-gray-600">{t('access.loading')}</div>
           ) : (
-            <div className="text-gray-900 text-lg">
-              {cards.length === 0
-                ? t('access.templates.a.none')
-                : t('access.templates.a.found')}
+            <div className="text-gray-900 text-lg flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full flex-shrink-0">
+                <DynamicIcon
+                  name={cards.length === 0 ? 'check' : 'circle-alert'}
+                  size={20}
+                  className="text-white"
+                />
+              </div>
+              <span>
+                {cards.length === 0 ? t('access.templates.a.none') : t('access.templates.a.found')}
+              </span>
             </div>
           )}
 
