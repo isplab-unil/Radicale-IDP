@@ -32,7 +32,7 @@ export function AppSidebar() {
   };
 
   return (
-    <aside className="w-16 md:w-64 bg-[#fbfbfd] flex flex-col flex-shrink-0 py-4">
+    <aside className="w-16 md:w-64 bg-[#fbfbfd] flex flex-col flex-shrink-0 py-4 border-r border-gray-300">
       {/* Action icons */}
       <div className="flex items-center justify-end gap-2 px-3 pb-4">
         <button
