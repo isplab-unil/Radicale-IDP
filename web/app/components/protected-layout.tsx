@@ -6,7 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { Button } from '~/components/ui/button';
@@ -78,10 +77,9 @@ export default function Layout() {
                   <>
                     {user?.contact && (
                       <>
-                        <DropdownMenuLabel className="font-normal text-gray-500 truncate bg-gray-100 -mx-1 -mt-1 px-3 py-2 rounded-t-2xl">
+                        <DropdownMenuLabel className="font-normal text-gray-500 truncate bg-gray-100 -mx-1 -mt-1 px-3 py-2 rounded-t-2xl border-b border-gray-300 mb-1">
                           {user.contact}
                         </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
                       </>
                     )}
                     <DropdownMenuItem asChild>
