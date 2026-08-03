@@ -62,7 +62,7 @@ export function AppSidebar() {
               aria-current={isActive ? 'page' : undefined}
               title={t(item.translationKey)}
               className={cn(
-                'flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-[10px] text-sm font-medium transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 isActive ? 'bg-brand-blue text-white' : 'text-gray-600 hover:bg-gray-200'
               )}
