@@ -78,7 +78,7 @@ export default function Layout() {
                   <>
                     {user?.contact && (
                       <>
-                        <DropdownMenuLabel className="font-normal text-gray-500 truncate">
+                        <DropdownMenuLabel className="font-normal text-gray-500 truncate bg-gray-100 -mx-1 -mt-1 px-3 py-2 rounded-t-2xl">
                           {user.contact}
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
@@ -93,7 +93,7 @@ export default function Layout() {
                         <span className="text-red-600 mr-2">
                           <DynamicIcon name={t('navigation.logoutIcon')} size={20} />
                         </span>
-                        {t('navigation.logout')}
+                        <span className="text-red-600">{t('navigation.logout')}</span>
                       </Button>
                     </DropdownMenuItem>
                   </>
