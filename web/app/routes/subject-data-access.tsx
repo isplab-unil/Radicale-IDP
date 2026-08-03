@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { meta, handle } from './subject-data-access-meta';
 import { useTemplateConfig } from '~/lib/template-context';
-import { TemplateSwitcher } from '~/components/template-switcher';
 import { TemplateA } from '~/components/subject-data-access-templates/TemplateA';
 import { TemplateB } from '~/components/subject-data-access-templates/TemplateB';
 import { TemplateC } from '~/components/subject-data-access-templates/TemplateC';
@@ -48,10 +47,5 @@ export default function DataAccessPage() {
     }
   }
 
-  return (
-    <>
-      <TemplateSwitcher />
-      {content}
-    </>
-  );
+  return <>{content}</>;
 }

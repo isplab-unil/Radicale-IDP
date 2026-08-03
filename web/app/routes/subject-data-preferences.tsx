@@ -12,7 +12,11 @@ export default function PreferencesPage() {
   const [originalPreferences, setOriginalPreferences] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Derived: unsaved changes exist when current values differ from the
+  // last saved/loaded ones (toggling an option back reverts the change).
+  const hasChanges =
+    Object.keys(preferences).length !== Object.keys(originalPreferences).length ||
+    Object.keys(preferences).some(key => preferences[key] !== originalPreferences[key]);
 
   // Mapping between API field names and user-friendly labels
   const fieldMapping = {
@@ -66,7 +70,6 @@ export default function PreferencesPage() {
           const data = await response.json();
           setPreferences(data.preferences);
           setOriginalPreferences(data.preferences);
-          setHasChanges(false);
         } else {
           toast.error(t('preferences.loadError'), {
             description: t('preferences.loadErrorDescription'),
@@ -92,7 +95,6 @@ export default function PreferencesPage() {
       [fieldId]: checked,
     };
     setPreferences(newPreferences);
-    setHasChanges(true);
   };
 
   const handleSavePreferences = async () => {
@@ -106,7 +108,6 @@ export default function PreferencesPage() {
 
       if (response.ok) {
         setOriginalPreferences(preferences);
-        setHasChanges(false);
         toast.success(t('preferences.saveSuccess'), {
           description: t('preferences.saveSuccessDescription'),
         });
@@ -126,7 +127,6 @@ export default function PreferencesPage() {
 
   const handleCancel = () => {
     setPreferences(originalPreferences);
-    setHasChanges(false);
   };
 
   if (loading) {
@@ -142,7 +142,7 @@ export default function PreferencesPage() {
   }
 
   return (
-    <div className="pt-6 pb-30">
+    <div className="pt-12 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
         <div className="space-y-8">
           {/* Header */}
@@ -153,33 +153,8 @@ export default function PreferencesPage() {
             </p>
           </div>
 
-          <div className="text-gray-600 text-lg leading-relaxed">
-            <p>{t('preferences.explanation')}</p>
-          </div>
-
-          {/* Preferences Form */}
-          <div className="space-y-6">
-            {Object.entries(fieldMapping).map(([fieldId, fieldInfo]) => (
-              <div key={fieldId} className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  checked={preferences[fieldId] || false}
-                  onChange={e => handlePreferenceChange(fieldId, e.target.checked)}
-                  className="h-5 w-5 mt-1 rounded border-gray-300 text-brand-blue focus:ring-brand-blue disabled:opacity-50"
-                  disabled={saving}
-                />
-                <div className="flex-1">
-                  <label className="text-lg text-gray-900 cursor-pointer select-none font-medium">
-                    {t('preferences.keepPrivate', { field: fieldInfo.label })}
-                  </label>
-                  <p className="text-sm text-gray-600 mt-1">{fieldInfo.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
           {/* Contact Provider Status */}
-          <div className="bg-gray-100 p-6 rounded-2xl mb-6">
+          <div className="bg-gray-100 p-6 rounded-2xl">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -206,6 +181,31 @@ export default function PreferencesPage() {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div className="text-gray-600 text-lg leading-relaxed">
+            <p>{t('preferences.explanation')}</p>
+          </div>
+
+          {/* Preferences Form */}
+          <div className="space-y-6">
+            {Object.entries(fieldMapping).map(([fieldId, fieldInfo]) => (
+              <div key={fieldId} className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  checked={preferences[fieldId] || false}
+                  onChange={e => handlePreferenceChange(fieldId, e.target.checked)}
+                  className="h-5 w-5 mt-1 rounded border-gray-300 text-brand-blue focus:ring-brand-blue disabled:opacity-50"
+                  disabled={saving}
+                />
+                <div className="flex-1">
+                  <label className="text-lg text-gray-900 cursor-pointer select-none font-medium">
+                    {t('preferences.keepPrivate', { field: fieldInfo.label })}
+                  </label>
+                  <p className="text-sm text-gray-600 mt-1">{fieldInfo.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

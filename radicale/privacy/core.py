@@ -5,6 +5,7 @@ This module provides the core business logic for managing user privacy
 settings and processing vCards according to those settings.
 """
 
+import base64
 import logging
 import re
 from typing import Any, Dict, List, Tuple, Union
@@ -21,6 +22,27 @@ from radicale.privacy.vcard_properties import (PRIVACY_TO_VCARD_MAP,
 from radicale.utils import normalize_phone_e164
 
 logger = logging.getLogger(__name__)
+
+
+def _photo_to_data_uri(photo) -> str:
+    """Convert a binary (vCard 3.0 ENCODING=b) PHOTO value to a data URI.
+
+    vobject decodes base64-encoded photos to bytes; the web UI needs a
+    data URI to render them in <img src>. The image format is detected
+    from magic bytes, falling back to the TYPE parameter (default png).
+    """
+    value = photo.value
+    if value.startswith(b'\xff\xd8'):
+        mime = 'jpeg'
+    elif value.startswith(b'\x89PNG'):
+        mime = 'png'
+    elif value.startswith(b'GIF8'):
+        mime = 'gif'
+    else:
+        mime = (photo.params.get('TYPE', ['png'])[0]).lower()
+        if mime == 'jpg':
+            mime = 'jpeg'
+    return f"data:image/{mime};base64,{base64.b64encode(value).decode('ascii')}"
 
 
 class PrivacyCore:
@@ -354,7 +376,11 @@ class PrivacyCore:
                     else:
                         # Handle single value properties
                         if hasattr(vcard, prop_name):
-                            vcard_match["fields"][prop_name] = make_json_safe(getattr(vcard, prop_name).value)
+                            value = getattr(vcard, prop_name).value
+                            if prop_name == 'photo' and isinstance(value, bytes):
+                                vcard_match["fields"][prop_name] = _photo_to_data_uri(getattr(vcard, prop_name))
+                            else:
+                                vcard_match["fields"][prop_name] = make_json_safe(value)
 
                 vcard_matches.append(vcard_match)
 

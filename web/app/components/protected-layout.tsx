@@ -6,14 +6,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { Button } from '~/components/ui/button';
 import { ProtectedRoute } from './protected-route';
 import { isAuthenticated, clearAuthToken, getCurrentUser } from '~/lib/auth';
 import { useNavigateWithTemplate } from '~/lib/template-context';
-import { PageTabs } from './ui/page-tabs';
+import { AppSidebar } from './app-sidebar';
 
 interface RouteHandle {
   subtitle?: string;
@@ -34,12 +33,6 @@ export default function Layout() {
     clearAuthToken();
     navigate('/login');
   };
-
-  // Tab configuration for page navigation
-  const pageTabs = [
-    { to: '/subject-data-preferences', translationKey: 'tabs.dataPreferences' },
-    { to: '/subject-data-access', translationKey: 'tabs.dataAccess' },
-  ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -78,10 +71,9 @@ export default function Layout() {
                   <>
                     {user?.contact && (
                       <>
-                        <DropdownMenuLabel className="font-normal text-gray-500 truncate">
+                        <DropdownMenuLabel className="font-normal text-gray-500 truncate bg-gray-100 -mx-1 -mt-1 px-3 py-2 rounded-t-2xl border-b border-gray-300 mb-1">
                           {user.contact}
                         </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
                       </>
                     )}
                     <DropdownMenuItem asChild>
@@ -93,7 +85,7 @@ export default function Layout() {
                         <span className="text-red-600 mr-2">
                           <DynamicIcon name={t('navigation.logoutIcon')} size={20} />
                         </span>
-                        {t('navigation.logout')}
+                        <span className="text-red-600">{t('navigation.logout')}</span>
                       </Button>
                     </DropdownMenuItem>
                   </>
@@ -104,15 +96,15 @@ export default function Layout() {
         </div>
       </header>
 
-      {/* Page Navigation Tabs */}
-      <PageTabs tabs={pageTabs} />
-
-      {/* Main content */}
-      <main className="flex-1">
+      {/* Sidebar + main content */}
+      <div className="flex flex-1">
         <ProtectedRoute>
-          <Outlet />
+          <AppSidebar />
+          <main className="flex-1 min-w-0">
+            <Outlet />
+          </main>
         </ProtectedRoute>
-      </main>
+      </div>
 
       {/* Footer */}
       <footer className="bg-gray-100 py-4 px-4 mt-auto">

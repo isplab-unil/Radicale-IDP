@@ -1,9 +1,15 @@
 import { verifyAuth } from '~/lib/auth';
-import { updatePrivacySettings, createPrivacySettings, reprocessUserCards } from '~/api/radicale';
+import {
+  updatePrivacySettings,
+  createPrivacySettings,
+  reprocessUserCards,
+  getUserCards,
+} from '~/api/radicale';
 import {
   getUserByContact,
   getUserPreferences,
   saveUserPreferences,
+  saveUserCardsCache,
   markContactProviderSynced,
 } from '~/db/operations';
 
@@ -138,58 +144,9 @@ export async function action({ request }: { request: Request }) {
 
     const body = (await request.json()) as {
       preferences?: Record<string, boolean>;
-      action?: string;
     };
 
-    const { preferences, action } = body;
-
-    // Handle sync action - sync with Radicale and call reprocess
-    if (action === 'sync') {
-      // Get current preferences from web database
-      const currentPreferences = await getUserPreferences(dbUser.id);
-
-      if (currentPreferences) {
-        // Convert database format to Radicale format
-        const radicalePreferences = {
-          disallow_photo: currentPreferences.disallowPhoto === 1,
-          disallow_gender: currentPreferences.disallowGender === 1,
-          disallow_birthday: currentPreferences.disallowBirthday === 1,
-          disallow_address: currentPreferences.disallowAddress === 1,
-          disallow_company: currentPreferences.disallowCompany === 1,
-          disallow_title: currentPreferences.disallowTitle === 1,
-          disallow_related: currentPreferences.disallowRelated === 1,
-          disallow_nickname: currentPreferences.disallowNickname === 1,
-        };
-
-        // Update Radicale with current preferences
-        try {
-          await updatePrivacySettings(user.contact, radicalePreferences);
-        } catch (err: any) {
-          if (err?.status === 400) {
-            await createPrivacySettings(user.contact, radicalePreferences);
-          } else {
-            throw err;
-          }
-        }
-      }
-
-      // Trigger reprocessing in Radicale
-      await reprocessUserCards(user.contact);
-
-      // Mark as synced in web database
-      await markContactProviderSynced(dbUser.id);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'Contact provider synchronized and reprocessing triggered',
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const { preferences } = body;
 
     // Handle preferences update
     if (!preferences || typeof preferences !== 'object') {
@@ -227,6 +184,10 @@ export async function action({ request }: { request: Request }) {
 
     // Trigger reprocessing in Radicale
     await reprocessUserCards(user.contact);
+
+    // Refresh the cached cards so the access page shows current data
+    const fresh = await getUserCards(user.contact);
+    await saveUserCardsCache(dbUser.id, fresh);
 
     // Mark as synced in web database
     await markContactProviderSynced(dbUser.id);
