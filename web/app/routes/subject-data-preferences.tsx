@@ -145,6 +145,36 @@ export default function PreferencesPage() {
     <div className="pt-6 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
         <div className="space-y-8">
+          {/* Contact Provider Status */}
+          <div className="bg-gray-100 p-6 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {t('preferences.providerStatus')}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {hasChanges ? t('preferences.statusUnsaved') : t('preferences.statusSynced')}
+                </p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleCancel}
+                  disabled={!hasChanges || saving}
+                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-gray-300 text-gray-900 hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t('preferences.buttonCancel')}
+                </button>
+                <button
+                  onClick={handleSavePreferences}
+                  disabled={!hasChanges || saving}
+                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-brand-blue text-white hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? t('preferences.buttonSaving') : t('preferences.buttonSave')}
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Header */}
           <div>
             <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('preferences.title')}</h1>
@@ -176,36 +206,6 @@ export default function PreferencesPage() {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Contact Provider Status */}
-          <div className="bg-gray-100 p-6 rounded-2xl mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {t('preferences.providerStatus')}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {hasChanges ? t('preferences.statusUnsaved') : t('preferences.statusSynced')}
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={handleCancel}
-                  disabled={!hasChanges || saving}
-                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-gray-300 text-gray-900 hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t('preferences.buttonCancel')}
-                </button>
-                <button
-                  onClick={handleSavePreferences}
-                  disabled={!hasChanges || saving}
-                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-brand-blue text-white hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {saving ? t('preferences.buttonSaving') : t('preferences.buttonSave')}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
