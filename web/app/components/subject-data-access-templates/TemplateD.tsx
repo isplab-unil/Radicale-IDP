@@ -127,13 +127,15 @@ export function TemplateD() {
                     <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full flex-shrink-0">
                       <DynamicIcon name={row.icon} size={20} className="text-white" />
                     </div>
-                    <span>
-                      {t(row.labelKey)}:{' '}
-                      {row.values.length === 1
-                        ? t('access.cardCount', { count: row.values.length })
-                        : t('access.cardCountPlural', { count: row.values.length })}
-                      {formatValues(row.values)}
-                    </span>
+                    <div>
+                      <div className="text-sm text-gray-500 font-medium">{t(row.labelKey)}</div>
+                      <div className="text-base text-gray-900 font-medium">
+                        {row.values.length === 1
+                          ? t('access.cardCount', { count: row.values.length })
+                          : t('access.cardCountPlural', { count: row.values.length })}
+                        {formatValues(row.values)}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
