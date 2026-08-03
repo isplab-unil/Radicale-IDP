@@ -849,3 +849,61 @@ def test_get_matching_cards_with_photo(core):
     assert isinstance(match["fields"]["photo"], str)
     assert match["fields"]["photo"].startswith('data:image/')
     assert match["fields"]["photo"] is not True
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_get_matching_cards_with_binary_photo(core):
+    """Test that a vCard 3.0 ENCODING=b photo is returned as a data URI.
+
+    vobject decodes base64-encoded photos to bytes; the web UI needs a
+    data URI string to render them in <img src>.
+    """
+    import base64
+
+    # Create privacy settings for the user
+    settings = {
+        "disallow_photo": False,
+        "disallow_gender": False,
+        "disallow_birthday": False,
+        "disallow_address": False,
+        "disallow_company": False,
+        "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
+    }
+    core.create_settings("jpeg@test.com", settings)
+
+    # Minimal JPEG payload (SOI magic bytes + padding)
+    jpeg_bytes = b'\xff\xd8\xff\xe0' + b'\x00' * 32
+
+    # Create a test vCard with a binary (ENCODING=b) JPEG photo
+    vcard = vobject.vCard()
+    vcard.add('uid')
+    vcard.uid.value = "test-jpeg-photo-uid"
+    vcard.add('fn')
+    vcard.fn.value = "JPEG Photo Test"
+    vcard.add('email')
+    vcard.email.value = "jpeg@test.com"
+    vcard.email.type_param = 'INTERNET'
+    vcard.add('photo')
+    vcard.photo.value = jpeg_bytes
+    vcard.photo.params['ENCODING'] = ['b']
+    vcard.photo.params['TYPE'] = ['JPEG']
+
+    # Create collection and upload vCard
+    collection, _, _ = core._scanner._storage.create_collection("/jpeguser/contacts")
+    item = Item(vobject_item=vcard, collection_path="jpeguser/contacts", component_name="VCARD")
+    collection.upload("jpeg-photo-card.vcf", item)
+
+    # Get matching cards
+    success, result = core.get_matching_cards("jpeg@test.com")
+
+    # Verify the photo is a renderable JPEG data URI, not a bytes repr
+    assert success
+    assert len(result["matches"]) == 1
+    match = result["matches"][0]
+    photo = match["fields"]["photo"]
+    assert isinstance(photo, str)
+    assert photo.startswith('data:image/jpeg;base64,')
+    payload = photo[len('data:image/jpeg;base64,'):]
+    assert base64.b64decode(payload) == jpeg_bytes
