@@ -3,6 +3,10 @@ import { toast } from 'sonner';
 import { authFetch, isAuthenticated } from '~/lib/auth';
 import type { CardMatch, CardsResponse } from '~/lib/card-types';
 
+// Custom event dispatched after a successful provider sync so mounted
+// pages reload their cards from the refreshed cache.
+export const CARDS_SYNCED_EVENT = 'cards-synced';
+
 // Normalize field values from Radicale (handles Python list strings, objects, etc.)
 function normalizeFieldValue(value: any): any {
   if (!value) return value;
@@ -42,19 +46,50 @@ function normalizeCard(card: CardMatch): CardMatch {
   };
 }
 
+async function fetchCards(): Promise<CardMatch[]> {
+  const resp = await authFetch('/api/user/cards');
+  if (!resp.ok) throw new Error('Failed to load cards');
+  const data: CardsResponse = await resp.json();
+  return (data.matches || []).map(normalizeCard);
+}
+
+/**
+ * Synchronize the contact provider: push current preferences to
+ * Radicale, reprocess the cards and refresh the cache. Dispatches
+ * CARDS_SYNCED_EVENT on success so listeners can reload their data.
+ */
+export async function syncContactProvider(): Promise<boolean> {
+  try {
+    const response = await authFetch('/api/user/cards', {
+      method: 'PUT',
+    });
+
+    if (response.ok) {
+      toast.success('Contact provider synchronized!', {
+        description: 'Your privacy preferences have been synchronized with the contact provider.',
+      });
+      window.dispatchEvent(new Event(CARDS_SYNCED_EVENT));
+      return true;
+    }
+    toast.error('Failed to synchronize', {
+      description: 'Please try again. If the problem persists, contact support.',
+    });
+  } catch (e) {
+    console.error('Failed to sync cards:', e);
+    toast.error('Failed to synchronize', {
+      description: 'Network error. Please check your connection and try again.',
+    });
+  }
+  return false;
+}
+
 export function useCardData() {
-  const [syncing, setSyncing] = useState(false);
   const [cards, setCards] = useState<CardMatch[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadCards = async () => {
     try {
-      const resp = await authFetch('/api/user/cards');
-      if (!resp.ok) throw new Error('Failed to load cards');
-      const data: CardsResponse = await resp.json();
-      // Normalize the cards before setting state
-      const normalizedCards = (data.matches || []).map(normalizeCard);
-      setCards(normalizedCards);
+      setCards(await fetchCards());
     } catch (e) {
       console.error('Failed to load cards:', e);
       toast.error('Failed to load data', { description: 'Unable to load contact records.' });
@@ -63,50 +98,17 @@ export function useCardData() {
     }
   };
 
-  const syncCards = async () => {
-    setSyncing(true);
-
-    try {
-      const response = await authFetch('/api/user/cards', {
-        method: 'PUT',
-      });
-
-      if (response.ok) {
-        toast.success('Contact provider synchronized!', {
-          description: 'Your privacy preferences have been synchronized with the contact provider.',
-        });
-        // Reload cards from DB cache
-        try {
-          const resp = await authFetch('/api/user/cards');
-          if (resp.ok) {
-            const data: CardsResponse = await resp.json();
-            // Normalize the cards before setting state
-            const normalizedCards = (data.matches || []).map(normalizeCard);
-            setCards(normalizedCards);
-          }
-        } catch (e) {
-          console.error('Failed to reload cards after sync:', e);
-        }
-      } else {
-        toast.error('Failed to synchronize', {
-          description: 'Please try again. If the problem persists, contact support.',
-        });
-      }
-    } catch (e) {
-      console.error('Failed to sync cards:', e);
-      toast.error('Failed to synchronize', {
-        description: 'Network error. Please check your connection and try again.',
-      });
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   useEffect(() => {
     if (isAuthenticated()) {
       loadCards();
     }
+
+    // Reload when the contact provider is synchronized elsewhere
+    // (e.g. the sidebar sync button)
+    const onSynced = () => loadCards();
+    window.addEventListener(CARDS_SYNCED_EVENT, onSynced);
+    return () => window.removeEventListener(CARDS_SYNCED_EVENT, onSynced);
   }, []);
 
-  return { cards, loading, syncing, syncCards };
+  return { cards, loading };
 }

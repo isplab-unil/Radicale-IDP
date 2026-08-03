@@ -5,7 +5,7 @@ import { AccessPageHeader } from './AccessPageHeader';
 
 export function TemplateC() {
   const { t } = useTranslation();
-  const { cards, loading, syncing, syncCards } = useCardData();
+  const { cards, loading } = useCardData();
 
   // Calculate field counts across all cards
   const fieldCounts = {
@@ -54,25 +54,6 @@ export function TemplateC() {
     <div className="pt-6 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
         <div className="space-y-8">
-          {/* Contact Provider Synchronization */}
-          <div className="bg-gray-100 p-6 rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {t('access.providerStatus')}
-                </h3>
-                <p className="text-sm text-gray-600">{t('access.providerDescription')}</p>
-              </div>
-              <button
-                onClick={syncCards}
-                disabled={syncing}
-                className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-brand-blue text-white hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {syncing ? t('access.buttonSyncing') : t('access.buttonSync')}
-              </button>
-            </div>
-          </div>
-
           {/* Header */}
           <AccessPageHeader />
 

@@ -12,7 +12,7 @@ import { Button } from '~/components/ui/button';
 import { ProtectedRoute } from './protected-route';
 import { isAuthenticated, clearAuthToken, getCurrentUser } from '~/lib/auth';
 import { useNavigateWithTemplate } from '~/lib/template-context';
-import { PageTabs } from './ui/page-tabs';
+import { AppSidebar } from './app-sidebar';
 
 interface RouteHandle {
   subtitle?: string;
@@ -33,12 +33,6 @@ export default function Layout() {
     clearAuthToken();
     navigate('/login');
   };
-
-  // Tab configuration for page navigation
-  const pageTabs = [
-    { to: '/subject-data-preferences', translationKey: 'tabs.dataPreferences' },
-    { to: '/subject-data-access', translationKey: 'tabs.dataAccess' },
-  ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -102,15 +96,15 @@ export default function Layout() {
         </div>
       </header>
 
-      {/* Page Navigation Tabs */}
-      <PageTabs tabs={pageTabs} />
-
-      {/* Main content */}
-      <main className="flex-1">
+      {/* Sidebar + main content */}
+      <div className="flex flex-1">
         <ProtectedRoute>
-          <Outlet />
+          <AppSidebar />
+          <main className="flex-1 min-w-0">
+            <Outlet />
+          </main>
         </ProtectedRoute>
-      </main>
+      </div>
 
       {/* Footer */}
       <footer className="bg-gray-100 py-4 px-4 mt-auto">
