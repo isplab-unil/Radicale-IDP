@@ -45,13 +45,13 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
       </div>
 
       {/* Contact Details */}
-      <div className="px-6 pb-6 space-y-4">
+      <div className="px-6 pb-6">
         {contact.fields.tel && (
-          <div className="flex items-center gap-4">
+          <div className="group flex items-center gap-4 pt-4">
             <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name={t('access.mobileIcon')} size={20} className="text-white" />
             </div>
-            <div className="flex-1">
+            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
               <div className="text-sm text-gray-500 font-medium">{t('access.mobile')}</div>
               <div className="text-base text-gray-900 font-medium">
                 {Array.isArray(contact.fields.tel)
@@ -63,11 +63,11 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
         )}
 
         {contact.fields.email && (
-          <div className="flex items-center gap-4">
+          <div className="group flex items-center gap-4 pt-4">
             <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name={t('access.emailIcon')} size={20} className="text-white" />
             </div>
-            <div className="flex-1">
+            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
               <div className="text-sm text-gray-500 font-medium">{t('access.email')}</div>
               <div className="text-base text-gray-900 font-medium">
                 {Array.isArray(contact.fields.email)
@@ -79,11 +79,11 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
         )}
 
         {contact.fields.bday && (
-          <div className="flex items-center gap-4">
+          <div className="group flex items-center gap-4 pt-4">
             <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name="cake" size={20} className="text-white" />
             </div>
-            <div className="flex-1">
+            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
               <div className="text-sm text-gray-500 font-medium">{t('access.fields.birthday')}</div>
               <div className="text-base text-gray-900 font-medium">{contact.fields.bday}</div>
             </div>
@@ -91,11 +91,11 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
         )}
 
         {contact.fields.gender && (
-          <div className="flex items-center gap-4">
+          <div className="group flex items-center gap-4 pt-4">
             <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name="user-round" size={20} className="text-white" />
             </div>
-            <div className="flex-1">
+            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
               <div className="text-sm text-gray-500 font-medium">{t('access.fields.pronoun')}</div>
               <div className="text-base text-gray-900 font-medium">{contact.fields.gender}</div>
             </div>
@@ -103,11 +103,11 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
         )}
 
         {contact.fields.related && (
-          <div className="flex items-center gap-4">
+          <div className="group flex items-center gap-4 pt-4">
             <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name={t('access.spouseIcon')} size={20} className="text-white" />
             </div>
-            <div className="flex-1">
+            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
               <div className="text-sm text-gray-500 font-medium">{t('access.spouse')}</div>
               <div className="text-base text-gray-900 font-medium">
                 {Array.isArray(contact.fields.related)
@@ -119,11 +119,11 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
         )}
 
         {contact.fields.adr && (
-          <div className="flex items-center gap-4">
+          <div className="group flex items-center gap-4 pt-4">
             <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
               <DynamicIcon name="map-pin" size={20} className="text-white" />
             </div>
-            <div className="flex-1">
+            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
               <div className="text-sm text-gray-500 font-medium">{t('access.fields.address')}</div>
               <div className="text-base text-gray-900 font-medium">
                 {typeof contact.fields.adr === 'object' && contact.fields.adr !== null
