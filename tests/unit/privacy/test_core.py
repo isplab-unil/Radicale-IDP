@@ -12,6 +12,7 @@ import vobject
 from radicale import config, storage
 from radicale.item import Item
 from radicale.privacy.core import PrivacyCore, PrivacyScanner
+from radicale.privacy.templates import CD_FIELDS, shape_cards
 
 
 @pytest.fixture
@@ -946,3 +947,89 @@ def test_download_cards_no_matches(core):
     assert success
     assert result["count"] == 0
     assert result["vcf"] == ""
+
+
+def test_shape_cards_count_templates():
+    """Templates a/b only disclose the number of matching cards."""
+    matches = [{"fields": {"fn": "John"}}, {"fields": {}}]
+    assert shape_cards(matches, "a") == {"count": 2}
+    assert shape_cards(matches, "b") == {"count": 2}
+    assert shape_cards([], "a") == {"count": 0}
+
+
+def test_shape_cards_counts_template():
+    """Template c discloses per-field card counts (presence only)."""
+    matches = [
+        {"fields": {"fn": "John", "tel": ["+41789600142"]}},
+        {"fields": {"fn": "Jane"}},
+    ]
+    result = shape_cards(matches, "c")
+    assert set(result["counts"]) == set(CD_FIELDS)
+    assert result["counts"]["fn"] == 2
+    assert result["counts"]["tel"] == 1
+    assert result["counts"]["photo"] == 0
+
+
+def test_shape_cards_values_template():
+    """Template d discloses per-field values, photo as presence only."""
+    matches = [
+        {"fields": {"fn": "John", "photo": "data:image/png;base64,aGVsbG8="}},
+        {"fields": {"fn": "Jane"}},
+    ]
+    result = shape_cards(matches, "d")
+    assert result["values"]["fn"] == ["John", "Jane"]
+    assert result["values"]["photo"] == ["Photo"]
+    assert result["values"]["tel"] == []
+
+
+def test_shape_cards_detail_templates_prune_fields():
+    """Templates e/f keep the cards but prune fields to the rendered set."""
+    matches = [{
+        "vcard_uid": "card1",
+        "collection_path": "user1/contacts",
+        "matching_fields": ["email"],
+        "fields": {"fn": "John", "n": {"given": "John"}, "note": "secret", "role": "boss"},
+    }]
+    for template in ("e", "f"):
+        result = shape_cards(matches, template)
+        card = result["matches"][0]
+        assert card["vcard_uid"] == "card1"
+        assert card["matching_fields"] == ["email"]
+        assert set(card["fields"]) == {"fn", "n"}
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_get_matching_cards_with_template_prunes_fields(core):
+    """get_matching_cards shapes the result when a template is given."""
+    vcard = vobject.vCard()
+    vcard.add('uid')
+    vcard.uid.value = "tpl-card"
+    vcard.add('fn')
+    vcard.fn.value = "Template Contact"
+    vcard.add('email')
+    vcard.email.value = "template@test.com"
+    vcard.email.type_param = 'INTERNET'
+    vcard.add('note')
+    vcard.note.value = "internal note"
+
+    collection, _, _ = core._scanner._storage.create_collection("/tpluser/contacts")
+    item = Item(vobject_item=vcard, collection_path="tpluser/contacts", component_name="VCARD")
+    collection.upload("tpl-card.vcf", item)
+
+    # Without a template, all extracted fields are returned
+    success, result = core.get_matching_cards("template@test.com")
+    assert success
+    assert "note" in result["matches"][0]["fields"]
+
+    # Template e prunes fields not rendered by templates E/F
+    success, result = core.get_matching_cards("template@test.com", template="e")
+    assert success
+    fields = result["matches"][0]["fields"]
+    assert "fn" in fields
+    assert "email" in fields
+    assert "note" not in fields
+
+    # Template a only discloses the count
+    success, result = core.get_matching_cards("template@test.com", template="a")
+    assert success
+    assert result == {"count": 1}

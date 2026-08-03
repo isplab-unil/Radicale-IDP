@@ -412,3 +412,60 @@ def test_invalid_json(http_app):
 
 
 # test_unauthorized_access removed - now covered by authentication tests above
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_get_matching_cards_with_template_param(http_app):
+    """Test that the template query param is forwarded to the core."""
+    with patch.object(http_app._privacy_core, 'get_matching_cards') as mock_get:
+        mock_get.return_value = (True, {"count": 1})
+
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/privacy/cards/test@example.com",
+            "QUERY_STRING": "template=A",
+            "HTTP_AUTHORIZATION": f"Bearer {http_app._test_token}"
+        }
+
+        status, headers, body, _ = http_app.do_GET(environ, "/privacy/cards/test@example.com")
+
+        assert status == client.OK
+        # Template value is normalized to lowercase before reaching the core
+        mock_get.assert_called_once_with("test@example.com", "a")
+        assert json.loads(body) == {"count": 1}
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_get_matching_cards_without_template_param(http_app):
+    """Test that a missing template param keeps the full-payload behavior."""
+    with patch.object(http_app._privacy_core, 'get_matching_cards') as mock_get:
+        mock_get.return_value = (True, {"matches": []})
+
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/privacy/cards/test@example.com",
+            "HTTP_AUTHORIZATION": f"Bearer {http_app._test_token}"
+        }
+
+        status, _, _, _ = http_app.do_GET(environ, "/privacy/cards/test@example.com")
+
+        assert status == client.OK
+        mock_get.assert_called_once_with("test@example.com", None)
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_get_matching_cards_invalid_template_param(http_app):
+    """Test that an invalid template value is rejected with 400."""
+    with patch.object(http_app._privacy_core, 'get_matching_cards') as mock_get:
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/privacy/cards/test@example.com",
+            "QUERY_STRING": "template=z",
+            "HTTP_AUTHORIZATION": f"Bearer {http_app._test_token}"
+        }
+
+        status, headers, body, _ = http_app.do_GET(environ, "/privacy/cards/test@example.com")
+
+        assert status == client.BAD_REQUEST
+        assert "error" in json.loads(body)
+        mock_get.assert_not_called()
