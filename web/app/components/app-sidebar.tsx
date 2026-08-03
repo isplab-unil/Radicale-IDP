@@ -43,7 +43,7 @@ export function AppSidebar() {
           className="flex items-center justify-center w-9 h-9 rounded-full text-brand-blue hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <DynamicIcon
-            name="refresh-cw"
+            name="rotate-cw"
             size={18}
             className={syncing ? 'animate-spin' : undefined}
           />
