@@ -9,6 +9,7 @@ export default [
     index('routes/index-redirect.tsx'),
     route('/subject-data-preferences', 'routes/subject-data-preferences.tsx'),
     route('/subject-data-access', 'routes/subject-data-access.tsx'),
+    route('/subject-data-download', 'routes/subject-data-download.tsx'),
   ]),
   // API routes for authentication
   route('/api/auth/request-otp', 'routes/api.auth.request-otp.tsx'),
