@@ -8,13 +8,14 @@ settings and processing vCards according to those settings.
 import base64
 import logging
 import re
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from radicale import config, storage
 from radicale.item import Item
 from radicale.privacy.database import PrivacyDatabase
 from radicale.privacy.reprocessor import PrivacyReprocessor
 from radicale.privacy.scanner import PrivacyScanner
+from radicale.privacy.templates import shape_cards
 from radicale.privacy.vcard_properties import (PRIVACY_TO_VCARD_MAP,
                                                VCARD_NAME_TO_ENUM,
                                                VCARD_PROPERTY_TYPES,
@@ -271,11 +272,15 @@ class PrivacyCore:
         except Exception as e:
             return False, str(e)
 
-    def get_matching_cards(self, user: str) -> Tuple[bool, Union[Dict[str, List[Dict[str, Any]]], str]]:
+    def get_matching_cards(self, user: str,
+                           template: Optional[str] = None) -> Tuple[bool, Union[Dict[str, Any], str]]:
         """Get all vCards that match a user's identity.
 
         Args:
             user: The user identifier (email or phone)
+            template: Optional disclosure template (a-f). When set, the
+                result is reduced to what that template renders (see
+                radicale.privacy.templates.shape_cards)
 
         Returns:
             Tuple of (success, result)
@@ -310,7 +315,7 @@ class PrivacyCore:
         try:
             matches = self._scanner.find_identity_occurrences(lookup_id)
             if not matches:
-                return True, {"matches": []}
+                return True, shape_cards([], template) if template else {"matches": []}
 
             # Get the vCards
             vcard_matches = []
@@ -384,7 +389,7 @@ class PrivacyCore:
 
                 vcard_matches.append(vcard_match)
 
-            return True, {"matches": vcard_matches}
+            return True, shape_cards(vcard_matches, template) if template else {"matches": vcard_matches}
 
         except Exception as e:
             logger.error("PRIVACY: Error finding matching cards: %s", str(e), exc_info=True)
