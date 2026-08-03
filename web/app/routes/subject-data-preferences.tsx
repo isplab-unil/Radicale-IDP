@@ -142,9 +142,17 @@ export default function PreferencesPage() {
   }
 
   return (
-    <div className="pt-6 pb-30">
+    <div className="pt-12 pb-30">
       <div className="container mx-auto max-w-8xl px-6">
         <div className="space-y-8">
+          {/* Header */}
+          <div>
+            <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('preferences.title')}</h1>
+            <p className="text-gray-600 text-lg leading-relaxed mb-2 max-w-4xl">
+              {t('preferences.description')}
+            </p>
+          </div>
+
           {/* Contact Provider Status */}
           <div className="bg-gray-100 p-6 rounded-2xl">
             <div className="flex items-center justify-between">
@@ -173,14 +181,6 @@ export default function PreferencesPage() {
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Header */}
-          <div>
-            <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('preferences.title')}</h1>
-            <p className="text-gray-600 text-lg leading-relaxed mb-2 max-w-4xl">
-              {t('preferences.description')}
-            </p>
           </div>
 
           <div className="text-gray-600 text-lg leading-relaxed">
