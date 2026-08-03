@@ -5,7 +5,8 @@ import { AccessPageHeader } from './AccessPageHeader';
 
 export function TemplateA() {
   const { t } = useTranslation();
-  const { cards, loading } = useCardData();
+  const { data, loading } = useCardData();
+  const count = data && 'count' in data ? data.count : 0;
 
   return (
     <div className="pt-12 pb-30">
@@ -21,13 +22,13 @@ export function TemplateA() {
             <div className="text-gray-900 text-lg flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full flex-shrink-0">
                 <DynamicIcon
-                  name={cards.length === 0 ? 'check' : 'circle-alert'}
+                  name={count === 0 ? 'check' : 'circle-alert'}
                   size={20}
                   className="text-white"
                 />
               </div>
               <span>
-                {cards.length === 0 ? t('access.templates.a.none') : t('access.templates.a.found')}
+                {count === 0 ? t('access.templates.a.none') : t('access.templates.a.found')}
               </span>
             </div>
           )}

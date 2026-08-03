@@ -150,7 +150,8 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 
 export function TemplateE() {
   const { t } = useTranslation();
-  const { cards, loading } = useCardData();
+  const { data, loading } = useCardData();
+  const cards = data && 'matches' in data ? data.matches : [];
 
   return (
     <div className="pt-12 pb-30">
