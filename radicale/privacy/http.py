@@ -42,6 +42,7 @@ class PrivacyHTTP:
         self.url_map = Map([
             Rule('/privacy/settings/<user>', endpoint='get_settings', methods=['GET']),
             Rule('/privacy/cards/<user>', endpoint='get_cards', methods=['GET']),
+            Rule('/privacy/cards/<user>/download', endpoint='download_cards', methods=['GET']),
             Rule('/privacy/settings/<user>', endpoint='create_settings', methods=['POST']),
             Rule('/privacy/cards/<user>/reprocess', endpoint='reprocess_cards', methods=['POST']),
             Rule('/privacy/settings/<user>', endpoint='update_settings', methods=['PUT']),
@@ -52,6 +53,7 @@ class PrivacyHTTP:
         self.endpoints = {
             "get_settings": self._handle_get_settings,
             "get_cards": self._handle_get_cards,
+            "download_cards": self._handle_download_cards,
             "create_settings": self._handle_create_settings,
             "update_settings": self._handle_update_settings,
             "delete_settings": self._handle_delete_settings,
@@ -204,6 +206,26 @@ class PrivacyHTTP:
         logger.info("GET cards for user: %s", user_identifier)
 
         success, result = self._privacy_core.get_matching_cards(user_identifier)
+        return self._to_wsgi_response(success, result)
+
+    def _handle_download_cards(
+        self, environ: types.WSGIEnviron, url_params: Dict[str, str]
+    ) -> types.WSGIResponse:
+        """Handle GET /privacy/cards/<user>/download"""
+        user_identifier = url_params["user"]
+        logger.info("DOWNLOAD cards for user: %s", user_identifier)
+
+        success, result = self._privacy_core.download_cards(user_identifier)
+        if success and isinstance(result, dict):
+            return (
+                client.OK,
+                {
+                    "Content-Type": "text/vcard; charset=utf-8",
+                    "Content-Disposition": f'attachment; filename="{user_identifier}.vcf"',
+                },
+                result["vcf"].encode("utf-8"),
+                None,
+            )
         return self._to_wsgi_response(success, result)
 
     def _handle_create_settings(
