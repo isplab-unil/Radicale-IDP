@@ -3,17 +3,19 @@ import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
 import { getCurrentUser } from '~/lib/auth';
 import type { CardMatch } from '~/lib/card-types';
+import { getPhotoSrc } from '~/lib/card-types';
 
 function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
+  const photoSrc = getPhotoSrc(contact.fields.photo);
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-300">
       {/* Header Info */}
       <div className="p-6">
         <div className="flex items-start gap-6">
           {/* Large Contact Photo or Icon */}
-          {contact.fields.photo ? (
+          {photoSrc ? (
             <img
-              src={contact.fields.photo}
+              src={photoSrc}
               alt="Contact"
               className="w-16 h-16 rounded-full flex-shrink-0 mt-4 object-cover"
             />
