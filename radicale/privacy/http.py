@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 SettingsResult = Union[Dict[str, bool], Dict[str, str]]
 CardsResult = Dict[str, List[Dict[str, Any]]]
 StatusResult = Dict[str, Union[str, int, List[str]]]
-APIResult = Union[SettingsResult, CardsResult, StatusResult, str]
+DownloadResult = Dict[str, Union[str, int]]
+APIResult = Union[SettingsResult, CardsResult, StatusResult, DownloadResult, str]
 
 
 class PrivacyHTTP:
@@ -217,15 +218,17 @@ class PrivacyHTTP:
 
         success, result = self._privacy_core.download_cards(user_identifier)
         if success and isinstance(result, dict):
-            return (
-                client.OK,
-                {
-                    "Content-Type": "text/vcard; charset=utf-8",
-                    "Content-Disposition": f'attachment; filename="{user_identifier}.vcf"',
-                },
-                result["vcf"].encode("utf-8"),
-                None,
-            )
+            vcf = result.get("vcf")
+            if isinstance(vcf, str):
+                return (
+                    client.OK,
+                    {
+                        "Content-Type": "text/vcard; charset=utf-8",
+                        "Content-Disposition": f'attachment; filename="{user_identifier}.vcf"',
+                    },
+                    vcf.encode("utf-8"),
+                    None,
+                )
         return self._to_wsgi_response(success, result)
 
     def _handle_create_settings(
