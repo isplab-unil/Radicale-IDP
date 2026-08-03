@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { authFetch, isAuthenticated } from '~/lib/auth';
-import type { CardMatch, CardsResponse } from '~/lib/card-types';
+import { useTemplateConfig } from '~/lib/template-context';
+import type { CardMatch, TemplateCardsResponse } from '~/lib/card-types';
 
 // Custom event dispatched after a successful provider sync so mounted
 // pages reload their cards from the refreshed cache.
@@ -46,11 +47,14 @@ function normalizeCard(card: CardMatch): CardMatch {
   };
 }
 
-async function fetchCards(): Promise<CardMatch[]> {
-  const resp = await authFetch('/api/user/cards');
+async function fetchCards(template: string): Promise<TemplateCardsResponse> {
+  const resp = await authFetch(`/api/user/cards?template=${encodeURIComponent(template)}`);
   if (!resp.ok) throw new Error('Failed to load cards');
-  const data: CardsResponse = await resp.json();
-  return (data.matches || []).map(normalizeCard);
+  const payload: TemplateCardsResponse = await resp.json();
+  if ('matches' in payload) {
+    return { matches: (payload.matches || []).map(normalizeCard) };
+  }
+  return payload;
 }
 
 /**
@@ -84,21 +88,27 @@ export async function syncContactProvider(): Promise<boolean> {
 }
 
 export function useCardData() {
-  const [cards, setCards] = useState<CardMatch[]>([]);
+  // Resolve the active template the same way the access page does, so the
+  // backend only returns the data this template actually renders
+  const { version, defaultTemplate, enableTemplates } = useTemplateConfig();
+  const template = (enableTemplates ? version || defaultTemplate : defaultTemplate).toLowerCase();
+
+  const [data, setData] = useState<TemplateCardsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadCards = async () => {
-    try {
-      setCards(await fetchCards());
-    } catch (e) {
-      console.error('Failed to load cards:', e);
-      toast.error('Failed to load data', { description: 'Unable to load contact records.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadCards = async () => {
+      setLoading(true);
+      try {
+        setData(await fetchCards(template));
+      } catch (e) {
+        console.error('Failed to load cards:', e);
+        toast.error('Failed to load data', { description: 'Unable to load contact records.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (isAuthenticated()) {
       loadCards();
     }
@@ -108,7 +118,7 @@ export function useCardData() {
     const onSynced = () => loadCards();
     window.addEventListener(CARDS_SYNCED_EVENT, onSynced);
     return () => window.removeEventListener(CARDS_SYNCED_EVENT, onSynced);
-  }, []);
+  }, [template]);
 
-  return { cards, loading };
+  return { data, loading, template };
 }
