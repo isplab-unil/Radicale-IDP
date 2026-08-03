@@ -17,4 +17,6 @@ export default [
   route('/api/user/preferences', 'routes/api.user.preferences.tsx'),
   // API routes for user cards
   route('/api/user/cards', 'routes/api.user.cards.tsx'),
+  // API routes for data download
+  route('/api/user/download', 'routes/api.user.download.tsx'),
 ] satisfies RouteConfig;
