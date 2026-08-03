@@ -112,18 +112,30 @@
       }
     }
   },
+  "download": {
+    "title": "Download your data",
+    "description": "You have the right to receive a copy of the personal data stored about you in a structured, commonly used and machine-readable format. This page lets you export all contact cards containing your information as a vCard (.vcf) file, which you can open or import in any contacts application.",
+    "sectionTitle": "Your contact data export",
+    "sectionDescription": "The export contains the data as currently stored by the contact provider. Fields you marked as private in your Data Preferences are not included, as they have already been removed from the stored cards.",
+    "button": "Download (.vcf)",
+    "buttonDownloading": "Preparing...",
+    "error": "Download failed",
+    "errorDescription": "Unable to download your data. Please try again. If the problem persists, contact support."
+  },
   "navigation": {
     "logout": "Sign Out",
     "logoutIcon": "circle-x",
     "menuLabel": "User menu",
     "subtitles": {
       "dataPreferences": "Contacts - Subject Data Preferences",
-      "dataAccess": "Contacts - Subject Data Access"
+      "dataAccess": "Contacts - Subject Data Access",
+      "dataDownload": "Contacts - Subject Data Download"
     }
   },
   "tabs": {
     "dataPreferences": "Data Preferences",
     "dataAccess": "Data Access",
+    "dataDownload": "Data Download",
     "navigationLabel": "Page navigation"
   },
   "footer": {

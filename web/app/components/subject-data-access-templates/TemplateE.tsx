@@ -19,8 +19,8 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
               className="w-16 h-16 rounded-full flex-shrink-0 mt-4 object-cover"
             />
           ) : (
-            <div className="flex items-center justify-center w-16 h-16 bg-gray-300 rounded-full flex-shrink-0 mt-4">
-              <DynamicIcon name="user" size={32} className="text-white" />
+            <div className="flex items-center justify-center w-16 h-16 rounded-full flex-shrink-0 mt-4">
+              <DynamicIcon name="circle-user-round" size={64} className="text-gray-300" />
             </div>
           )}
 

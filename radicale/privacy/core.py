@@ -420,3 +420,74 @@ class PrivacyCore:
             }
         except Exception as e:
             return False, f"Error reprocessing cards: {str(e)}"
+
+    def download_cards(self, user: str) -> Tuple[bool, Union[Dict[str, Union[str, int]], str]]:
+        """Serialize all vCards matching a user's identity into one vCard stream.
+
+        Args:
+            user: The user identifier (email or phone)
+
+        Returns:
+            Tuple of (success, result)
+            If success is True, result contains the combined vCard data
+            ("vcf") and the number of exported cards ("count")
+            If success is False, result contains the error message
+        """
+        is_valid, error_msg = self._validate_user_identifier(user)
+        if not is_valid:
+            return False, error_msg
+
+        if '@' in user:
+            lookup_id = user
+        else:
+            try:
+                lookup_id = normalize_phone_e164(user)
+            except Exception as e:
+                return False, str(e)
+
+        try:
+            matches = self._scanner.find_identity_occurrences(lookup_id)
+            serialized_cards = []
+            for match in matches:
+                try:
+                    discover_path = "/" + match["collection_path"].lstrip("/")
+                    collections = list(self._scanner._storage.discover(discover_path))
+                    collection = next(iter(collections), None)
+                except Exception as e:
+                    logger.warning("PRIVACY: Error discovering collection: %r", e)
+                    continue
+
+                if not collection:
+                    continue
+
+                item = None
+                for candidate in collection.get_all():
+                    if (isinstance(candidate, Item) and
+                            (candidate.component_name == "VCARD" or candidate.name == "VCARD") and
+                            hasattr(candidate.vobject_item, "uid") and
+                            candidate.vobject_item.uid.value == match["vcard_uid"]):
+                        item = candidate
+                        break
+
+                if not item:
+                    logger.warning("PRIVACY: vCard %r not found for download", match["vcard_uid"])
+                    continue
+
+                serialized_cards.append(item.serialize())
+
+            # Log the export for accountability (GDPR)
+            try:
+                self._privacy_db.log_vcard_action(
+                    "data_exported", lookup_id,
+                    details={"cards_exported": len(serialized_cards)})
+            except Exception as e:
+                logger.debug("PRIVACY: Could not log export to database: %s", e)
+
+            return True, {
+                "vcf": "".join(serialized_cards),
+                "count": len(serialized_cards),
+            }
+
+        except Exception as e:
+            logger.error("PRIVACY: Error downloading cards: %s", str(e), exc_info=True)
+            return False, f"Error downloading cards: {str(e)}"

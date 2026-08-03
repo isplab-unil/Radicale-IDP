@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     icon: 'sliders-horizontal',
   },
   { to: '/subject-data-access', translationKey: 'tabs.dataAccess', icon: 'eye' },
+  { to: '/subject-data-download', translationKey: 'tabs.dataDownload', icon: 'download' },
 ];
 
 /**

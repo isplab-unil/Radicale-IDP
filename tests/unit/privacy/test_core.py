@@ -907,3 +907,42 @@ def test_get_matching_cards_with_binary_photo(core):
     assert photo.startswith('data:image/jpeg;base64,')
     payload = photo[len('data:image/jpeg;base64,'):]
     assert base64.b64decode(payload) == jpeg_bytes
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_download_cards(core):
+    """Test that download_cards returns the matching vCards serialized."""
+    # Create two test vCards containing the user's email
+    for uid, name in [("download-card-1", "Download One"), ("download-card-2", "Download Two")]:
+        vcard = vobject.vCard()
+        vcard.add('uid')
+        vcard.uid.value = uid
+        vcard.add('fn')
+        vcard.fn.value = name
+        vcard.add('email')
+        vcard.email.value = "download@test.com"
+        vcard.email.type_param = 'INTERNET'
+
+        collection, _, _ = core._scanner._storage.create_collection(f"/dluser/{uid}")
+        item = Item(vobject_item=vcard, collection_path=f"dluser/{uid}", component_name="VCARD")
+        collection.upload(f"{uid}.vcf", item)
+
+    success, result = core.download_cards("download@test.com")
+
+    assert success
+    assert result["count"] == 2
+    payload = result["vcf"]
+    assert payload.count("BEGIN:VCARD") == 2
+    assert payload.count("END:VCARD") == 2
+    assert "Download One" in payload
+    assert "Download Two" in payload
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_download_cards_no_matches(core):
+    """Test that download_cards returns an empty payload when nothing matches."""
+    success, result = core.download_cards("nobody@test.com")
+
+    assert success
+    assert result["count"] == 0
+    assert result["vcf"] == ""
