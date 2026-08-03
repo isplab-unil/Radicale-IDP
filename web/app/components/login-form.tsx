@@ -1,6 +1,7 @@
 import { useState, useEffect, type ComponentProps, type FormEvent } from 'react';
 import { X, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router';
 
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
@@ -90,8 +91,19 @@ async function verifyOtp(
 export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
   const navigate = useNavigateWithTemplate();
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState<'identifier' | 'code'>('identifier');
-  const [identifier, setIdentifier] = useState('');
+  // Pre-fill the identifier from the ?id= URL parameter. A literal '+'
+  // in the query string decodes to a space, so restore the leading '+'
+  // for phone numbers (anything without '@'); the form requires E.164
+  // anyway. Without the parameter, the field starts empty.
+  const [identifier, setIdentifier] = useState(() => {
+    const id = searchParams.get('id');
+    if (!id) return '';
+    const trimmed = id.trim();
+    if (trimmed.includes('@')) return trimmed;
+    return trimmed.startsWith('+') ? trimmed : `+${trimmed}`;
+  });
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
