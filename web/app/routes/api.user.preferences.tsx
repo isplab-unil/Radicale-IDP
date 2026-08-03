@@ -1,15 +1,10 @@
 import { verifyAuth } from '~/lib/auth';
-import {
-  updatePrivacySettings,
-  createPrivacySettings,
-  reprocessUserCards,
-  getUserCards,
-} from '~/api/radicale';
+import { updatePrivacySettings, createPrivacySettings, reprocessUserCards } from '~/api/radicale';
 import {
   getUserByContact,
   getUserPreferences,
   saveUserPreferences,
-  saveUserCardsCache,
+  clearUserCardsCache,
   markContactProviderSynced,
 } from '~/db/operations';
 
@@ -185,9 +180,9 @@ export async function action({ request }: { request: Request }) {
     // Trigger reprocessing in Radicale
     await reprocessUserCards(user.contact);
 
-    // Refresh the cached cards so the access page shows current data
-    const fresh = await getUserCards(user.contact);
-    await saveUserCardsCache(dbUser.id, fresh);
+    // Invalidate the per-template card cache so the access page refetches
+    // current shaped data from radicale on its next read
+    await clearUserCardsCache(dbUser.id);
 
     // Mark as synced in web database
     await markContactProviderSynced(dbUser.id);

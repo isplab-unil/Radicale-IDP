@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from './index';
 import { usersTable, userPreferencesTable, userCardsTable } from './schema';
-import type { CardMatch } from '~/api/radicale';
+import type { TemplateCardsResponse } from '~/lib/card-types';
 
 // User operations
 export async function createUser(contact: string) {
@@ -144,20 +144,42 @@ export async function markContactProviderSynced(userId: number) {
   return updated[0];
 }
 
-export async function getUserCardsCache(userId: number): Promise<{ matches: CardMatch[] } | null> {
+/**
+ * Cards are cached per disclosure template: the stored JSON maps each
+ * template (a-f) to the payload radicale shaped for it, so the full
+ * unfiltered card data is never persisted here.
+ */
+export async function getUserCardsCache(
+  userId: number,
+  template: string
+): Promise<TemplateCardsResponse | null> {
   const rows = await db.select().from(userCardsTable).where(eq(userCardsTable.userId, userId));
   const row = rows[0];
   if (!row) return null;
   try {
-    return JSON.parse(row.data);
+    const all = JSON.parse(row.data);
+    return all[template] ?? null;
   } catch {
     return null;
   }
 }
 
-export async function saveUserCardsCache(userId: number, data: { matches: CardMatch[] }) {
+export async function saveUserCardsCache(
+  userId: number,
+  template: string,
+  data: TemplateCardsResponse
+) {
   const existing = await db.select().from(userCardsTable).where(eq(userCardsTable.userId, userId));
-  const payload = JSON.stringify(data);
+  let all: Record<string, TemplateCardsResponse> = {};
+  if (existing[0]) {
+    try {
+      all = JSON.parse(existing[0].data);
+    } catch {
+      all = {};
+    }
+  }
+  all[template] = data;
+  const payload = JSON.stringify(all);
   if (existing[0]) {
     await db
       .update(userCardsTable)
@@ -166,4 +188,8 @@ export async function saveUserCardsCache(userId: number, data: { matches: CardMa
   } else {
     await db.insert(userCardsTable).values({ userId, data: payload });
   }
+}
+
+export async function clearUserCardsCache(userId: number) {
+  await db.delete(userCardsTable).where(eq(userCardsTable.userId, userId));
 }
