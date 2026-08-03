@@ -12,7 +12,11 @@ export default function PreferencesPage() {
   const [originalPreferences, setOriginalPreferences] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Derived: unsaved changes exist when current values differ from the
+  // last saved/loaded ones (toggling an option back reverts the change).
+  const hasChanges =
+    Object.keys(preferences).length !== Object.keys(originalPreferences).length ||
+    Object.keys(preferences).some(key => preferences[key] !== originalPreferences[key]);
 
   // Mapping between API field names and user-friendly labels
   const fieldMapping = {
@@ -66,7 +70,6 @@ export default function PreferencesPage() {
           const data = await response.json();
           setPreferences(data.preferences);
           setOriginalPreferences(data.preferences);
-          setHasChanges(false);
         } else {
           toast.error(t('preferences.loadError'), {
             description: t('preferences.loadErrorDescription'),
@@ -92,7 +95,6 @@ export default function PreferencesPage() {
       [fieldId]: checked,
     };
     setPreferences(newPreferences);
-    setHasChanges(true);
   };
 
   const handleSavePreferences = async () => {
@@ -106,7 +108,6 @@ export default function PreferencesPage() {
 
       if (response.ok) {
         setOriginalPreferences(preferences);
-        setHasChanges(false);
         toast.success(t('preferences.saveSuccess'), {
           description: t('preferences.saveSuccessDescription'),
         });
@@ -126,7 +127,6 @@ export default function PreferencesPage() {
 
   const handleCancel = () => {
     setPreferences(originalPreferences);
-    setHasChanges(false);
   };
 
   if (loading) {
