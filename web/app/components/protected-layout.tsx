@@ -61,9 +61,9 @@ export default function Layout() {
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label={t('navigation.menuLabel')}
-                  className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full hover:bg-gray-400 transition-colors cursor-pointer"
+                  className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
                 >
-                  <DynamicIcon name="user" size={20} className="text-white" />
+                  <DynamicIcon name="circle-user-round" size={28} className="text-gray-500" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
