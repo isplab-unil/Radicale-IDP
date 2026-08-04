@@ -1,9 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 
 export default function LoginLayout() {
-  const { t } = useTranslation();
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -26,21 +23,6 @@ export default function LoginLayout() {
       <main className="flex-1">
         <Outlet />
       </main>
-
-      {/* Footer */}
-      <footer className="bg-accent py-4 px-4 mt-auto">
-        <div className="container mx-auto max-w-8xl px-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
-            <div className="flex flex-wrap justify-center sm:justify-start space-x-6 text-sm">
-              <span className="text-gray-400">{t('footer.privacyPolicy')}</span>
-              <span className="text-gray-400">{t('footer.termsConditions')}</span>
-            </div>
-            {t('footer.copyright') && (
-              <div className="text-sm text-gray-400">{t('footer.copyright')}</div>
-            )}
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
