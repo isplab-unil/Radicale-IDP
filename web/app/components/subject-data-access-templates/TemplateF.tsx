@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
-import { getPhotoSrc, type CardMatch } from '~/lib/card-types';
+import { getPhotoSrc, type ShapedCardMatch } from '~/lib/card-types';
 import { AccessPageHeader } from './AccessPageHeader';
 
-function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
+function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
   // Extract email from collection_path (format: email/uuid)
-  const email = contact.collection_path.split('/')[0];
+  const email = contact.collection_path?.split('/')[0] ?? '';
   const photoSrc = getPhotoSrc(contact.fields.photo);
 
   return (
@@ -179,12 +179,8 @@ export function TemplateF() {
             ) : cards.length === 0 ? (
               <div className="text-gray-600">{t('access.noRecords')}</div>
             ) : (
-              cards.map(contact => (
-                <ContactCard
-                  key={`${contact.collection_path}-${contact.vcard_uid}`}
-                  contact={contact}
-                  t={t}
-                />
+              cards.map((contact, index) => (
+                <ContactCard key={`${contact.collection_path}-${index}`} contact={contact} t={t} />
               ))
             )}
           </div>

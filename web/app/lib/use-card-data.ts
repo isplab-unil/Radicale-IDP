@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { authFetch, isAuthenticated } from '~/lib/auth';
 import { useTemplateConfig } from '~/lib/template-context';
-import type { CardMatch, TemplateCardsResponse } from '~/lib/card-types';
+import type { TemplateCardsResponse } from '~/lib/card-types';
 
 // Custom event dispatched after a successful provider sync so mounted
 // pages reload their cards from the refreshed cache.
@@ -34,7 +34,7 @@ function normalizeFieldValue(value: any): any {
 }
 
 // Normalize all fields in a card
-function normalizeCard(card: CardMatch): CardMatch {
+function normalizeCard<T extends { fields: Record<string, any> }>(card: T): T {
   const normalizedFields: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(card.fields)) {

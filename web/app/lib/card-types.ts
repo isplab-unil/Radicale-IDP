@@ -9,6 +9,17 @@ export type CardsResponse = {
   matches: CardMatch[];
 };
 
+/** Templates E/F: card with fields pruned to the rendered set.
+ *  Template F additionally discloses the card owner (collection_path). */
+export type ShapedCardMatch = {
+  collection_path?: string;
+  fields: Record<string, any>;
+};
+
+export type ShapedCardsResponse = {
+  matches: ShapedCardMatch[];
+};
+
 /** Disclosure templates understood by the backend (see radicale/privacy/templates.py). */
 export type CardTemplate = 'a' | 'b' | 'c' | 'd' | 'e' | 'f';
 
@@ -27,6 +38,7 @@ export type CardsValuesResponse = { values: Record<string, unknown[]> };
 /** Response of GET /privacy/cards/<user>?template=X, shaped by the template. */
 export type TemplateCardsResponse =
   | CardsResponse
+  | ShapedCardsResponse
   | CardsFoundResponse
   | CardsCountResponse
   | CardsCountsResponse
