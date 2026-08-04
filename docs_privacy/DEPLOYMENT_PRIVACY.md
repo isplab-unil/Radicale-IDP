@@ -6,14 +6,15 @@ Complete guide to deploy Radicale-IDP (CalDAV/CardDAV server with Privacy Extens
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
 3. [Quick Start](#quick-start)
-4. [Environment Configuration](#environment-configuration)
-5. [Server Configuration](#server-configuration)
-6. [Deployment Options](#deployment-options)
-7. [Reverse Proxy & SSL](#reverse-proxy--ssl)
-8. [Privacy System Overview](#privacy-system-overview)
-9. [Operations & Maintenance](#operations--maintenance)
-10. [Troubleshooting](#troubleshooting)
-11. [Quick Reference](#quick-reference)
+4. [Docker Management](#docker-management)
+5. [Environment Configuration](#environment-configuration)
+6. [Server Configuration](#server-configuration)
+7. [Deployment Options](#deployment-options)
+8. [Reverse Proxy & SSL](#reverse-proxy--ssl)
+9. [Privacy System Overview](#privacy-system-overview)
+10. [Operations & Maintenance](#operations--maintenance)
+11. [Troubleshooting](#troubleshooting)
+12. [Quick Reference](#quick-reference)
 
 ---
 
@@ -65,7 +66,7 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 
 ### What's Included
 
-- `docker compose.yml` - Service orchestration with nginx, certbot, radicale, and web services
+- `compose-privacy.yml` - Service orchestration with nginx, certbot, radicale, and web services
 - `Dockerfile.local` - Build Radicale from local source with privacy extensions
 - `.env.example` - Environment variable template
 - `config/radicale.config` - Radicale server configuration
@@ -163,14 +164,14 @@ chmod 600 .env
 
 ### Step 4: Start Services
 
-**For development/testing**:
 ```bash
-docker compose up -d
+docker compose -f compose-privacy.yml up -d
 ```
 
-**For production**:
+On the first run, build the images at the same time:
+
 ```bash
-docker compose -f docker compose.yml -f docker compose.prod.yml up -d
+docker compose -f compose-privacy.yml up --build -d
 ```
 
 Docker automatically manages volume creation and permissions.
@@ -179,16 +180,16 @@ Docker automatically manages volume creation and permissions.
 
 ```bash
 # Check services status
-docker compose ps
+docker compose -f compose-privacy.yml ps
 
 # Run health check
 ./scripts/health-check.sh
 
 # View logs
-docker compose logs -f
+docker compose -f compose-privacy.yml logs -f
 ```
 
-Both services should show as "Up" and healthy.
+All services should show as "Up" and healthy.
 
 ### Step 6: Access Services
 
@@ -199,7 +200,7 @@ ssh -L 5232:localhost:5232 -L 3000:localhost:3000 user@your-server.com
 
 Then open in your browser:
 - Radicale: `http://localhost:5232/`
-- Web App: `http://localhost:3000/web`
+- Web App: `http://localhost:3000/`
 
 **For persistent access**, add to `~/.ssh/config`:
 ```
@@ -220,11 +221,13 @@ Docker Compose manages all containers, volumes, and networking. No manual setup 
 
 ### Understanding Docker Compose
 
-The deployment uses two configuration files:
-- `docker compose.yml` - Base configuration (development defaults)
-- `docker compose.prod.yml` - Production overrides (applied on top)
+The deployment uses a single Compose file: `compose-privacy.yml`. It defines the full stack: radicale, web, nginx, and certbot services.
 
-When you use both: `docker compose -f docker compose.yml -f docker compose.prod.yml up -d`
+The repository also contains `compose.yaml`, which is the upstream Radicale-only file and is **not** used for this deployment.
+
+All commands should pass the file explicitly: `docker compose -f compose-privacy.yml ...`
+
+All commands below assume `-f compose-privacy.yml`; the examples show it explicitly.
 
 ### Building Images
 
@@ -232,14 +235,14 @@ Build Docker images from Dockerfiles:
 
 ```bash
 # Build all images
-docker compose build
+docker compose -f compose-privacy.yml build
 
 # Build specific service
-docker compose build web
-docker compose build radicale
+docker compose -f compose-privacy.yml build web
+docker compose -f compose-privacy.yml build radicale
 
 # Force rebuild (ignore cache)
-docker compose build --no-cache web
+docker compose -f compose-privacy.yml build --no-cache web
 ```
 
 **When to rebuild**:
@@ -252,40 +255,37 @@ docker compose build --no-cache web
 
 **Start services**:
 ```bash
-# Development (background)
-docker compose up -d
-
-# Production (background)
-docker compose -f docker compose.yml -f docker compose.prod.yml up -d
+# Background
+docker compose -f compose-privacy.yml up -d
 
 # Foreground (see output directly)
-docker compose up
+docker compose -f compose-privacy.yml up
 ```
 
 **Stop services**:
 ```bash
 # Stop containers (keeps all data)
-docker compose down
+docker compose -f compose-privacy.yml down
 
 # Stop and remove all volumes (REMOVES ALL DATA!)
-docker compose down -v
+docker compose -f compose-privacy.yml down -v
 ```
 
 ### Viewing Logs
 
 ```bash
 # All services, real-time
-docker compose logs -f
+docker compose -f compose-privacy.yml logs -f
 
 # Specific service
-docker compose logs -f radicale
-docker compose logs -f web
+docker compose -f compose-privacy.yml logs -f radicale
+docker compose -f compose-privacy.yml logs -f web
 
 # Last 50 lines
-docker compose logs --tail=50
+docker compose -f compose-privacy.yml logs --tail=50
 
 # With timestamps
-docker compose logs -f -t
+docker compose -f compose-privacy.yml logs -f -t
 
 # Stop log viewing: press Ctrl+C
 ```
@@ -294,16 +294,16 @@ docker compose logs -f -t
 
 ```bash
 # List running containers
-docker compose ps
+docker compose -f compose-privacy.yml ps
 
 # Show all containers (including stopped)
-docker compose ps -a
+docker compose -f compose-privacy.yml ps -a
 
 # Show resource usage (CPU, memory, network)
 docker stats
 
 # Check specific container details
-docker compose ps web
+docker compose -f compose-privacy.yml ps web
 ```
 
 ### Common Workflows
@@ -316,51 +316,51 @@ cd /opt/radicale-idp
 git pull
 
 # Rebuild images
-docker compose build
+docker compose -f compose-privacy.yml build
 
 # Stop old containers
-docker compose down
+docker compose -f compose-privacy.yml down
 
 # Start with new images
-docker compose -f docker compose.yml -f docker compose.prod.yml up -d
+docker compose -f compose-privacy.yml up -d
 
 # Check logs
-docker compose logs -f
+docker compose -f compose-privacy.yml logs -f
 ```
 
 **Quick restart (keeps data)**:
 ```bash
-docker compose restart
+docker compose -f compose-privacy.yml restart
 # or
-docker compose down && docker compose up -d
+docker compose -f compose-privacy.yml down && docker compose -f compose-privacy.yml up -d
 ```
 
 **Complete rebuild (removes all data)**:
 ```bash
 # CAUTION: This removes all data! Create backup first!
-docker compose down -v              # Stop and remove volumes
-docker compose build --no-cache     # Rebuild from scratch
-docker compose up -d                # Start fresh
-docker compose logs -f              # Watch startup
+docker compose -f compose-privacy.yml down -v              # Stop and remove volumes
+docker compose -f compose-privacy.yml build --no-cache     # Rebuild from scratch
+docker compose -f compose-privacy.yml up -d                # Start fresh
+docker compose -f compose-privacy.yml logs -f              # Watch startup
 ```
 
 **Troubleshooting workflow**:
 ```bash
 # Check status
-docker compose ps
+docker compose -f compose-privacy.yml ps
 
 # View logs
-docker compose logs web
+docker compose -f compose-privacy.yml logs web
 
 # Rebuild specific service
-docker compose build --no-cache web
+docker compose -f compose-privacy.yml build --no-cache web
 
 # Restart service
-docker compose down web
-docker compose up -d web
+docker compose -f compose-privacy.yml down web
+docker compose -f compose-privacy.yml up -d web
 
 # Check logs again
-docker compose logs -f web
+docker compose -f compose-privacy.yml logs -f web
 ```
 
 ---
@@ -375,7 +375,7 @@ All configuration is managed through environment variables. Copy `.env.example` 
 
 ```ini
 # ====== CRITICAL - Security Tokens ======
-# Privacy API authentication token (32+ random characters)
+# Privacy API authentication token (must be identical for radicale and web services)
 RADICALE_TOKEN=<generate-with-openssl-rand-hex-32>
 
 # Web app session signing (32+ random characters)
@@ -391,6 +391,11 @@ DOMAIN=your-domain.com
 # Email for Let's Encrypt notifications (required when SELF_SIGNED_SSL=false)
 EMAIL=admin@your-domain.com
 
+# ====== Default User Data ======
+# Password applied to ALL users created from default-data/ on first start
+# The built-in default is "password" - change it before production!
+DEFAULT_USER_PASSWORD=password
+
 # ====== AWS Configuration (Optional) ======
 # Leave blank or use MOCK_* flags for development
 
@@ -405,71 +410,21 @@ AWS_SECRET_ACCESS_KEY=your-secret-access-key
 EMAIL_FROM=noreply@your-domain.com
 EMAIL_FROM_NAME=Radicale IDP
 
-# SMS sender ID (must be registered in AWS SNS)
-SMS_FROM=RadicalIDP
-
 # ====== Mock Mode (Development) ======
-# Set to 'true' to skip AWS and use mock OTP delivery
+# Set to 'true' to skip AWS and display the OTP code directly on the login page
 MOCK_EMAIL=false
 MOCK_SMS=false
 
-# Mock email output directory (when MOCK_EMAIL=true)
-MOCK_EMAIL_OUTPUT_DIR=/var/lib/radicale/mock_emails
-
-# ====== Radicale Configuration ======
-# Server host/port (127.0.0.1 = localhost only)
-RADICALE_HOST=127.0.0.1
-RADICALE_PORT=5232
-
-# Storage type and path
-RADICALE_STORAGE_TYPE=multifilesystem
-RADICALE_STORAGE_FILESYSTEM_FOLDER=/var/lib/radicale/collections
-
-# Logging level: debug, info, warning, error
-RADICALE_LOG_LEVEL=info
-
-# ====== Privacy Database ======
-# Path to SQLite privacy settings database
-PRIVACY_DB_PATH=/var/lib/radicale/privacy.db
-
-# Default privacy settings for new users (true = disallow sharing)
-DEFAULT_DISALLOW_PHOTO=false
-DEFAULT_DISALLOW_GENDER=false
-DEFAULT_DISALLOW_BIRTHDAY=false
-DEFAULT_DISALLOW_ADDRESS=false
-DEFAULT_DISALLOW_COMPANY=false
-DEFAULT_DISALLOW_TITLE=false
-
 # ====== Web Application ======
-# Web app host/port
-WEB_HOST=127.0.0.1
-WEB_PORT=3000
+# Web app database path (inside the container)
+DB_FILE_NAME=/data/local.db
 
-# Web app database path
-WEB_DB_PATH=/data/local.db
+# Template switching (versions a-f) and the default template
+ENABLE_TEMPLATES=true
+DEFAULT_TEMPLATE=f
 
-# Web app log level
-WEB_LOG_LEVEL=info
-
-# ====== Authentication ======
-# Radicale auth type: none (development), htpasswd (production)
-RADICALE_AUTH_TYPE=none
-
-# Path to htpasswd file (if using htpasswd auth)
-RADICALE_AUTH_HTPASSWD_FILE=/etc/radicale/users
-
-# htpasswd encryption: plain, sha1, ssha, md5, crypt
-RADICALE_AUTH_HTPASSWD_ENCRYPTION=sha1
-
-# ====== Additional Settings ======
-# Debug mode (only in development)
-DEBUG=false
-
-# OTP validity period (seconds)
-OTP_EXPIRY=600
-
-# OTP code length
-OTP_LENGTH=6
+# Show disclaimer box on the login page (for demo/test deployments)
+SHOW_DISCLAIMER=false
 ```
 
 ### Key Configuration Details
@@ -514,12 +469,13 @@ Generate with: `openssl rand -hex 32`
 - EMAIL_FROM must be verified in AWS SES
 
 **Mock Mode (Development)**
-- Set `MOCK_EMAIL=true` and `MOCK_SMS=true` to disable AWS
-- OTP codes written to files instead of sent
-- Check `MOCK_EMAIL_OUTPUT_DIR` for generated codes
+- Set `MOCK_EMAIL=true` and `MOCK_SMS=true` to skip AWS
+- The OTP code is displayed directly on the login page ("Demo Mode - Your verification code:")
+- Codes expire after 5 minutes (300 seconds)
 
 **Privacy Defaults**
 - Applied to new users automatically
+- Configured in `config/radicale.config` (`[privacy]` section, `default_disallow_*` keys) - not via environment variables
 - Users can change their own preferences via web UI
 - Six fields are filterable: photo, gender, birthday, address, company, title
 
@@ -529,7 +485,7 @@ Generate with: `openssl rand -hex 32`
 
 ### Radicale Configuration File
 
-Located at `config/radicale.config` (loaded into container from `.env`).
+Located at `config/radicale.config`, mounted read-only into the container at `/etc/radicale/config`.
 
 #### Critical Sections
 
@@ -569,9 +525,10 @@ For production, create htpasswd file and set:
 ```ini
 [auth]
 type = htpasswd
-htpasswd_filename = /etc/radicale/users
-htpasswd_encryption = sha1
+htpasswd_filename = /var/lib/radicale/htpasswd
+htpasswd_encryption = bcrypt
 ```
+This matches the shipped configuration (bcrypt encryption is used).
 
 **[rights]**
 ```ini
@@ -597,14 +554,16 @@ Options: `debug`, `info`, `warning`, `error`. Use `debug` for troubleshooting.
 type = none
 
 [rights]
-type = owner_only  # Each user can only see their own data
+type = authenticated  # Privacy features require authenticated rights
 ```
+
+Note: `auth = none` is only for local testing.
 
 **For Production** (`auth = htpasswd`)
 
-Generate password file:
+Generate password file (bcrypt encryption is used):
 ```bash
-htpasswd -c /etc/radicale/users username
+htpasswd -c /var/lib/radicale/htpasswd username
 # Enter password when prompted
 ```
 
@@ -612,8 +571,8 @@ Update config:
 ```ini
 [auth]
 type = htpasswd
-htpasswd_filename = /etc/radicale/users
-htpasswd_encryption = sha1
+htpasswd_filename = /var/lib/radicale/htpasswd
+htpasswd_encryption = bcrypt
 
 [rights]
 type = authenticated  # Privacy features enabled
@@ -631,20 +590,20 @@ type = authenticated  # Privacy features enabled
 cd /opt/radicale-idp
 
 # Start services
-docker compose up -d
+docker compose -f compose-privacy.yml up -d
 
 # Services accessible at:
 # - Radicale: http://localhost:5232/
-# - Web app: http://localhost:3000/web
+# - Web app: http://localhost:3000/
 
 # View logs
-docker compose logs -f
+docker compose -f compose-privacy.yml logs -f
 
 # Stop services (keeps data)
-docker compose down
+docker compose -f compose-privacy.yml down
 
 # Stop and remove data
-docker compose down -v
+docker compose -f compose-privacy.yml down -v
 ```
 
 **Characteristics**:
@@ -663,13 +622,13 @@ Same commands as development deployment. The configuration includes health check
 cd /opt/radicale-idp
 
 # Start services
-docker compose up -d
+docker compose -f compose-privacy.yml up -d
 
 # Verify services
-docker compose ps
+docker compose -f compose-privacy.yml ps
 
 # View logs
-docker compose logs -f
+docker compose -f compose-privacy.yml logs -f
 ```
 
 **Production features included**:
@@ -729,7 +688,7 @@ SELF_SIGNED_SSL=true
 ```
 
 **What happens**:
-1. Start services: `docker compose up -d`
+1. Start services: `docker compose -f compose-privacy.yml up -d`
 2. Certbot container generates self-signed certificate on first run
 3. Nginx container configures SSL with self-signed certificate
 4. Services available at `https://localhost/` (expect browser warning)
@@ -757,7 +716,7 @@ EMAIL=admin@example.com
 ```
 
 **What happens**:
-1. Start services: `docker compose up -d`
+1. Start services: `docker compose -f compose-privacy.yml up -d`
 2. Certbot container obtains Let's Encrypt certificate via ACME challenge
 3. Nginx container configures SSL with Let's Encrypt certificate
 4. Services available at `https://your-domain.com/` (trusted certificate)
@@ -799,7 +758,7 @@ The certbot container runs automatically and:
 
 Run the bootstrapping script to complete setup:
 ```bash
-podman compose exec nginx obtain-ssl-certificate.sh
+podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 ```
 
 This script:
@@ -818,10 +777,10 @@ This script:
 **Commands**:
 ```bash
 # 1. Start services (nginx starts in HTTP-only mode)
-podman compose up -d
+podman compose -f compose-privacy.yml up -d
 
 # 2. Obtain SSL certificate and switch to HTTPS
-podman compose exec nginx obtain-ssl-certificate.sh
+podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 
 # 3. Verify HTTPS is working
 curl https://your-domain.com/
@@ -834,13 +793,13 @@ If ports 80/443 are closed or not yet configured, certbot cannot complete the AC
 **Temporary Solution** - Use self-signed certificates:
 ```bash
 # 1. Stop services
-podman compose down
+podman compose -f compose-privacy.yml down
 
 # 2. Update .env
 SELF_SIGNED_SSL=true
 
 # 3. Start with self-signed certificates
-podman compose up -d
+podman compose -f compose-privacy.yml up -d
 ```
 
 **Switch to Let's Encrypt Later** (once ports are open):
@@ -851,11 +810,11 @@ DOMAIN=your-domain.com
 EMAIL=your-email@example.com
 
 # 2. Restart services
-podman compose down
-podman compose up -d
+podman compose -f compose-privacy.yml down
+podman compose -f compose-privacy.yml up -d
 
 # 3. Obtain Let's Encrypt certificate
-podman compose exec nginx obtain-ssl-certificate.sh
+podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 ```
 
 #### Troubleshooting Bootstrapping
@@ -863,10 +822,10 @@ podman compose exec nginx obtain-ssl-certificate.sh
 **obtain-ssl-certificate.sh times out**:
 ```bash
 # Check if certbot container is running
-podman compose ps
+podman compose -f compose-privacy.yml ps
 
 # View certbot logs
-podman compose logs certbot
+podman compose -f compose-privacy.yml logs certbot
 
 # Common causes:
 # - Ports 80/443 not accessible from internet
@@ -875,14 +834,14 @@ podman compose logs certbot
 ```
 
 **Certbot fails with "Connection refused"**:
-- Verify nginx is running: `podman compose ps nginx`
-- Check nginx logs: `podman compose logs nginx`
+- Verify nginx is running: `podman compose -f compose-privacy.yml ps nginx`
+- Check nginx logs: `podman compose -f compose-privacy.yml logs nginx`
 - Ensure port 80 is accessible: `curl http://your-domain.com/.well-known/acme-challenge/test`
 
 **Already have certificates but nginx won't start with HTTPS**:
 ```bash
 # Manually reload nginx with HTTPS
-podman compose exec nginx obtain-ssl-certificate.sh
+podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 ```
 
 ### Switching Between Modes
@@ -900,11 +859,11 @@ nano .env
 dig your-domain.com
 
 # 3. Restart services
-docker compose down
-docker compose up -d
+docker compose -f compose-privacy.yml down
+docker compose -f compose-privacy.yml up -d
 
 # 4. Monitor certificate acquisition
-docker compose logs -f certbot
+docker compose -f compose-privacy.yml logs -f certbot
 ```
 
 **From Production to Development**:
@@ -915,8 +874,8 @@ nano .env
 #   SELF_SIGNED_SSL=true
 
 # 2. Restart services
-docker compose down
-docker compose up -d
+docker compose -f compose-privacy.yml down
+docker compose -f compose-privacy.yml up -d
 ```
 
 ### SSL Certificate Verification
@@ -930,12 +889,12 @@ docker compose up -d
 openssl x509 -enddate -noout -in volumes/ssl/self-signed/fullchain.pem
 
 # Check certificate expiration (Let's Encrypt mode)
-docker compose exec certbot certbot certificates
+docker compose -f compose-privacy.yml exec certbot certbot certificates
 ```
 
 **View certbot logs**:
 ```bash
-docker compose logs certbot
+docker compose -f compose-privacy.yml logs certbot
 ```
 
 ### Manual Certificate Operations
@@ -943,10 +902,10 @@ docker compose logs certbot
 **Force certificate renewal** (Let's Encrypt mode only):
 ```bash
 # Renew certificate
-docker compose exec certbot certbot renew --force-renewal
+docker compose -f compose-privacy.yml exec certbot certbot renew --force-renewal
 
 # Restart nginx to load renewed certificate
-docker compose restart nginx
+docker compose -f compose-privacy.yml restart nginx
 ```
 
 **Regenerate self-signed certificate**:
@@ -955,10 +914,10 @@ docker compose restart nginx
 rm volumes/ssl/self-signed/fullchain.pem volumes/ssl/self-signed/privkey.pem
 
 # Restart certbot to generate new certificate
-docker compose restart certbot
+docker compose -f compose-privacy.yml restart certbot
 
 # Restart nginx to load new certificate
-docker compose restart nginx
+docker compose -f compose-privacy.yml restart nginx
 ```
 
 ### Nginx Configuration
@@ -971,7 +930,7 @@ Nginx configuration is **dynamically generated** based on SSL mode:
 **Key features**:
 - HTTP to HTTPS redirect
 - WebDAV support for CalDAV/CardDAV
-- Reverse proxy to radicale (/) and web (/web)
+- Reverse proxy to web (/) and radicale (/radicale)
 - Proper header forwarding
 - ACME challenge endpoint for Let's Encrypt
 
@@ -981,11 +940,11 @@ Nginx configuration is **dynamically generated** based on SSL mode:
 ```bash
 # Check if certificates exist
 ls -la volumes/ssl/self-signed/  # For self-signed mode
-docker compose exec certbot ls -la /etc/letsencrypt/live/  # For Let's Encrypt mode
+docker compose -f compose-privacy.yml exec certbot ls -la /etc/letsencrypt/live/  # For Let's Encrypt mode
 
 # If missing, restart certbot to generate
-docker compose restart certbot
-docker compose logs -f certbot
+docker compose -f compose-privacy.yml restart certbot
+docker compose -f compose-privacy.yml logs -f certbot
 ```
 
 **Let's Encrypt certificate acquisition failed**:
@@ -999,7 +958,7 @@ sudo ufw status
 curl -I http://your-domain.com/.well-known/acme-challenge/test
 
 # 3. Check certbot logs
-docker compose logs certbot
+docker compose -f compose-privacy.yml logs certbot
 
 # 4. Common issues:
 #    - DNS not propagated (wait 24-48 hours)
@@ -1011,7 +970,7 @@ docker compose logs certbot
 **Browser shows "Not Secure" warning**:
 - **Expected in development mode** (self-signed certificates)
 - In production mode: Verify Let's Encrypt certificate was obtained successfully
-- Check certificate expiration: `docker compose exec certbot certbot certificates`
+- Check certificate expiration: `docker compose -f compose-privacy.yml exec certbot certbot certificates`
 
 **First-time setup - ports 80/443 are closed**:
 
@@ -1019,11 +978,9 @@ If you're setting up Let's Encrypt but ports 80/443 aren't accessible yet:
 1. Use `SELF_SIGNED_SSL=true` temporarily
 2. Request firewall/network admin to open ports
 3. Switch to Let's Encrypt mode once ports are open
-4. Run `podman compose exec nginx obtain-ssl-certificate.sh`
+4. Run `podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh`
 
 See "SSL Certificate Bootstrapping" section above for detailed instructions.
-
-For more detailed SSL documentation, see: `nginx/ssl/README.md`
 
 ---
 
@@ -1086,7 +1043,6 @@ curl -H "Authorization: Bearer $RADICALE_TOKEN" \
 Response:
 ```json
 {
-  "username": "john",
   "disallow_photo": false,
   "disallow_gender": true,
   "disallow_birthday": true,
@@ -1131,7 +1087,7 @@ curl -X POST \
 
 React-based web app provides user-friendly interface:
 
-**Access**: `http://your-domain.com/web`
+**Access**: `https://your-domain.com/`
 
 **Features**:
 - View current privacy settings
@@ -1159,8 +1115,7 @@ Regular backups are critical for production deployments. The backup script works
 
 # Backups saved to /backup/radicale-idp/YYYYMMDD_HHMMSS/
 # Contents:
-#   - collections-*.tar.gz (vCards and calendars)
-#   - radicale-data-*.tar.gz (privacy database)
+#   - radicale-data-*.tar.gz (collections, vCards, calendars, and privacy database)
 #   - web-data-*.tar.gz (web app database)
 #   - config-*.tar.gz (configuration files)
 #   - privacy-db-*.sql (privacy database SQL dump)
@@ -1187,21 +1142,16 @@ sudo crontab -e
 ls /backup/radicale-idp/
 
 # Stop services
-docker compose down
+docker compose -f compose-privacy.yml down
 
 # Remove volumes (CAUTION: removes current data!)
-docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
+# Note: the `radicale-idp_` prefix is the compose project name (the project directory name)
+docker volume rm radicale-idp_radicale_data radicale-idp_web_data
 
 # Restore specific backup (example from backup YYYYMMDD_HHMMSS)
 cd /backup/radicale-idp/YYYYMMDD_HHMMSS/
 
-# Restore collections
-docker run --rm \
-  -v radicale-idp_radicale_collections:/collections \
-  -v .:/backup:ro \
-  alpine tar xzf /backup/collections-*.tar.gz -C /collections
-
-# Restore Radicale data (privacy database)
+# Restore Radicale data (collections, vCards, and privacy database)
 docker run --rm \
   -v radicale-idp_radicale_data:/data \
   -v .:/backup:ro \
@@ -1214,7 +1164,7 @@ docker run --rm \
   alpine tar xzf /backup/web-data-*.tar.gz -C /data
 
 # Restart services
-docker compose up -d
+docker compose -f compose-privacy.yml up -d
 ```
 
 ### Health Monitoring
@@ -1239,59 +1189,59 @@ Reclaim unused space:
 
 ```bash
 # Radicale privacy database
-docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
 
 # Web app database
-docker compose exec web sqlite3 /data/local.db "VACUUM;"
+docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 #### Backup Databases
 
 ```bash
 # Privacy database
-docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > privacy-backup.sql
+docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > privacy-backup.sql
 
 # Web database
-docker compose exec web sqlite3 /data/local.db ".dump" > web-backup.sql
+docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db ".dump" > web-backup.sql
 ```
 
 ### Updating Containers
 
 ```bash
 # Pull latest images
-docker compose pull
+docker compose -f compose-privacy.yml pull
 
 # Rebuild local image
-docker compose build --no-cache radicale
+docker compose -f compose-privacy.yml build --no-cache radicale
 
 # Restart services
-docker compose up -d
+docker compose -f compose-privacy.yml up -d
 
 # Verify update
-docker compose ps
-docker compose logs
+docker compose -f compose-privacy.yml ps
+docker compose -f compose-privacy.yml logs
 ```
 
 ### Viewing Logs
 
 ```bash
 # Real-time logs (all services)
-docker compose logs -f
+docker compose -f compose-privacy.yml logs -f
 
 # Specific service logs
-docker compose logs -f radicale
-docker compose logs -f web
-docker compose logs -f nginx
-docker compose logs -f certbot
+docker compose -f compose-privacy.yml logs -f radicale
+docker compose -f compose-privacy.yml logs -f web
+docker compose -f compose-privacy.yml logs -f nginx
+docker compose -f compose-privacy.yml logs -f certbot
 
 # Last 100 lines of logs
-docker compose logs -f --tail=100
+docker compose -f compose-privacy.yml logs -f --tail=100
 
 # Logs with timestamps
-docker compose logs -f -t
+docker compose -f compose-privacy.yml logs -f -t
 
 # Multiple services at once
-docker compose logs -f radicale web nginx
+docker compose -f compose-privacy.yml logs -f radicale web nginx
 ```
 
 ### Token Rotation
@@ -1315,8 +1265,8 @@ nano .env
 
 **Step 3**: Restart services
 ```bash
-docker compose down
-docker compose up -d
+docker compose -f compose-privacy.yml down
+docker compose -f compose-privacy.yml up -d
 ```
 
 **Step 4**: Invalidate old tokens
@@ -1331,9 +1281,9 @@ docker compose up -d
 
 **Check logs**:
 ```bash
-docker compose logs
-docker compose logs radicale
-docker compose logs web
+docker compose -f compose-privacy.yml logs
+docker compose -f compose-privacy.yml logs radicale
+docker compose -f compose-privacy.yml logs web
 ```
 
 **Common issues**:
@@ -1354,15 +1304,15 @@ docker compose logs web
    ```bash
    # Docker manages volumes automatically, but if you have permission issues:
    # Remove and recreate volumes
-   docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
-   docker compose up -d
+   docker volume rm radicale-idp_radicale_data radicale-idp_web_data
+   docker compose -f compose-privacy.yml up -d
    ```
 
 ### Connection Refused
 
 **Verify services running**:
 ```bash
-docker compose ps
+docker compose -f compose-privacy.yml ps
 
 # All services should show "Up"
 ```
@@ -1376,14 +1326,14 @@ sudo netstat -tlnp | grep 3000
 **Test local connection**:
 ```bash
 curl http://localhost:5232/
-curl http://localhost:3000/web
+curl http://localhost:3000/
 ```
 
 ### Privacy API Authentication Failed
 
 **Verify RADICALE_TOKEN is set**:
 ```bash
-docker compose exec radicale env | grep RADICALE_TOKEN
+docker compose -f compose-privacy.yml exec radicale env | grep RADICALE_TOKEN
 ```
 
 **Test API with token**:
@@ -1393,16 +1343,15 @@ curl -H "Authorization: Bearer $RADICALE_TOKEN" \
 ```
 
 **Expected response**:
-- 200: Settings found
-- 404: User has no settings yet (normal)
+- 200: Settings returned (defaults are auto-created on first access, so 404 is not expected)
 - 401: Token invalid (check RADICALE_TOKEN)
 
 ### Database Issues
 
 **Check if databases exist**:
 ```bash
-docker compose exec radicale ls -la /var/lib/radicale/
-docker compose exec web ls -la /data/
+docker compose -f compose-privacy.yml exec radicale ls -la /var/lib/radicale/
+docker compose -f compose-privacy.yml exec web ls -la /data/
 ```
 
 **Initialize web database**:
@@ -1412,8 +1361,8 @@ docker compose exec web ls -la /data/
 
 **Reset databases** (careful - removes all data):
 ```bash
-docker compose down -v
-docker compose up -d
+docker compose -f compose-privacy.yml down -v
+docker compose -f compose-privacy.yml up -d
 ```
 
 ### SSL/TLS Certificate Issues
@@ -1430,15 +1379,15 @@ grep SELF_SIGNED_SSL .env
 **Nginx container won't start**:
 ```bash
 # Check nginx logs
-docker compose logs nginx
+docker compose -f compose-privacy.yml logs nginx
 
 # Verify certificates exist
 ls -la volumes/ssl/self-signed/  # For SELF_SIGNED_SSL=true
-docker compose exec certbot ls -la /etc/letsencrypt/live/  # For SELF_SIGNED_SSL=false
+docker compose -f compose-privacy.yml exec certbot ls -la /etc/letsencrypt/live/  # For SELF_SIGNED_SSL=false
 
 # Restart certbot to regenerate certificates
-docker compose restart certbot
-docker compose logs -f certbot
+docker compose -f compose-privacy.yml restart certbot
+docker compose -f compose-privacy.yml logs -f certbot
 ```
 
 **Certificate expired or invalid**:
@@ -1447,13 +1396,13 @@ docker compose logs -f certbot
 openssl x509 -enddate -noout -in volumes/ssl/self-signed/fullchain.pem
 
 # Force renewal (Let's Encrypt mode)
-docker compose exec certbot certbot renew --force-renewal
-docker compose restart nginx
+docker compose -f compose-privacy.yml exec certbot certbot renew --force-renewal
+docker compose -f compose-privacy.yml restart nginx
 
 # Regenerate (self-signed mode)
 rm volumes/ssl/self-signed/*.pem
-docker compose restart certbot
-docker compose restart nginx
+docker compose -f compose-privacy.yml restart certbot
+docker compose -f compose-privacy.yml restart nginx
 ```
 
 **Let's Encrypt acquisition failed**:
@@ -1478,13 +1427,13 @@ du -sh /var/lib/docker/volumes/*
 
 # View all volumes
 docker volume ls
-docker volume inspect radicale-idp_radicale_collections
+docker volume inspect radicale-idp_radicale_data
 ```
 
 **Optimize database**:
 ```bash
-docker compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
-docker compose exec web sqlite3 /data/local.db "VACUUM;"
+docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 ---
@@ -1495,16 +1444,16 @@ docker compose exec web sqlite3 /data/local.db "VACUUM;"
 
 ```bash
 # Start services
-docker compose up -d
+docker compose -f compose-privacy.yml up -d
 
 # Stop services
-docker compose down
+docker compose -f compose-privacy.yml down
 
 # Check status
-docker compose ps
+docker compose -f compose-privacy.yml ps
 
 # View logs
-docker compose logs -f
+docker compose -f compose-privacy.yml logs -f
 
 # Run backup
 ./scripts/backup.sh
@@ -1513,8 +1462,8 @@ docker compose logs -f
 ./scripts/health-check.sh
 
 # Execute command in container
-docker compose exec radicale <command>
-docker compose exec web <command>
+docker compose -f compose-privacy.yml exec radicale <command>
+docker compose -f compose-privacy.yml exec web <command>
 ```
 
 ### Important Paths
@@ -1540,7 +1489,7 @@ docker compose exec web <command>
 docker volume ls
 
 # View volume details
-docker volume inspect radicale-idp_radicale_collections
+# (the `radicale-idp_` prefix is the compose project name - the project directory name)
 docker volume inspect radicale-idp_radicale_data
 docker volume inspect radicale-idp_web_data
 ```
@@ -1579,16 +1528,13 @@ POST   /privacy/cards/{user}/reprocess    # Reprocess vCards
 | AWS_SECRET_ACCESS_KEY | OTP delivery | IAM secret |
 | MOCK_EMAIL | Dev OTP | true/false |
 | MOCK_SMS | Dev OTP | true/false |
-| RADICALE_AUTH_TYPE | Server auth | none/htpasswd |
 
 ---
 
 **Created**: 2024
-**Updated**: 2025-11-27
+**Updated**: 2026-08-04
 **Status**: Production-ready
 
 For additional help:
-- Check service logs: `docker compose logs`
-- SSL documentation: `nginx/ssl/README.md`
+- Check service logs: `docker compose -f compose-privacy.yml logs`
 - Health check: `./scripts/health-check.sh`
-- Archive documentation: `docs/archive/` (legacy information)

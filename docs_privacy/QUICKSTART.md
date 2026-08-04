@@ -13,7 +13,7 @@ This guide explains the key features and customization options for the Radicale 
 - [Auto-start on Boot](#auto-start-on-boot)
 - [Template Versions](#template-versions)
 - [Disclaimer Box](#disclaimer-box)
-- [Changing Text & Translations](#changing-text--translations)
+- [Changing Text, Icons & Translations](#changing-text-icons--translations)
 
 ---
 
@@ -61,10 +61,10 @@ When the deployment is initialized with the sample data from `default-data/`, th
 
 | User                  | Password          |
 | --------------------- | ----------------- |
-| `user1@example.com`   | `password123abc`  |
-| `user2@example.com`   | `password123abc`  |
+| `user1@example.com`   | `password`        |
+| `user2@example.com`   | `password`        |
 
-The password is controlled by the `DEFAULT_USER_PASSWORD` variable in the root `.env` file. For local development it defaults to `password123abc`; change it before deploying to production.
+The password is controlled by the `DEFAULT_USER_PASSWORD` variable in the root `.env` file. For local development it defaults to `password`; change it before deploying to production.
 
 ---
 
@@ -105,7 +105,12 @@ For production deployment using Docker Compose (recommended), environment variab
 | `MOCK_SMS`              | Simulate SMS (for testing)                                     | `true` or `false`           |
 | `MOCK_EMAIL`            | Simulate email (for testing)                                   | `true` or `false`           |
 | `ENABLE_TEMPLATES`      | Enable template switching                                      | `true` or `false`           |
-| `DEFAULT_TEMPLATE`      | Default template version                                       | `a`, `b`, `c`, or `d`       |
+| `DEFAULT_TEMPLATE`      | Default template version                                       | `a`, `b`, `c`, `d`, `e`, or `f` |
+| `DEFAULT_USER_PASSWORD` | Password for users created from `default-data/` (⚠️ **change before production**) | `password` (insecure default) |
+| `SHOW_DISCLAIMER`       | Show disclaimer box on the login page                          | `true` or `false`           |
+| `SELF_SIGNED_SSL`       | SSL mode: self-signed (dev) or Let's Encrypt (prod)            | `true` or `false`           |
+| `DOMAIN`                | Domain name (required when `SELF_SIGNED_SSL=false`)            | `radicale.example.com`      |
+| `EMAIL`                 | Let's Encrypt contact email (required when `SELF_SIGNED_SSL=false`) | `admin@example.com`    |
 
 > **Note:** When `MOCK_SMS` or `MOCK_EMAIL` is set to `true`, the OTP (one-time password) will be displayed directly on the login page instead of being sent via SMS or email. This is useful for testing and development without requiring AWS credentials.
 
@@ -277,7 +282,7 @@ The system supports two formats for default data:
 
 - ⚠️ **The `DEFAULT_USER_PASSWORD` applies to ALL users** created from `default-data/`
 - Change this password BEFORE deploying to production
-- The default password `password123abc` is INSECURE and only for local development
+- The default password `password` is INSECURE and only for local development
 - Avoid shell special characters (!, $, `, \, ", ') in passwords
 - Generate a strong password: `openssl rand -base64 16 | tr -d '/+='`
 
@@ -409,7 +414,7 @@ https://yoursite.com/?v=a
 **How it works:**
 
 - Templates are enabled/disabled via environment variables
-- When enabled, users can switch between versions: `a`, `b`, `c`, or `d`
+- When enabled, users can switch between versions: `a`, `b`, `c`, `d`, `e`, or `f`
 - The selected version is remembered as users navigate through the site
 - The default version is set in environment variables
 
