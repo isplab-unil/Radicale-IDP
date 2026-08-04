@@ -134,7 +134,7 @@ export default function PreferencesPage() {
       <div className="py-30">
         <div className="container mx-auto max-w-8xl px-6">
           <div className="flex items-center justify-center">
-            <div className="text-gray-600">{t('preferences.loading')}</div>
+            <div className="text-gray-600 dark:text-gray-300">{t('preferences.loading')}</div>
           </div>
         </div>
       </div>
@@ -147,20 +147,20 @@ export default function PreferencesPage() {
         <div className="space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('preferences.title')}</h1>
-            <p className="text-gray-600 text-lg leading-relaxed mb-2 max-w-4xl">
+            <h1 className="text-5xl font-medium text-gray-900 dark:text-gray-100 mb-6">{t('preferences.title')}</h1>
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed mb-2 max-w-4xl">
               {t('preferences.description')}
             </p>
           </div>
 
           {/* Contact Provider Status */}
-          <div className="bg-gray-100 p-6 rounded-2xl">
+          <div className="bg-gray-100 dark:bg-[#2c2c2e] p-6 rounded-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                   {t('preferences.providerStatus')}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   {hasChanges ? t('preferences.statusUnsaved') : t('preferences.statusSynced')}
                 </p>
               </div>
@@ -168,7 +168,7 @@ export default function PreferencesPage() {
                 <button
                   onClick={handleCancel}
                   disabled={!hasChanges || saving}
-                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-gray-300 text-gray-900 hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-gray-300 dark:bg-[#3a3a3c] text-gray-900 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg-[#48484c] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('preferences.buttonCancel')}
                 </button>
@@ -183,7 +183,7 @@ export default function PreferencesPage() {
             </div>
           </div>
 
-          <div className="text-gray-600 text-lg leading-relaxed">
+          <div className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
             <p>{t('preferences.explanation')}</p>
           </div>
 
@@ -195,14 +195,14 @@ export default function PreferencesPage() {
                   type="checkbox"
                   checked={preferences[fieldId] || false}
                   onChange={e => handlePreferenceChange(fieldId, e.target.checked)}
-                  className="h-5 w-5 mt-1 rounded border-gray-300 text-brand-blue focus:ring-brand-blue disabled:opacity-50"
+                  className="h-5 w-5 mt-1 rounded border-gray-300 dark:border-[#3a3a3c] text-brand-blue focus:ring-brand-blue disabled:opacity-50"
                   disabled={saving}
                 />
                 <div className="flex-1">
-                  <label className="text-lg text-gray-900 cursor-pointer select-none font-medium">
+                  <label className="text-lg text-gray-900 dark:text-gray-100 cursor-pointer select-none font-medium">
                     {t('preferences.keepPrivate', { field: fieldInfo.label })}
                   </label>
-                  <p className="text-sm text-gray-600 mt-1">{fieldInfo.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{fieldInfo.description}</p>
                 </div>
               </div>
             ))}

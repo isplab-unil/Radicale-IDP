@@ -138,11 +138,6 @@
     "dataDownload": "Data Download",
     "navigationLabel": "Page navigation"
   },
-  "footer": {
-    "privacyPolicy": "Privacy Policy",
-    "termsConditions": "Terms & Conditions",
-    "copyright": "© Cloud Provider"
-  },
   "errors": {
     "oops": "Oops!",
     "unexpected": "An unexpected error occurred.",

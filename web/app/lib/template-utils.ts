@@ -1,7 +1,7 @@
-import { useTemplateVersion } from './template-context';
+import { useTemplateContext } from './template-context';
 
 /**
- * Build a URL preserving the current template version
+ * Build a URL preserving the given template version
  */
 export function buildUrlWithTemplate(path: string, templateVersion?: string): string {
   if (!templateVersion) return path;
@@ -11,10 +11,10 @@ export function buildUrlWithTemplate(path: string, templateVersion?: string): st
 }
 
 /**
- * Hook to build links that preserve the current template version
+ * Hook to build links that preserve a pinned template version
  */
 export function useBuildUrlWithTemplate() {
-  const templateVersion = useTemplateVersion();
+  const { pinned, version } = useTemplateContext();
 
-  return (path: string) => buildUrlWithTemplate(path, templateVersion);
+  return (path: string) => buildUrlWithTemplate(path, pinned ? version : undefined);
 }

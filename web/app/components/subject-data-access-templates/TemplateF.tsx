@@ -10,10 +10,10 @@ function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
   const photoSrc = getPhotoSrc(contact.fields.photo);
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-300">
+    <div className="bg-white dark:bg-[#2c2c2e] rounded-2xl overflow-hidden border border-gray-300 dark:border-[#3a3a3c]">
       {/* From Section */}
-      <div className="px-6 py-2 bg-brand-blue flex items-center gap-2">
-        <DynamicIcon name={t('access.fromIcon')} size={16} className="text-white" />
+      <div className="px-6 py-2 bg-brand-blue dark:bg-[#3a9afd] flex items-center gap-2">
+        <DynamicIcon name={t('access.fromIcon')} size={16} className="text-white dark:text-black" />
         <div className="text-sm text-white font-medium">
           {t('access.from')}: {email}
         </div>
@@ -31,25 +31,25 @@ function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
             />
           ) : (
             <div className="flex items-center justify-center w-16 h-16 rounded-full flex-shrink-0 mt-4">
-              <DynamicIcon name="circle-user-round" size={64} className="text-gray-300" />
+              <DynamicIcon name="circle-user-round" size={64} className="text-gray-300 dark:text-gray-600" />
             </div>
           )}
 
           {/* Contact Details */}
           <div className="flex-1">
-            <div className="text-sm text-gray-500 mb-2 font-medium tracking-wide">
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium tracking-wide">
               {contact.fields.org || ''}
             </div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-1">
+            <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
               {contact.fields.fn || contact.fields.n || t('access.unknownContact')}
             </h3>
             {contact.fields.nickname && (
-              <div className="text-base text-gray-600 font-bold mt-1">
+              <div className="text-base text-gray-600 dark:text-gray-300 font-bold mt-1">
                 «{contact.fields.nickname}»
               </div>
             )}
             {contact.fields.title && (
-              <div className="text-base text-gray-600 font-medium">{contact.fields.title}</div>
+              <div className="text-base text-gray-600 dark:text-gray-300 font-medium">{contact.fields.title}</div>
             )}
           </div>
         </div>
@@ -59,12 +59,12 @@ function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
       <div className="px-6 pb-6">
         {contact.fields.tel && (
           <div className="group flex items-center gap-4 pt-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name={t('access.mobileIcon')} size={20} className="text-white" />
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full ml-4 mr-4">
+              <DynamicIcon name={t('access.mobileIcon')} size={20} className="text-white dark:text-black" />
             </div>
-            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
-              <div className="text-sm text-gray-500 font-medium">{t('access.mobile')}</div>
-              <div className="text-base text-gray-900 font-medium">
+            <div className="w-1/3 border-b border-gray-200 dark:border-[#3a3a3c] pb-4 group-last:border-b-0 group-last:pb-0">
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('access.mobile')}</div>
+              <div className="text-base text-gray-900 dark:text-gray-100 font-medium">
                 {Array.isArray(contact.fields.tel)
                   ? contact.fields.tel.join(', ')
                   : contact.fields.tel}
@@ -75,12 +75,12 @@ function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
 
         {contact.fields.email && (
           <div className="group flex items-center gap-4 pt-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name={t('access.emailIcon')} size={20} className="text-white" />
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full ml-4 mr-4">
+              <DynamicIcon name={t('access.emailIcon')} size={20} className="text-white dark:text-black" />
             </div>
-            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
-              <div className="text-sm text-gray-500 font-medium">{t('access.email')}</div>
-              <div className="text-base text-gray-900 font-medium">
+            <div className="w-1/3 border-b border-gray-200 dark:border-[#3a3a3c] pb-4 group-last:border-b-0 group-last:pb-0">
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('access.email')}</div>
+              <div className="text-base text-gray-900 dark:text-gray-100 font-medium">
                 {Array.isArray(contact.fields.email)
                   ? contact.fields.email.join(', ')
                   : contact.fields.email}
@@ -91,36 +91,36 @@ function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
 
         {contact.fields.bday && (
           <div className="group flex items-center gap-4 pt-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name="cake" size={20} className="text-white" />
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full ml-4 mr-4">
+              <DynamicIcon name="cake" size={20} className="text-white dark:text-black" />
             </div>
-            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
-              <div className="text-sm text-gray-500 font-medium">{t('access.fields.birthday')}</div>
-              <div className="text-base text-gray-900 font-medium">{contact.fields.bday}</div>
+            <div className="w-1/3 border-b border-gray-200 dark:border-[#3a3a3c] pb-4 group-last:border-b-0 group-last:pb-0">
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('access.fields.birthday')}</div>
+              <div className="text-base text-gray-900 dark:text-gray-100 font-medium">{contact.fields.bday}</div>
             </div>
           </div>
         )}
 
         {contact.fields.gender && (
           <div className="group flex items-center gap-4 pt-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name="user-round" size={20} className="text-white" />
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full ml-4 mr-4">
+              <DynamicIcon name="user-round" size={20} className="text-white dark:text-black" />
             </div>
-            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
-              <div className="text-sm text-gray-500 font-medium">{t('access.fields.pronoun')}</div>
-              <div className="text-base text-gray-900 font-medium">{contact.fields.gender}</div>
+            <div className="w-1/3 border-b border-gray-200 dark:border-[#3a3a3c] pb-4 group-last:border-b-0 group-last:pb-0">
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('access.fields.pronoun')}</div>
+              <div className="text-base text-gray-900 dark:text-gray-100 font-medium">{contact.fields.gender}</div>
             </div>
           </div>
         )}
 
         {contact.fields.related && (
           <div className="group flex items-center gap-4 pt-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name={t('access.spouseIcon')} size={20} className="text-white" />
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full ml-4 mr-4">
+              <DynamicIcon name={t('access.spouseIcon')} size={20} className="text-white dark:text-black" />
             </div>
-            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
-              <div className="text-sm text-gray-500 font-medium">{t('access.spouse')}</div>
-              <div className="text-base text-gray-900 font-medium">
+            <div className="w-1/3 border-b border-gray-200 dark:border-[#3a3a3c] pb-4 group-last:border-b-0 group-last:pb-0">
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('access.spouse')}</div>
+              <div className="text-base text-gray-900 dark:text-gray-100 font-medium">
                 {Array.isArray(contact.fields.related)
                   ? contact.fields.related.join(', ')
                   : contact.fields.related}
@@ -131,12 +131,12 @@ function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
 
         {contact.fields.adr && (
           <div className="group flex items-center gap-4 pt-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full ml-4 mr-4">
-              <DynamicIcon name="map-pin" size={20} className="text-white" />
+            <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full ml-4 mr-4">
+              <DynamicIcon name="map-pin" size={20} className="text-white dark:text-black" />
             </div>
-            <div className="w-1/3 border-b border-gray-200 pb-4 group-last:border-b-0 group-last:pb-0">
-              <div className="text-sm text-gray-500 font-medium">{t('access.fields.address')}</div>
-              <div className="text-base text-gray-900 font-medium">
+            <div className="w-1/3 border-b border-gray-200 dark:border-[#3a3a3c] pb-4 group-last:border-b-0 group-last:pb-0">
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('access.fields.address')}</div>
+              <div className="text-base text-gray-900 dark:text-gray-100 font-medium">
                 {typeof contact.fields.adr === 'object' && contact.fields.adr !== null
                   ? [
                       contact.fields.adr.street,
@@ -173,11 +173,11 @@ export function TemplateF() {
 
           {/* Contact Cards */}
           <div className="space-y-6">
-            <h2 className="text-2xl font-medium text-gray-900">{t('access.contactRecords')}</h2>
+            <h2 className="text-2xl font-medium text-gray-900 dark:text-gray-100">{t('access.contactRecords')}</h2>
             {loading ? (
-              <div className="text-gray-600">{t('access.loading')}</div>
+              <div className="text-gray-600 dark:text-gray-300">{t('access.loading')}</div>
             ) : cards.length === 0 ? (
-              <div className="text-gray-600">{t('access.noRecords')}</div>
+              <div className="text-gray-600 dark:text-gray-300">{t('access.noRecords')}</div>
             ) : (
               cards.map((contact, index) => (
                 <ContactCard key={`${contact.collection_path}-${index}`} contact={contact} t={t} />

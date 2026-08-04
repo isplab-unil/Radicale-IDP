@@ -17,14 +17,14 @@ export function TemplateB() {
 
           {/* Count */}
           {loading ? (
-            <div className="text-gray-600">{t('access.loading')}</div>
+            <div className="text-gray-600 dark:text-gray-300">{t('access.loading')}</div>
           ) : (
-            <div className="text-gray-900 text-lg flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full flex-shrink-0">
+            <div className="text-gray-900 dark:text-gray-100 text-lg flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full flex-shrink-0">
                 <DynamicIcon
                   name={count === 0 ? 'check' : 'circle-alert'}
                   size={20}
-                  className="text-white"
+                  className="text-white dark:text-black"
                 />
               </div>
               <span>
