@@ -949,12 +949,18 @@ def test_download_cards_no_matches(core):
     assert result["vcf"] == ""
 
 
-def test_shape_cards_count_templates():
-    """Templates a/b only disclose the number of matching cards."""
+def test_shape_cards_found_template():
+    """Template a only discloses whether any cards match."""
     matches = [{"fields": {"fn": "John"}}, {"fields": {}}]
-    assert shape_cards(matches, "a") == {"count": 2}
+    assert shape_cards(matches, "a") == {"found": True}
+    assert shape_cards([], "a") == {"found": False}
+
+
+def test_shape_cards_count_template():
+    """Template b only discloses the number of matching cards."""
+    matches = [{"fields": {"fn": "John"}}, {"fields": {}}]
     assert shape_cards(matches, "b") == {"count": 2}
-    assert shape_cards([], "a") == {"count": 0}
+    assert shape_cards([], "b") == {"count": 0}
 
 
 def test_shape_cards_counts_template():
@@ -1029,7 +1035,7 @@ def test_get_matching_cards_with_template_prunes_fields(core):
     assert "email" in fields
     assert "note" not in fields
 
-    # Template a only discloses the count
+    # Template a only discloses whether any cards match
     success, result = core.get_matching_cards("template@test.com", template="a")
     assert success
-    assert result == {"count": 1}
+    assert result == {"found": True}

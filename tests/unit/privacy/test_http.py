@@ -418,7 +418,7 @@ def test_invalid_json(http_app):
 def test_get_matching_cards_with_template_param(http_app):
     """Test that the template query param is forwarded to the core."""
     with patch.object(http_app._privacy_core, 'get_matching_cards') as mock_get:
-        mock_get.return_value = (True, {"count": 1})
+        mock_get.return_value = (True, {"found": True})
 
         environ = {
             "REQUEST_METHOD": "GET",
@@ -432,7 +432,7 @@ def test_get_matching_cards_with_template_param(http_app):
         assert status == client.OK
         # Template value is normalized to lowercase before reaching the core
         mock_get.assert_called_once_with("test@example.com", "a")
-        assert json.loads(body) == {"count": 1}
+        assert json.loads(body) == {"found": True}
 
 
 @pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
