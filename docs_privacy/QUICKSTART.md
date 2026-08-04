@@ -413,10 +413,10 @@ https://yoursite.com/?v=a
 
 **How it works:**
 
-- Templates are enabled/disabled via environment variables
-- When enabled, users can switch between versions: `a`, `b`, `c`, `d`, `e`, or `f`
-- The selected version is remembered as users navigate through the site
-- The default version is set in environment variables
+- Templates are enabled/disabled via the `ENABLE_TEMPLATES` environment variable
+- When enabled and the URL has **no** `v=` parameter, a template selector (A–F buttons) is displayed so users can switch between versions: `a`, `b`, `c`, `d`, `e`, or `f`. The choice is saved in the browser (localStorage) and remembered across visits
+- When the URL contains a valid `v=` parameter (e.g. a shared study link), that template is forced: the selector is hidden and the parameter is preserved as users navigate through the site
+- The default version is set via the `DEFAULT_TEMPLATE` environment variable
 
 **Use cases:**
 
