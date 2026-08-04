@@ -12,7 +12,10 @@ export type CardsResponse = {
 /** Disclosure templates understood by the backend (see radicale/privacy/templates.py). */
 export type CardTemplate = 'a' | 'b' | 'c' | 'd' | 'e' | 'f';
 
-/** Templates A/B: number of matching cards only. */
+/** Template A: whether any cards match (presence only). */
+export type CardsFoundResponse = { found: boolean };
+
+/** Template B: number of matching cards only. */
 export type CardsCountResponse = { count: number };
 
 /** Template C: per-field card counts (presence only). */
@@ -24,6 +27,7 @@ export type CardsValuesResponse = { values: Record<string, unknown[]> };
 /** Response of GET /privacy/cards/<user>?template=X, shaped by the template. */
 export type TemplateCardsResponse =
   | CardsResponse
+  | CardsFoundResponse
   | CardsCountResponse
   | CardsCountsResponse
   | CardsValuesResponse;
