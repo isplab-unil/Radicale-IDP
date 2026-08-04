@@ -37,7 +37,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-accent w-full">
+      <header className="bg-accent w-full border-b border-[#e5e5ea] dark:border-[#343436]">
         <div className="px-4 py-1">
           <nav className="flex items-center justify-between">
             <button
