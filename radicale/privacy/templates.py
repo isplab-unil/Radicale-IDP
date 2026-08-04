@@ -4,7 +4,8 @@ The web frontend renders one of several disclosure templates (A-F). To avoid
 sending data the active template never displays, this module reduces the full
 list of matching cards to exactly what each template renders:
 
-- a, b: only the number of matching cards
+- a:    only whether any cards match
+- b:    the number of matching cards
 - c:    per-field card counts (presence only)
 - d:    per-field values, aggregated across cards (photo as presence only)
 - e, f: the cards with their fields pruned to the rendered set
@@ -37,7 +38,10 @@ def shape_cards(matches: List[Dict[str, Any]], template: str) -> Dict[str, Any]:
     Returns:
         The shaped payload for the template.
     """
-    if template in ("a", "b"):
+    if template == "a":
+        return {"found": bool(matches)}
+
+    if template == "b":
         return {"count": len(matches)}
 
     if template == "c":
