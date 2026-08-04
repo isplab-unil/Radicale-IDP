@@ -65,17 +65,17 @@ export function TemplateD() {
           {/* Field Values Summary */}
           {!loading && values && hasData && (
             <div className="space-y-4">
-              <div className="text-gray-900 text-lg">
+              <div className="text-gray-900 dark:text-gray-100 text-lg">
                 {rows.map(row => {
                   const entries = (values[row.field] ?? []).map(formatValue);
                   return (
                     <div key={row.labelKey} className="mb-4 flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-brand-blue rounded-full flex-shrink-0">
-                        <DynamicIcon name={row.icon} size={20} className="text-white" />
+                      <div className="flex items-center justify-center w-10 h-10 bg-brand-blue dark:bg-[#3a9afd] rounded-full flex-shrink-0">
+                        <DynamicIcon name={row.icon} size={20} className="text-white dark:text-black" />
                       </div>
                       <div>
-                        <div className="text-sm text-gray-500 font-medium">{t(row.labelKey)}</div>
-                        <div className="text-base text-gray-900 font-medium">
+                        <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t(row.labelKey)}</div>
+                        <div className="text-base text-gray-900 dark:text-gray-100 font-medium">
                           {entries.length === 1
                             ? t('access.cardCount', { count: entries.length })
                             : t('access.cardCountPlural', { count: entries.length })}
@@ -89,9 +89,9 @@ export function TemplateD() {
             </div>
           )}
 
-          {loading && <div className="text-gray-600">{t('access.loading')}</div>}
+          {loading && <div className="text-gray-600 dark:text-gray-300">{t('access.loading')}</div>}
 
-          {!loading && !hasData && <div className="text-gray-600">{t('access.noRecords')}</div>}
+          {!loading && !hasData && <div className="text-gray-600 dark:text-gray-300">{t('access.noRecords')}</div>}
         </div>
       </div>
     </div>

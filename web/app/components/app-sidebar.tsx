@@ -33,7 +33,7 @@ export function AppSidebar() {
   };
 
   return (
-    <aside className="w-16 md:w-64 bg-[#fbfbfd] flex flex-col flex-shrink-0 py-4 border-r border-gray-300">
+    <aside className="w-16 md:w-64 bg-sidebar flex flex-col flex-shrink-0 py-4 border-r border-gray-300 dark:border-black">
       {/* Action icons */}
       <div className="flex items-center justify-end gap-2 px-3 pb-4">
         <button
@@ -41,7 +41,7 @@ export function AppSidebar() {
           disabled={syncing}
           aria-label={t('access.buttonSync')}
           title={t('access.buttonSync')}
-          className="flex items-center justify-center w-9 h-9 rounded-full text-brand-blue hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center w-9 h-9 rounded-full text-brand-blue hover:bg-gray-200 dark:hover:bg-sidebar-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <DynamicIcon
             name="rotate-cw"
@@ -65,7 +65,9 @@ export function AppSidebar() {
               className={cn(
                 'flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-[10px] text-sm font-medium transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                isActive ? 'bg-brand-blue text-white' : 'text-gray-600 hover:bg-gray-200'
+                isActive
+                  ? 'bg-brand-blue dark:bg-[#4aa9fe] text-white'
+                  : 'text-gray-600 dark:text-sidebar-foreground hover:bg-gray-200 dark:hover:bg-sidebar-accent'
               )}
             >
               <DynamicIcon

@@ -50,20 +50,20 @@ export default function DataDownloadPage() {
         <div className="space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-5xl font-medium text-gray-900 mb-6">{t('download.title')}</h1>
-            <p className="text-gray-500 text-lg leading-relaxed mb-6 max-w-4xl">
+            <h1 className="text-5xl font-medium text-gray-900 dark:text-gray-100 mb-6">{t('download.title')}</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed mb-6 max-w-4xl">
               {t('download.description')}
             </p>
           </div>
 
           {/* Download */}
-          <div className="bg-gray-100 p-6 rounded-2xl max-w-2xl">
+          <div className="bg-gray-100 dark:bg-[#2c2c2e] p-6 rounded-2xl max-w-2xl">
             <div className="flex items-center justify-between gap-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                   {t('download.sectionTitle')}
                 </h3>
-                <p className="text-sm text-gray-600">{t('download.sectionDescription')}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{t('download.sectionDescription')}</p>
               </div>
               <button
                 onClick={handleDownload}

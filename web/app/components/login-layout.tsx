@@ -14,6 +14,7 @@ export default function LoginLayout() {
               <img
                 src="/logo.svg"
                 alt="Logo"
+                className="dark:invert"
                 style={{ width: '82px', height: '31px', marginTop: '-1px' }}
               />
             </div>
@@ -27,7 +28,7 @@ export default function LoginLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-100 py-4 px-4 mt-auto">
+      <footer className="bg-accent py-4 px-4 mt-auto">
         <div className="container mx-auto max-w-8xl px-6">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
             <div className="flex flex-wrap justify-center sm:justify-start space-x-6 text-sm">

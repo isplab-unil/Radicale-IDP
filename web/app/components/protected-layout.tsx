@@ -47,10 +47,11 @@ export default function Layout() {
               <img
                 src="/logo.svg"
                 alt="Logo"
+                className="dark:invert"
                 style={{ width: '82px', height: '31px', marginTop: '-1px' }}
               />
               {subtitle && (
-                <span className="text-brand-blue text-xl font-bold hidden sm:block">
+                <span className="text-brand-blue dark:text-[#2c71e2] text-xl font-bold hidden sm:block">
                   {subtitle}
                 </span>
               )}
@@ -61,21 +62,21 @@ export default function Layout() {
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label={t('navigation.menuLabel')}
-                  className="group flex items-center justify-center w-10 h-10 rounded-[8px] hover:bg-[#dedede] data-[state=open]:bg-[#dedede] transition-colors cursor-pointer"
+                  className="group flex items-center justify-center w-10 h-10 rounded-[8px] hover:bg-[#dedede] data-[state=open]:bg-[#dedede] dark:hover:bg-[#3a3a3c] dark:data-[state=open]:bg-[#3a3a3c] transition-colors cursor-pointer"
                 >
                   <DynamicIcon
                     name="circle-user-round"
                     size={28}
-                    className="text-gray-500 group-hover:text-white group-data-[state=open]:text-white"
+                    className="text-gray-500 dark:text-gray-400 group-hover:text-white group-data-[state=open]:text-white"
                   />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 dark:bg-[#1c1c1e]">
                 {authenticated && (
                   <>
                     {user?.contact && (
                       <>
-                        <DropdownMenuLabel className="font-normal text-gray-500 truncate bg-gray-100 -mx-1 -mt-1 px-3 py-2 rounded-t-2xl border-b border-gray-300 mb-1">
+                        <DropdownMenuLabel className="font-normal text-gray-500 dark:text-gray-400 truncate bg-gray-100 dark:bg-[#38383c] -mx-1 -mt-1 px-3 py-2 rounded-t-2xl border-b border-gray-300 dark:border-[#3a3a3c] mb-1">
                           {user.contact}
                         </DropdownMenuLabel>
                       </>
@@ -111,7 +112,7 @@ export default function Layout() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-100 py-4 px-4 mt-auto">
+      <footer className="bg-accent py-4 px-4 mt-auto">
         <div className="container mx-auto max-w-8xl px-6">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
             <div className="flex flex-wrap justify-center sm:justify-start space-x-6 text-sm">

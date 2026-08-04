@@ -204,6 +204,7 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
             <img
               src="/apple.svg"
               alt="Logo"
+              className="dark:invert"
               style={{ width: '48px', height: '60px', marginTop: '-10px' }}
             />
           </div>
@@ -211,8 +212,8 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
       </div>
 
       <div className="text-center mb-8 mt-8">
-        <h2 className="text-3xl font-medium text-gray-900 mb-2">{t('login.title')}</h2>
-        <p className="text-gray-600">{t('login.description')}</p>
+        <h2 className="text-3xl font-medium text-gray-900 dark:text-gray-100 mb-2">{t('login.title')}</h2>
+        <p className="text-gray-600 dark:text-gray-300">{t('login.description')}</p>
       </div>
 
       {step === 'identifier' ? (
@@ -224,7 +225,7 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
                 placeholder={t('login.emailPlaceholder')}
-                className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 focus:border-gray-300 focus:ring-0"
+                className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 dark:border-[#3a3a3c] focus:border-gray-300 dark:focus:border-[#48484c] focus:ring-0"
                 required
                 disabled={loading}
                 autoComplete="email"
@@ -232,10 +233,10 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
               />
               <Button
                 type="submit"
-                className="absolute right-2 h-10 w-10 rounded-full border-2 border-gray-200 bg-white hover:bg-gray-50 p-0 flex items-center justify-center shadow-sm"
+                className="absolute right-2 h-10 w-10 rounded-full border-2 border-gray-200 dark:border-[#3a3a3c] bg-white dark:bg-[#2c2c2e] hover:bg-gray-50 dark:hover:bg-[#3a3a3c] p-0 flex items-center justify-center shadow-sm"
                 disabled={loading || !identifier.trim()}
               >
-                <ArrowRight className="text-gray-500" />
+                <ArrowRight className="text-gray-500 dark:text-gray-400" />
               </Button>
             </div>
           </div>
@@ -253,17 +254,17 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
               <Input
                 type="text"
                 value={identifier}
-                className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 bg-gray-50"
+                className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 dark:border-[#3a3a3c] bg-gray-50 dark:bg-[#2c2c2e]"
                 disabled
                 readOnly
               />
               <Button
                 type="button"
                 onClick={handleBack}
-                className="absolute right-2 h-10 w-10 rounded-full border-2 border-gray-200 bg-white hover:bg-gray-50 p-0 flex items-center justify-center shadow-sm"
+                className="absolute right-2 h-10 w-10 rounded-full border-2 border-gray-200 dark:border-[#3a3a3c] bg-white dark:bg-[#2c2c2e] hover:bg-gray-50 dark:hover:bg-[#3a3a3c] p-0 flex items-center justify-center shadow-sm"
                 disabled={loading}
               >
-                <X className="text-gray-500" />
+                <X className="text-gray-500 dark:text-gray-400" />
               </Button>
             </div>
           </div>
@@ -276,7 +277,7 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
                 value={code}
                 onChange={e => setCode(e.target.value)}
                 placeholder={t('login.codePlaceholder')}
-                className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 focus:border-gray-300 focus:ring-0 tracking-widest"
+                className="h-14 text-lg px-4 pr-16 rounded-2xl border-2 border-gray-200 dark:border-[#3a3a3c] focus:border-gray-300 dark:focus:border-[#48484c] focus:ring-0 tracking-widest"
                 required
                 autoComplete="one-time-code"
                 inputMode="numeric"
@@ -288,22 +289,22 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
               />
               <Button
                 type="submit"
-                className="absolute right-2 h-10 w-10 rounded-full border-2 border-gray-200 bg-white hover:bg-gray-50 p-0 flex items-center justify-center shadow-sm"
+                className="absolute right-2 h-10 w-10 rounded-full border-2 border-gray-200 dark:border-[#3a3a3c] bg-white dark:bg-[#2c2c2e] hover:bg-gray-50 dark:hover:bg-[#3a3a3c] p-0 flex items-center justify-center shadow-sm"
                 disabled={loading || !code.trim() || !identifier.trim()}
               >
-                <ArrowRight className="text-gray-500" />
+                <ArrowRight className="text-gray-500 dark:text-gray-400" />
               </Button>
             </div>
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           {step === 'code' && isMockMode && mockOtp && (
-            <div className="mt-4 p-4 bg-gray-100 rounded-2xl border-2 border-gray-200">
+            <div className="mt-4 p-4 bg-gray-100 dark:bg-[#2c2c2e] rounded-2xl border-2 border-gray-200 dark:border-[#3a3a3c]">
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-2">{t('login.mockModeLabel')}</p>
-                <div className="font-mono text-2xl font-bold text-gray-900 tracking-widest">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{t('login.mockModeLabel')}</p>
+                <div className="font-mono text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-widest">
                   {mockOtp}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">{t('login.mockModeDescription')}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t('login.mockModeDescription')}</p>
               </div>
             </div>
           )}
