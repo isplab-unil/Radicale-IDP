@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import DynamicIcon from 'lucide-react/dist/esm/DynamicIcon.js';
 import { useCardData } from '~/lib/use-card-data';
-import { getPhotoSrc, type CardMatch } from '~/lib/card-types';
+import { getPhotoSrc, type ShapedCardMatch } from '~/lib/card-types';
 import { AccessPageHeader } from './AccessPageHeader';
 
-function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
+function ContactCard({ contact, t }: { contact: ShapedCardMatch; t: any }) {
   const photoSrc = getPhotoSrc(contact.fields.photo);
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-300">
@@ -150,7 +150,8 @@ function ContactCard({ contact, t }: { contact: CardMatch; t: any }) {
 
 export function TemplateE() {
   const { t } = useTranslation();
-  const { cards, loading } = useCardData();
+  const { data, loading } = useCardData();
+  const cards = data && 'matches' in data ? data.matches : [];
 
   return (
     <div className="pt-12 pb-30">
@@ -167,13 +168,7 @@ export function TemplateE() {
             ) : cards.length === 0 ? (
               <div className="text-gray-600">{t('access.noRecords')}</div>
             ) : (
-              cards.map(contact => (
-                <ContactCard
-                  key={`${contact.collection_path}-${contact.vcard_uid}`}
-                  contact={contact}
-                  t={t}
-                />
-              ))
+              cards.map((contact, index) => <ContactCard key={index} contact={contact} t={t} />)
             )}
           </div>
         </div>

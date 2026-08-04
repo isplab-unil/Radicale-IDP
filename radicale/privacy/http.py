@@ -17,6 +17,7 @@ from werkzeug.wrappers import Request
 
 from radicale import httputils, types
 from radicale.privacy.core import PrivacyCore
+from radicale.privacy.templates import VALID_TEMPLATES
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,8 @@ logger = logging.getLogger(__name__)
 SettingsResult = Union[Dict[str, bool], Dict[str, str]]
 CardsResult = Dict[str, List[Dict[str, Any]]]
 StatusResult = Dict[str, Union[str, int, List[str]]]
-APIResult = Union[SettingsResult, CardsResult, StatusResult, str]
+DownloadResult = Dict[str, Union[str, int]]
+APIResult = Union[SettingsResult, CardsResult, StatusResult, DownloadResult, str]
 
 
 class PrivacyHTTP:
@@ -203,9 +205,19 @@ class PrivacyHTTP:
     ) -> types.WSGIResponse:
         """Handle GET /privacy/cards/<user>"""
         user_identifier = url_params["user"]
-        logger.info("GET cards for user: %s", user_identifier)
+        template = Request(environ).args.get("template")
+        if template is not None:
+            template = template.lower()
+            if template not in VALID_TEMPLATES:
+                return (
+                    client.BAD_REQUEST,
+                    {"Content-Type": "application/json"},
+                    json.dumps({"error": f"Invalid template: {template}"}).encode(),
+                    None,
+                )
+        logger.info("GET cards for user: %s (template: %s)", user_identifier, template or "full")
 
-        success, result = self._privacy_core.get_matching_cards(user_identifier)
+        success, result = self._privacy_core.get_matching_cards(user_identifier, template)
         return self._to_wsgi_response(success, result)
 
     def _handle_download_cards(
@@ -217,15 +229,17 @@ class PrivacyHTTP:
 
         success, result = self._privacy_core.download_cards(user_identifier)
         if success and isinstance(result, dict):
-            return (
-                client.OK,
-                {
-                    "Content-Type": "text/vcard; charset=utf-8",
-                    "Content-Disposition": f'attachment; filename="{user_identifier}.vcf"',
-                },
-                result["vcf"].encode("utf-8"),
-                None,
-            )
+            vcf = result.get("vcf")
+            if isinstance(vcf, str):
+                return (
+                    client.OK,
+                    {
+                        "Content-Type": "text/vcard; charset=utf-8",
+                        "Content-Disposition": f'attachment; filename="{user_identifier}.vcf"',
+                    },
+                    vcf.encode("utf-8"),
+                    None,
+                )
         return self._to_wsgi_response(success, result)
 
     def _handle_create_settings(

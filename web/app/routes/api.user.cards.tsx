@@ -9,8 +9,16 @@ import {
   getUserByContact,
   getUserCardsCache,
   saveUserCardsCache,
+  clearUserCardsCache,
   getUserPreferences,
 } from '~/db/operations';
+
+const VALID_TEMPLATES = ['a', 'b', 'c', 'd', 'e', 'f'];
+
+function parseTemplate(request: Request): string {
+  const template = new URL(request.url).searchParams.get('template')?.toLowerCase();
+  return template && VALID_TEMPLATES.includes(template) ? template : 'a';
+}
 
 export async function loader({ request }: { request: Request }) {
   try {
@@ -42,8 +50,14 @@ export async function loader({ request }: { request: Request }) {
       });
     }
 
-    // Read cards from DB cache
-    const cards = (await getUserCardsCache(dbUser.id)) || { matches: [] };
+    // Serve the payload radicale shaped for the requested template,
+    // cached per template so the full card data never leaves radicale
+    const template = parseTemplate(request);
+    const cached = await getUserCardsCache(dbUser.id, template);
+    const cards = cached ?? (await getUserCards(user.contact, template));
+    if (!cached) {
+      await saveUserCardsCache(dbUser.id, template, cards);
+    }
     return new Response(JSON.stringify(cards), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -88,7 +102,8 @@ export async function action({ request }: { request: Request }) {
 
     const method = request.method.toUpperCase();
 
-    // Sync action: update Radicale with privacy preferences, reprocess, fetch filtered cards, and update DB cache
+    // Sync action: update Radicale with privacy preferences, reprocess, and
+    // invalidate the per-template card cache (clients refetch shaped payloads)
     if (method === 'PUT') {
       // Get current preferences from web database
       const currentPreferences = await getUserPreferences(dbUser.id);
@@ -119,9 +134,9 @@ export async function action({ request }: { request: Request }) {
         await reprocessUserCards(user.contact);
       }
 
-      // Fetch filtered cards from Radicale
-      const fresh = await getUserCards(user.contact);
-      await saveUserCardsCache(dbUser.id, fresh);
+      // Invalidate the cached per-template payloads; clients refetch
+      // the shaped data from radicale on their next read
+      await clearUserCardsCache(dbUser.id);
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },

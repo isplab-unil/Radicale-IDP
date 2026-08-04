@@ -1,3 +1,5 @@
+import type { TemplateCardsResponse } from '~/lib/card-types';
+
 export type PrivacySettings = {
   disallow_photo: boolean;
   disallow_gender: boolean;
@@ -88,6 +90,10 @@ export type CardMatch = {
   fields: Record<string, any>;
 };
 
-export async function getUserCards(user: string): Promise<{ matches: CardMatch[] }> {
-  return request(`/privacy/cards/${encodeURIComponent(user)}`);
+export async function getUserCards(
+  user: string,
+  template?: string
+): Promise<TemplateCardsResponse> {
+  const query = template ? `?template=${encodeURIComponent(template)}` : '';
+  return request(`/privacy/cards/${encodeURIComponent(user)}${query}`);
 }
