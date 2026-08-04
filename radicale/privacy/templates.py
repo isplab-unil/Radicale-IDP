@@ -8,7 +8,8 @@ list of matching cards to exactly what each template renders:
 - b:    the number of matching cards
 - c:    per-field card counts (presence only)
 - d:    per-field values, aggregated across cards (photo as presence only)
-- e, f: the cards with their fields pruned to the rendered set
+- e:    the cards' fields pruned to the rendered set
+- f:    like e, plus who each card belongs to (collection_path)
 
 Field names are vCard property names (lowercase); mapping them to display
 labels is left to the frontend.
@@ -60,10 +61,20 @@ def shape_cards(matches: List[Dict[str, Any]], template: str) -> Dict[str, Any]:
                 values[field].append("Photo" if field == "photo" else match["fields"][field])
         return {"values": values}
 
-    # e, f: keep the cards, prune the fields to the rendered set
+    # e: keep only the fields, pruned to the rendered set
+    if template == "e":
+        return {"matches": [
+            {"fields": {
+                field: value for field, value in match["fields"].items() if field in EF_FIELDS
+            }}
+            for match in matches
+        ]}
+
+    # f: like e, plus who the card belongs to
     return {"matches": [
-        {**match, "fields": {
-            field: value for field, value in match["fields"].items() if field in EF_FIELDS
-        }}
+        {"collection_path": match["collection_path"],
+         "fields": {
+             field: value for field, value in match["fields"].items() if field in EF_FIELDS
+         }}
         for match in matches
     ]}
