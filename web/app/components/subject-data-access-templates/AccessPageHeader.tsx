@@ -5,7 +5,7 @@ import { TemplateSwitcher } from '~/components/template-switcher';
 /**
  * Shared header for the subject-data-access page: title with the
  * template switcher on the right, description below. The switcher
- * renders nothing when templates are disabled.
+ * renders nothing when templates are disabled or pinned via ?v=.
  */
 export function AccessPageHeader() {
   const { t } = useTranslation();

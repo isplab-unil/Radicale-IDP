@@ -5,12 +5,13 @@ const TEMPLATES = ['a', 'b', 'c', 'd', 'e', 'f'];
 
 /**
  * Row of A–F buttons to switch between template variants.
- * Only rendered when templates are enabled (ENABLE_TEMPLATES=true).
+ * Only rendered when templates are enabled (ENABLE_TEMPLATES=true) and no
+ * template is pinned via a ?v= URL parameter (shared study links).
  */
 export function TemplateSwitcher() {
-  const { version, defaultTemplate, enableTemplates, setVersion } = useTemplateContext();
+  const { version, defaultTemplate, enableTemplates, pinned, setVersion } = useTemplateContext();
 
-  if (!enableTemplates) return null;
+  if (!enableTemplates || pinned) return null;
 
   // No explicit selection: the default template applies
   const selected = (version || defaultTemplate).toLowerCase();

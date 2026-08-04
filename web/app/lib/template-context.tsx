@@ -13,9 +13,14 @@ interface TemplateContextType {
   version: string;
   defaultTemplate: string;
   enableTemplates: boolean;
+  /** True when the template is forced by a valid ?v= URL parameter (shared study links). */
+  pinned: boolean;
   setVersion: (_: string) => void;
   navigateWithTemplate: (_: string) => void;
 }
+
+const VALID_VERSIONS = ['a', 'b', 'c', 'd', 'e', 'f'];
+const STORAGE_KEY = 'template-version';
 
 const TemplateContext = createContext<TemplateContextType | undefined>(undefined);
 
@@ -30,78 +35,69 @@ export function TemplateProvider({
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [version, setVersionState] = useState(() => {
-    const urlVersion = searchParams.get('v');
-    // If templates are disabled, ignore URL version
-    return enableTemplates && urlVersion ? urlVersion : '';
-  });
 
-  // Update URL when version changes (only if templates are enabled)
-  const setVersion = (newVersion: string) => {
-    if (!enableTemplates) return; // Don't change version if templates are disabled
+  // A valid ?v= parameter pins the template (shared study links): it always
+  // wins and the template switcher stays hidden.
+  const urlVersion = searchParams.get('v')?.toLowerCase() ?? '';
+  const pinned = enableTemplates && VALID_VERSIONS.includes(urlVersion);
 
-    setVersionState(newVersion);
-    if (newVersion) {
-      setSearchParams(prev => {
-        const params = new URLSearchParams(prev);
-        params.set('v', newVersion);
-        return params;
-      });
-    } else {
-      setSearchParams(prev => {
-        const params = new URLSearchParams(prev);
-        params.delete('v');
-        return params;
-      });
+  // Local preference, used only when no template is pinned. Persisted in
+  // localStorage so it survives reloads without touching the URL.
+  const [preference, setPreference] = useState('');
+
+  // Load the stored preference on the client (effects don't run during SSR,
+  // so server and client first render agree on the default template).
+  useEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored && VALID_VERSIONS.includes(stored.toLowerCase())) {
+      setPreference(stored.toLowerCase());
     }
-  };
+  }, []);
 
-  // Navigate while preserving template version (only if templates are enabled)
+  // Templates disabled: remove ?v= from the URL and ignore versions.
+  useEffect(() => {
+    if (!enableTemplates && searchParams.get('v')) {
+      const params = new URLSearchParams(searchParams);
+      params.delete('v');
+      setSearchParams(params, { replace: true });
+    }
+  }, [enableTemplates, searchParams, setSearchParams]);
+
+  const version = enableTemplates ? (pinned ? urlVersion : preference) : '';
+
+  // Update the local template preference. No-op when a template is pinned:
+  // shared links must always show the pinned template.
+  const setVersion = useCallback(
+    (newVersion: string) => {
+      if (!enableTemplates || pinned) return;
+
+      const normalized = newVersion.toLowerCase();
+      setPreference(normalized);
+      if (normalized) {
+        window.localStorage.setItem(STORAGE_KEY, normalized);
+      } else {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    },
+    [enableTemplates, pinned]
+  );
+
+  // Navigate while preserving a pinned template version
   const navigateWithTemplate = useCallback(
     (path: string) => {
-      if (enableTemplates && version) {
+      if (pinned) {
         const separator = path.includes('?') ? '&' : '?';
-        navigate(`${path}${separator}v=${version}`);
+        navigate(`${path}${separator}v=${urlVersion}`);
       } else {
         navigate(path);
       }
     },
-    [version, navigate, enableTemplates]
+    [pinned, urlVersion, navigate]
   );
 
-  // Initialize with default template if needed and sync with URL changes
-  useEffect(() => {
-    const urlVersion = searchParams.get('v');
-    const validVersions = ['a', 'b', 'c', 'd', 'e', 'f'];
-    const isValidVersion = urlVersion && validVersions.includes(urlVersion.toLowerCase());
-
-    if (!enableTemplates) {
-      // Templates disabled: remove ?v= from URL and ignore version
-      if (urlVersion) {
-        const params = new URLSearchParams(searchParams);
-        params.delete('v');
-        setSearchParams(params);
-      }
-      setVersionState('');
-      return;
-    }
-
-    // Templates enabled: manage versions normally
-    if (isValidVersion) {
-      // URL has a valid version, make sure state matches
-      if (urlVersion !== version) {
-        setVersionState(urlVersion);
-      }
-    } else if (version) {
-      // No (valid) version in the URL - clear any stale selection. The
-      // default template applies implicitly without writing ?v= to the URL.
-      setVersionState('');
-    }
-  }, [searchParams, defaultTemplate, enableTemplates]); // Minimal dependencies to avoid loops
-
   const value = useMemo(
-    () => ({ version, defaultTemplate, enableTemplates, setVersion, navigateWithTemplate }),
-    [version, defaultTemplate, enableTemplates, setVersion, navigateWithTemplate]
+    () => ({ version, defaultTemplate, enableTemplates, pinned, setVersion, navigateWithTemplate }),
+    [version, defaultTemplate, enableTemplates, pinned, setVersion, navigateWithTemplate]
   );
 
   return <TemplateContext.Provider value={value}>{children}</TemplateContext.Provider>;
@@ -124,6 +120,7 @@ export function useTemplateConfig() {
     version: context.version,
     defaultTemplate: context.defaultTemplate,
     enableTemplates: context.enableTemplates,
+    pinned: context.pinned,
   };
 }
 
@@ -152,15 +149,15 @@ export function useTemplateContext() {
 }
 
 /**
- * Custom Link component that automatically preserves template version
+ * Custom Link component that preserves a pinned template version
  */
 export function LinkWithTemplate({
   to,
   children,
   ...props
 }: { to: string; children: ReactNode } & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
-  const { version } = useTemplateContext();
-  const href = version ? `${to}${to.includes('?') ? '&' : '?'}v=${version}` : to;
+  const { pinned, version } = useTemplateContext();
+  const href = pinned ? `${to}${to.includes('?') ? '&' : '?'}v=${version}` : to;
   return (
     <RouterLink to={href} {...props}>
       {children}
