@@ -12,6 +12,7 @@ This guide explains the key features and customization options for the Radicale 
 - [Redeploying and Updating](#redeploying-and-updating)
 - [Auto-start on Boot](#auto-start-on-boot)
 - [Template Versions](#template-versions)
+- [Prefilling the Login Identifier](#prefilling-the-login-identifier)
 - [Disclaimer Box](#disclaimer-box)
 - [Changing Text, Icons & Translations](#changing-text-icons--translations)
 
@@ -428,6 +429,24 @@ https://yoursite.com/?v=a
 
 - Standard version: `https://contact.example.com/?v=a`
 - Alternative version: `https://contact.example.com/?v=b`
+
+---
+
+## Prefilling the Login Identifier
+
+Append an `id` query parameter to the login URL to pre-fill the identifier field (email address or phone number). This is useful for personalized invitation or study links:
+
+```
+https://yoursite.com/login?id=user@example.com
+```
+
+**How it works:**
+
+- Values containing `@` are treated as email addresses and used as-is
+- Other values are treated as phone numbers, and a leading `+` is added automatically if missing (a literal `+` in a query string decodes to a space, so both `?id=+41789600142` and `?id=41789600142` work)
+- The field is only pre-filled — users can still edit it before requesting a code
+- Without the parameter, the field starts empty
+- Can be combined with other parameters, e.g. `https://yoursite.com/login?id=user@example.com&v=b`
 
 ---
 
