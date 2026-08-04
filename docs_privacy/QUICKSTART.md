@@ -549,4 +549,4 @@ Icons are stored directly in the JSON file as text values. They use icon names f
 
 - **JSON Validation:** Use https://jsonlint.com/ to check if your en.json file is valid
 - **Icon Search:** https://lucide.dev/icons/ for finding the right icon name
-- **Color Customization:** The app uses Tailwind CSS color names (red-50, red-900, etc.)
+- **Color Customization:** The app uses Tailwind CSS color names; light and dark palettes are defined in `web/app/app.css` (`:root` and the `prefers-color-scheme: dark` media query) — dark mode follows the user's system preference automatically, so adjust both palettes when customizing colors.
