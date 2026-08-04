@@ -988,20 +988,33 @@ def test_shape_cards_values_template():
     assert result["values"]["tel"] == []
 
 
-def test_shape_cards_detail_templates_prune_fields():
-    """Templates e/f keep the cards but prune fields to the rendered set."""
+def test_shape_cards_detail_template_e_prunes_fields():
+    """Template e keeps only the pruned fields (owner not disclosed)."""
     matches = [{
         "vcard_uid": "card1",
         "collection_path": "user1/contacts",
         "matching_fields": ["email"],
         "fields": {"fn": "John", "n": {"given": "John"}, "note": "secret", "role": "boss"},
     }]
-    for template in ("e", "f"):
-        result = shape_cards(matches, template)
-        card = result["matches"][0]
-        assert card["vcard_uid"] == "card1"
-        assert card["matching_fields"] == ["email"]
-        assert set(card["fields"]) == {"fn", "n"}
+    result = shape_cards(matches, "e")
+    card = result["matches"][0]
+    assert set(card) == {"fields"}
+    assert set(card["fields"]) == {"fn", "n"}
+
+
+def test_shape_cards_detail_template_f_discloses_owner():
+    """Template f also discloses who the card belongs to."""
+    matches = [{
+        "vcard_uid": "card1",
+        "collection_path": "user1/contacts",
+        "matching_fields": ["email"],
+        "fields": {"fn": "John", "n": {"given": "John"}, "note": "secret", "role": "boss"},
+    }]
+    result = shape_cards(matches, "f")
+    card = result["matches"][0]
+    assert set(card) == {"collection_path", "fields"}
+    assert card["collection_path"] == "user1/contacts"
+    assert set(card["fields"]) == {"fn", "n"}
 
 
 @pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
