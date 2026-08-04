@@ -523,7 +523,6 @@ Icons are stored directly in the JSON file as text values. They use icon names f
 | Logout label       | `navigation.logout`              | Text | "Sign Out"                             |
 | Logout icon        | `navigation.logoutIcon`          | Icon | "circle-x"                             |
 | Field icon         | `access.fromIcon`                | Icon | "mail"                                 |
-| Footer links       | `footer.*`                       | Text | "Privacy Policy", "Terms & Conditions" |
 
 ---
 
