@@ -2,10 +2,9 @@
 # Backup Radicale-IDP Docker volumes and data
 #
 # This script backs up:
-# 1. CalDAV/CardDAV collections (radicale_collections volume)
-# 2. Radicale data including privacy database (radicale_data volume)
-# 3. Web app database (web_data volume)
-# 4. Configuration files
+# 1. Radicale data including collections and privacy database (radicale_data volume)
+# 2. Web app database (web_data volume)
+# 3. Configuration files
 #
 # Usage: ./scripts/backup.sh [backup_dir]
 # Default backup dir: /backup/radicale-idp
@@ -43,6 +42,10 @@ fi
 BACKUP_DIR="${1:-/backup/radicale-idp}"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_PATH="$BACKUP_DIR/$DATE"
+
+# Compose prefixes volume names with the project name (the project
+# directory name, lowercased)
+PROJECT_NAME="$(basename "$PROJECT_ROOT" | tr '[:upper:]' '[:lower:]')"
 
 # Color output
 RED='\033[0;31m'
@@ -91,46 +94,34 @@ backup_volumes() {
 
     cd "$PROJECT_ROOT"
 
-    # Get volume names from compose
-    VOLUMES=$($COMPOSE_CMD config --resolve-image-digests 2>/dev/null | grep -E "^\s+[a-z_]+:" | sed 's/.*\([a-z_]*\):.*/\1/' || echo "")
-
-    # Backup collections volume
-    if $CONTAINER_RUNTIME volume ls | grep -q "radicale.*collections"; then
-        log_info "Backing up CalDAV/CardDAV collections..."
+    # Backup Radicale data volume (collections, privacy database, cache)
+    if $CONTAINER_RUNTIME volume ls | grep -q "${PROJECT_NAME}_radicale_data"; then
+        log_info "Backing up Radicale data (collections, privacy database)..."
         $CONTAINER_RUNTIME run --rm \
-            -v radicale-idp_radicale_collections:/collections:ro \
-            -v "$BACKUP_PATH":/backup \
-            alpine tar czf /backup/collections-$DATE.tar.gz -C /collections . 2>/dev/null || true
-
-        if [ -f "$BACKUP_PATH/collections-$DATE.tar.gz" ]; then
-            log_info "  Collections backup: $(du -h "$BACKUP_PATH/collections-$DATE.tar.gz" | cut -f1)"
-        fi
-    fi
-
-    # Backup Radicale data volume (privacy database, cache)
-    if $CONTAINER_RUNTIME volume ls | grep -q "radicale.*data"; then
-        log_info "Backing up Radicale data (privacy database)..."
-        $CONTAINER_RUNTIME run --rm \
-            -v radicale-idp_radicale_data:/data:ro \
+            -v "${PROJECT_NAME}_radicale_data":/data:ro \
             -v "$BACKUP_PATH":/backup \
             alpine tar czf /backup/radicale-data-$DATE.tar.gz -C /data . 2>/dev/null || true
 
         if [ -f "$BACKUP_PATH/radicale-data-$DATE.tar.gz" ]; then
             log_info "  Radicale data backup: $(du -h "$BACKUP_PATH/radicale-data-$DATE.tar.gz" | cut -f1)"
         fi
+    else
+        log_warn "Volume ${PROJECT_NAME}_radicale_data not found, skipping"
     fi
 
     # Backup web data volume (SQLite database)
-    if $CONTAINER_RUNTIME volume ls | grep -q "web_data"; then
+    if $CONTAINER_RUNTIME volume ls | grep -q "${PROJECT_NAME}_web_data"; then
         log_info "Backing up web app data..."
         $CONTAINER_RUNTIME run --rm \
-            -v radicale-idp_web_data:/data:ro \
+            -v "${PROJECT_NAME}_web_data":/data:ro \
             -v "$BACKUP_PATH":/backup \
             alpine tar czf /backup/web-data-$DATE.tar.gz -C /data . 2>/dev/null || true
 
         if [ -f "$BACKUP_PATH/web-data-$DATE.tar.gz" ]; then
             log_info "  Web data backup: $(du -h "$BACKUP_PATH/web-data-$DATE.tar.gz" | cut -f1)"
         fi
+    else
+        log_warn "Volume ${PROJECT_NAME}_web_data not found, skipping"
     fi
 }
 
@@ -140,9 +131,8 @@ backup_config() {
 
     cd "$PROJECT_ROOT"
 
-    # Backup docker-compose files
+    # Backup compose file
     cp compose-privacy.yml "$BACKUP_PATH/compose-privacy.yml" 2>/dev/null || log_warn "compose-privacy.yml not found"
-    cp docker-compose.prod.yml "$BACKUP_PATH/docker-compose.prod.yml" 2>/dev/null || log_warn "docker-compose.prod.yml not found"
 
     # Backup configuration
     if [ -d "config" ]; then
@@ -167,21 +157,18 @@ Project: $PROJECT_ROOT
 
 Files included:
 - compose-privacy.yml: Compose configuration
-- docker-compose.prod.yml: Production overrides
 - config-$DATE.tar.gz: Configuration files (radicale.config, nginx.conf, etc)
-- collections-$DATE.tar.gz: CalDAV/CardDAV collections
-- radicale-data-$DATE.tar.gz: Radicale privacy database and cache
+- radicale-data-$DATE.tar.gz: Collections, vCards, calendars, and privacy database
 - web-data-$DATE.tar.gz: Web app database
 - .env.backup: Environment variables (SECURE - Do not commit!)
 
 To restore from backup:
-1. Stop services: docker-compose -f compose-privacy.yml down
-2. Remove volumes: docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
+1. Stop services: docker compose -f compose-privacy.yml down
+2. Remove volumes: docker volume rm ${PROJECT_NAME}_radicale_data ${PROJECT_NAME}_web_data
 3. Extract volumes:
-   - docker run --rm -v radicale-idp_radicale_collections:/collections -v .:/backup alpine tar xzf /backup/collections-*.tar.gz -C /collections
-   - docker run --rm -v radicale-idp_radicale_data:/data -v .:/backup alpine tar xzf /backup/radicale-data-*.tar.gz -C /data
-   - docker run --rm -v radicale-idp_web_data:/data -v .:/backup alpine tar xzf /backup/web-data-*.tar.gz -C /data
-4. Start services: docker-compose -f compose-privacy.yml up -d
+   - docker run --rm -v ${PROJECT_NAME}_radicale_data:/data -v .:/backup alpine tar xzf /backup/radicale-data-*.tar.gz -C /data
+   - docker run --rm -v ${PROJECT_NAME}_web_data:/data -v .:/backup alpine tar xzf /backup/web-data-*.tar.gz -C /data
+4. Start services: docker compose -f compose-privacy.yml up -d
 EOF
 }
 
