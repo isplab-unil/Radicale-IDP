@@ -58,7 +58,7 @@ sudo ./scripts/backup.sh /backup/radicale-idp
 - `privacy-db-YYYYMMDD_HHMMSS.sql` - SQL dump of privacy settings
 - `web-db-YYYYMMDD_HHMMSS.sql` - SQL dump of web app database
 - `config-YYYYMMDD_HHMMSS.tar.gz` - Configuration files
-- `docker-compose.yml`, `docker-compose.prod.yml` - Current compose config
+- `compose-privacy.yml`, `docker-compose.prod.yml` - Current compose config
 - `.env.backup` - Environment variables (secure, 600 permissions)
 - `BACKUP_INFO.txt` - Backup metadata and restore instructions
 
@@ -128,7 +128,7 @@ sudo crontab -e
 ### Weekly optimization
 ```bash
 # Add:
-0 3 0 * * docker-compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;" && docker-compose exec web sqlite3 /data/local.db "VACUUM;"
+0 3 0 * * docker-compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;" && docker-compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 ## Example: Complete Setup Script
@@ -152,7 +152,7 @@ fi
 
 # 2. Start services
 echo "Starting services..."
-docker-compose up -d
+docker-compose -f compose-privacy.yml up -d
 
 # 3. Wait for services to be ready
 echo "Waiting for services..."
@@ -182,11 +182,11 @@ echo "  - Web App: http://localhost:3000/web"
 ### If services won't start
 ```bash
 # Check logs
-docker-compose logs
+docker-compose -f compose-privacy.yml logs
 
 # Reset volumes (WARNING: deletes data!)
-docker-compose down -v
-docker-compose up -d
+docker-compose -f compose-privacy.yml down -v
+docker-compose -f compose-privacy.yml up -d
 
 # Reinitialize
 ./scripts/init-web-db.sh
@@ -207,8 +207,8 @@ docker-compose up -d
 du -sh /var/lib/docker/volumes/*
 
 # Optimize databases
-docker-compose exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
-docker-compose exec web sqlite3 /data/local.db "VACUUM;"
+docker-compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+docker-compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 
 # Clean up old backups manually
 find /backup/radicale-idp -type d -mtime +7 -exec rm -rf {} \;
@@ -218,6 +218,6 @@ find /backup/radicale-idp -type d -mtime +7 -exec rm -rf {} \;
 
 For issues with these scripts:
 1. Run `./scripts/health-check.sh` to diagnose problems
-2. Check the logs: `docker-compose logs`
+2. Check the logs: `docker-compose -f compose-privacy.yml logs`
 3. Review the [DEPLOYMENT.md](../DEPLOYMENT.md) guide
 4. Consult the [DOCS_PRIVACY.md](../DOCS_PRIVACY.md) documentation

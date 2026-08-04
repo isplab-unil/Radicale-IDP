@@ -25,13 +25,15 @@ else
     exit 1
 fi
 
-# Detect compose command
+# Detect compose command (always target the fork's compose-privacy.yml, not the
+# upstream compose.yaml that Docker Compose would pick by default)
+COMPOSE_FILE="$PROJECT_ROOT/compose-privacy.yml"
 if command -v docker-compose &> /dev/null; then
-    COMPOSE_CMD="docker-compose"
+    COMPOSE_CMD="docker-compose -f $COMPOSE_FILE"
 elif [ "$CONTAINER_RUNTIME" = "docker" ] && docker compose version &> /dev/null; then
-    COMPOSE_CMD="docker compose"
+    COMPOSE_CMD="docker compose -f $COMPOSE_FILE"
 elif [ "$CONTAINER_RUNTIME" = "podman" ] && command -v podman-compose &> /dev/null; then
-    COMPOSE_CMD="podman-compose"
+    COMPOSE_CMD="podman-compose -f $COMPOSE_FILE"
 else
     echo "Error: No compose command found"
     exit 1
@@ -66,8 +68,8 @@ check_prerequisites() {
     log_info "Using container runtime: $CONTAINER_RUNTIME"
     log_info "Using compose command: $COMPOSE_CMD"
 
-    if [ ! -f "$PROJECT_ROOT/docker-compose.yml" ]; then
-        log_error "docker-compose.yml not found in $PROJECT_ROOT"
+    if [ ! -f "$PROJECT_ROOT/compose-privacy.yml" ]; then
+        log_error "compose-privacy.yml not found in $PROJECT_ROOT"
         exit 1
     fi
 }
@@ -139,7 +141,7 @@ backup_config() {
     cd "$PROJECT_ROOT"
 
     # Backup docker-compose files
-    cp docker-compose.yml "$BACKUP_PATH/docker-compose.yml" 2>/dev/null || log_warn "docker-compose.yml not found"
+    cp compose-privacy.yml "$BACKUP_PATH/compose-privacy.yml" 2>/dev/null || log_warn "compose-privacy.yml not found"
     cp docker-compose.prod.yml "$BACKUP_PATH/docker-compose.prod.yml" 2>/dev/null || log_warn "docker-compose.prod.yml not found"
 
     # Backup configuration
@@ -164,7 +166,7 @@ Location: $BACKUP_PATH
 Project: $PROJECT_ROOT
 
 Files included:
-- docker-compose.yml: Compose configuration
+- compose-privacy.yml: Compose configuration
 - docker-compose.prod.yml: Production overrides
 - config-$DATE.tar.gz: Configuration files (radicale.config, nginx.conf, etc)
 - collections-$DATE.tar.gz: CalDAV/CardDAV collections
@@ -173,13 +175,13 @@ Files included:
 - .env.backup: Environment variables (SECURE - Do not commit!)
 
 To restore from backup:
-1. Stop services: docker-compose down
+1. Stop services: docker-compose -f compose-privacy.yml down
 2. Remove volumes: docker volume rm radicale-idp_radicale_collections radicale-idp_radicale_data radicale-idp_web_data
 3. Extract volumes:
    - docker run --rm -v radicale-idp_radicale_collections:/collections -v .:/backup alpine tar xzf /backup/collections-*.tar.gz -C /collections
    - docker run --rm -v radicale-idp_radicale_data:/data -v .:/backup alpine tar xzf /backup/radicale-data-*.tar.gz -C /data
    - docker run --rm -v radicale-idp_web_data:/data -v .:/backup alpine tar xzf /backup/web-data-*.tar.gz -C /data
-4. Start services: docker-compose up -d
+4. Start services: docker-compose -f compose-privacy.yml up -d
 EOF
 }
 

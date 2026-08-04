@@ -27,16 +27,16 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-# Check if docker-compose.yml exists
-if [ ! -f "docker-compose.yml" ]; then
-    echo "Error: docker-compose.yml not found"
+# Check if compose-privacy.yml exists
+if [ ! -f "compose-privacy.yml" ]; then
+    echo "Error: compose-privacy.yml not found"
     exit 1
 fi
 
 echo "Checking if web service is running..."
-if ! docker-compose ps web | grep -q "running"; then
+if ! docker-compose -f compose-privacy.yml ps web | grep -q "running"; then
     echo "Warning: Web service is not running. Starting services..."
-    docker-compose up -d
+    docker-compose -f compose-privacy.yml up -d
 
     # Wait for services to be ready
     echo "Waiting for services to become healthy..."
@@ -44,7 +44,7 @@ if ! docker-compose ps web | grep -q "running"; then
 fi
 
 echo "Running database migrations..."
-if ! docker-compose exec web npm run db:migrate; then
+if ! docker-compose -f compose-privacy.yml exec web npm run db:migrate; then
     echo "Error: Database migration failed"
     exit 1
 fi
@@ -53,9 +53,9 @@ echo ""
 echo "=== Database Initialization Complete ==="
 echo ""
 echo "Verifying database..."
-if docker-compose exec web test -f /data/local.db; then
+if docker-compose -f compose-privacy.yml exec web test -f /data/local.db; then
     echo "✓ Database file created: /data/local.db"
-    docker-compose exec web ls -lh /data/local.db
+    docker-compose -f compose-privacy.yml exec web ls -lh /data/local.db
 else
     echo "✗ Database file not found"
     exit 1
@@ -63,7 +63,7 @@ fi
 
 echo ""
 echo "To verify the database schema:"
-echo "  docker-compose exec web sqlite3 /data/local.db \".tables\""
+echo "  docker-compose -f compose-privacy.yml exec web sqlite3 /data/local.db \".tables\""
 echo ""
 echo "To view database info:"
-echo "  docker-compose exec web sqlite3 /data/local.db \".schema\""
+echo "  docker-compose -f compose-privacy.yml exec web sqlite3 /data/local.db \".schema\""

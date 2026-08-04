@@ -70,10 +70,10 @@ main() {
 
     echo ""
     echo "Container Status:"
-    check "Radicale container is running" "docker compose ps radicale | grep -q Up"
-    check "Web container is running" "docker compose ps web | grep -q Up"
-    check "Nginx container is running" "docker compose ps nginx | grep -q Up"
-    check "Certbot container is running" "docker compose ps certbot | grep -q Up"
+    check "Radicale container is running" "docker compose -f compose-privacy.yml ps radicale | grep -q Up"
+    check "Web container is running" "docker compose -f compose-privacy.yml ps web | grep -q Up"
+    check "Nginx container is running" "docker compose -f compose-privacy.yml ps nginx | grep -q Up"
+    check "Certbot container is running" "docker compose -f compose-privacy.yml ps certbot | grep -q Up"
 
     echo ""
     echo "Service Availability:"
@@ -84,8 +84,8 @@ main() {
 
     echo ""
     echo "Database Accessibility:"
-    check "Privacy database is accessible" "docker compose exec radicale test -f /var/lib/radicale/privacy.db"
-    check "Web database is accessible" "docker compose exec web test -f /data/local.db"
+    check "Privacy database is accessible" "docker compose -f compose-privacy.yml exec radicale test -f /var/lib/radicale/privacy.db"
+    check "Web database is accessible" "docker compose -f compose-privacy.yml exec web test -f /data/local.db"
 
     echo ""
     echo "Volume Status:"
@@ -95,7 +95,7 @@ main() {
 
     echo ""
     echo "Configuration Files:"
-    check "docker-compose.yml exists" "test -f docker-compose.yml"
+    check "compose-privacy.yml exists" "test -f compose-privacy.yml"
     check ".env file exists" "test -f .env"
     check "Radicale config exists" "test -f config/radicale.config"
     set -e  # Re-enable exit on error
@@ -106,26 +106,26 @@ main() {
     echo ""
 
     echo "Container Status:"
-    docker compose ps
+    docker compose -f compose-privacy.yml ps
 
     echo ""
     echo "Radicale Configuration:"
-    docker compose exec radicale cat /var/lib/radicale/privacy.db 2>/dev/null >/dev/null && echo "  Privacy database size: $(docker compose exec radicale du -h /var/lib/radicale/privacy.db | cut -f1)" || echo "  Privacy database: Not initialized"
+    docker compose -f compose-privacy.yml exec radicale cat /var/lib/radicale/privacy.db 2>/dev/null >/dev/null && echo "  Privacy database size: $(docker compose -f compose-privacy.yml exec radicale du -h /var/lib/radicale/privacy.db | cut -f1)" || echo "  Privacy database: Not initialized"
 
     echo ""
     echo "Web App Configuration:"
-    docker compose exec web test -f /data/local.db && echo "  Web database size: $(docker compose exec web du -h /data/local.db | cut -f1)" || echo "  Web database: Not initialized"
+    docker compose -f compose-privacy.yml exec web test -f /data/local.db && echo "  Web database size: $(docker compose -f compose-privacy.yml exec web du -h /data/local.db | cut -f1)" || echo "  Web database: Not initialized"
 
     # Check environment variables
     echo ""
     echo "Critical Environment Variables:"
-    if docker compose exec radicale env | grep -q RADICALE_TOKEN; then
+    if docker compose -f compose-privacy.yml exec radicale env | grep -q RADICALE_TOKEN; then
         echo -e "  ${GREEN}✓${NC} RADICALE_TOKEN is set"
     else
         echo -e "  ${RED}✗${NC} RADICALE_TOKEN is not set"
     fi
 
-    if docker compose exec web env | grep -q JWT_SECRET; then
+    if docker compose -f compose-privacy.yml exec web env | grep -q JWT_SECRET; then
         echo -e "  ${GREEN}✓${NC} JWT_SECRET is set"
     else
         echo -e "  ${RED}✗${NC} JWT_SECRET is not set"
@@ -133,8 +133,8 @@ main() {
 
     echo ""
     echo "Development/Mock Mode Configuration:"
-    MOCK_EMAIL=$(docker compose exec web env | grep MOCK_EMAIL | cut -d'=' -f2 | tr -d '\r\n')
-    MOCK_SMS=$(docker compose exec web env | grep MOCK_SMS | cut -d'=' -f2 | tr -d '\r\n')
+    MOCK_EMAIL=$(docker compose -f compose-privacy.yml exec web env | grep MOCK_EMAIL | cut -d'=' -f2 | tr -d '\r\n')
+    MOCK_SMS=$(docker compose -f compose-privacy.yml exec web env | grep MOCK_SMS | cut -d'=' -f2 | tr -d '\r\n')
 
     if [ "$MOCK_EMAIL" = "true" ]; then
         echo -e "  ${YELLOW}⚠${NC} MOCK_EMAIL is enabled (development mode)"
@@ -171,7 +171,7 @@ main() {
                 else
                     echo -e "  ${GREEN}✓${NC} DOMAIN is set to: $DOMAIN"
                     # Check if Let's Encrypt certificates exist
-                    if docker compose exec certbot test -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" 2>/dev/null; then
+                    if docker compose -f compose-privacy.yml exec certbot test -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" 2>/dev/null; then
                         echo -e "  ${GREEN}✓${NC} Let's Encrypt certificates exist for $DOMAIN"
                     else
                         echo -e "  ${YELLOW}⚠${NC} Let's Encrypt certificates not yet obtained"
@@ -225,16 +225,16 @@ show_logs_on_failure() {
         echo "Recent logs:"
         echo ""
         echo "Radicale logs:"
-        docker compose logs --tail=5 radicale
+        docker compose -f compose-privacy.yml logs --tail=5 radicale
         echo ""
         echo "Web app logs:"
-        docker compose logs --tail=5 web
+        docker compose -f compose-privacy.yml logs --tail=5 web
         echo ""
         echo "Nginx logs:"
-        docker compose logs --tail=5 nginx
+        docker compose -f compose-privacy.yml logs --tail=5 nginx
         echo ""
         echo "Certbot logs:"
-        docker compose logs --tail=5 certbot
+        docker compose -f compose-privacy.yml logs --tail=5 certbot
     fi
 }
 
