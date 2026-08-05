@@ -12,8 +12,9 @@ This guide explains the key features and customization options for the Radicale 
 - [Redeploying and Updating](#redeploying-and-updating)
 - [Auto-start on Boot](#auto-start-on-boot)
 - [Template Versions](#template-versions)
+- [Prefilling the Login Identifier](#prefilling-the-login-identifier)
 - [Disclaimer Box](#disclaimer-box)
-- [Changing Text & Translations](#changing-text--translations)
+- [Changing Text, Icons & Translations](#changing-text-icons--translations)
 
 ---
 
@@ -21,28 +22,30 @@ This guide explains the key features and customization options for the Radicale 
 
 This fork ships with two Compose files:
 
-- **`docker-compose.yml`** — the fork's full stack: Radicale backend, React web app, nginx reverse proxy, and certbot. Use this file for the privacy IDP deployment.
+- **`compose-privacy.yml`** — the fork's full stack: Radicale backend, React web app, nginx reverse proxy, and certbot. Use this file for the privacy IDP deployment.
 - **`compose.yaml`** — the upstream Radicale-only compose file. It starts only the CalDAV/CardDAV backend and does **not** include the privacy web interface.
 
 To deploy the full fork, run from the repository root:
 
 ```bash
-docker compose -f docker-compose.yml up --build -d
+docker compose -f compose-privacy.yml up --build -d
 ```
 
 To stop it:
 
 ```bash
-docker compose -f docker-compose.yml down
+docker compose -f compose-privacy.yml down
 ```
 
 To view logs:
 
 ```bash
-docker compose -f docker-compose.yml logs -f
+docker compose -f compose-privacy.yml logs -f
 ```
 
-All further `docker compose` commands in this guide assume you are using `-f docker-compose.yml`.
+All further `docker compose` commands in this guide assume you are using `-f compose-privacy.yml`.
+
+> **Note (production server):** The production server uses Podman instead of Docker. Wherever a command shows `docker compose`, run `sudo podman compose` instead — the syntax is identical. Use `sudo` consistently for **every** compose command (`up`, `down`, `ps`, `logs`, `exec`, ...): containers created via `sudo podman` are invisible to a rootless `podman`, and vice versa. For the same reason, run the helper scripts (`scripts/backup.sh`, `scripts/health-check.sh`) with `sudo` on the production server.
 
 ---
 
@@ -61,10 +64,10 @@ When the deployment is initialized with the sample data from `default-data/`, th
 
 | User                  | Password          |
 | --------------------- | ----------------- |
-| `user1@example.com`   | `password123abc`  |
-| `user2@example.com`   | `password123abc`  |
+| `user1@example.com`   | `password`        |
+| `user2@example.com`   | `password`        |
 
-The password is controlled by the `DEFAULT_USER_PASSWORD` variable in the root `.env` file. For local development it defaults to `password123abc`; change it before deploying to production.
+The password is controlled by the `DEFAULT_USER_PASSWORD` variable in the root `.env` file. For local development it defaults to `password`; change it before deploying to production.
 
 ---
 
@@ -78,13 +81,13 @@ For production deployment using Docker Compose (recommended), environment variab
 
 ### How to Update Environment Variables
 
-1. Open the `.env` file **in the root directory** (same directory as `docker-compose.yml`)
+1. Open the `.env` file **in the root directory** (same directory as `compose-privacy.yml`)
 2. Find the variable you want to change
 3. Update the value (keep it on the same line)
 4. Save the file
 5. Restart the Docker containers for changes to take effect:
    ```bash
-   docker compose -f docker-compose.yml restart
+   docker compose -f compose-privacy.yml restart
    ```
 
 > **Note:** The `web/.env` file exists for local development only (running the web app without Docker). For production with Docker Compose, always use the root `.env` file.
@@ -105,7 +108,12 @@ For production deployment using Docker Compose (recommended), environment variab
 | `MOCK_SMS`              | Simulate SMS (for testing)                                     | `true` or `false`           |
 | `MOCK_EMAIL`            | Simulate email (for testing)                                   | `true` or `false`           |
 | `ENABLE_TEMPLATES`      | Enable template switching                                      | `true` or `false`           |
-| `DEFAULT_TEMPLATE`      | Default template version                                       | `a`, `b`, `c`, or `d`       |
+| `DEFAULT_TEMPLATE`      | Default template version                                       | `a`, `b`, `c`, `d`, `e`, or `f` |
+| `DEFAULT_USER_PASSWORD` | Password for users created from `default-data/` (⚠️ **change before production**) | `password` (insecure default) |
+| `SHOW_DISCLAIMER`       | Show disclaimer box on the login page                          | `true` or `false`           |
+| `SELF_SIGNED_SSL`       | SSL mode: self-signed (dev) or Let's Encrypt (prod)            | `true` or `false`           |
+| `DOMAIN`                | Domain name (required when `SELF_SIGNED_SSL=false`)            | `radicale.example.com`      |
+| `EMAIL`                 | Let's Encrypt contact email (required when `SELF_SIGNED_SSL=false`) | `admin@example.com`    |
 
 > **Note:** When `MOCK_SMS` or `MOCK_EMAIL` is set to `true`, the OTP (one-time password) will be displayed directly on the login page instead of being sent via SMS or email. This is useful for testing and development without requiring AWS credentials.
 
@@ -144,10 +152,10 @@ The default value is `false`. The database path is the same SQLite file that sto
 
 ```bash
 # Follow Radicale server logs in real time
-docker compose -f docker-compose.yml logs -f radicale
+docker compose -f compose-privacy.yml logs -f radicale
 
 # Show the last 100 lines
-docker compose -f docker-compose.yml logs --tail=100 radicale
+docker compose -f compose-privacy.yml logs --tail=100 radicale
 ```
 
 **Local server:**
@@ -168,7 +176,7 @@ The privacy database is a standard SQLite file. You can query it from inside the
 **From inside the container:**
 
 ```bash
-docker compose -f docker-compose.yml exec radicale sqlite3 /var/lib/radicale/privacy.db \
+docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db \
   "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC LIMIT 20;"
 ```
 
@@ -233,6 +241,12 @@ The system supports two formats for default data:
 > UID:john-doe-unique-id
 > END:VCARD
 > ```
+>
+> Instead of adding UIDs by hand, you can run the helper script, which backfills a deterministic UID (`<user subfolder><file name>`, alphanumeric only) on every card that lacks one. It is idempotent — existing UIDs are never modified:
+>
+> ```bash
+> ./scripts/add-vcard-uids.sh
+> ```
 
 ### Adding a New User
 
@@ -253,8 +267,8 @@ The system supports two formats for default data:
 
 4. **Important:** Remove any existing Docker volumes to reload the data:
    ```bash
-   docker compose -f docker-compose.yml down -v
-   docker compose -f docker-compose.yml up --build -d
+   docker compose -f compose-privacy.yml down -v
+   docker compose -f compose-privacy.yml up --build -d
    ```
 
    > ⚠️ **WARNING:** The `-v` flag will delete ALL volume data, including:
@@ -277,7 +291,7 @@ The system supports two formats for default data:
 
 - ⚠️ **The `DEFAULT_USER_PASSWORD` applies to ALL users** created from `default-data/`
 - Change this password BEFORE deploying to production
-- The default password `password123abc` is INSECURE and only for local development
+- The default password `password` is INSECURE and only for local development
 - Avoid shell special characters (!, $, `, \, ", ') in passwords
 - Generate a strong password: `openssl rand -base64 16 | tr -d '/+='`
 
@@ -301,22 +315,22 @@ When you need to update your deployment to the latest version or apply configura
 
 3. **Stop the current containers:**
    ```bash
-   docker compose -f docker-compose.yml down
+   docker compose -f compose-privacy.yml down
    ```
 
    Or if using Podman:
    ```bash
-   podman compose -f docker-compose.yml down
+   podman compose -f compose-privacy.yml down
    ```
 
 4. **Rebuild and start the containers:**
    ```bash
-   docker compose -f docker-compose.yml up --build -d
+   docker compose -f compose-privacy.yml up --build -d
    ```
 
    Or if using Podman:
    ```bash
-   podman compose -f docker-compose.yml up --build -d
+   podman compose -f compose-privacy.yml up --build -d
    ```
 
 The `--build` flag ensures that Docker/Podman rebuilds the images with the latest code changes, and `-d` runs the containers in detached mode (in the background).
@@ -333,13 +347,13 @@ You should redeploy when:
 
 ### Preserving Data During Redeployment
 
-The standard redeployment process (`docker compose -f docker-compose.yml down` without the `-v` flag) **preserves all your data**:
+The standard redeployment process (`docker compose -f compose-privacy.yml down` without the `-v` flag) **preserves all your data**:
 
 - User collections (contacts, calendars) are kept
 - Privacy database and logs are kept
 - Web application database is kept
 
-Only use `docker compose -f docker-compose.yml down -v` if you intentionally want to delete all data and start fresh (see the warning in the [Adding Default User Data](#adding-default-user-data) section).
+Only use `docker compose -f compose-privacy.yml down -v` if you intentionally want to delete all data and start fresh (see the warning in the [Adding Default User Data](#adding-default-user-data) section).
 
 ---
 
@@ -360,15 +374,15 @@ After=network.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/path/to/Radicale-IDP
-ExecStart=/usr/bin/podman compose up -d
-ExecStop=/usr/bin/podman compose down
+ExecStart=/usr/bin/podman compose -f compose-privacy.yml up -d
+ExecStop=/usr/bin/podman compose -f compose-privacy.yml down
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Replace `/path/to/Radicale-IDP` with the absolute path to your project directory (the directory containing `docker-compose.yml`).
+Replace `/path/to/Radicale-IDP` with the absolute path to your project directory (the directory containing `compose-privacy.yml`).
 
 > **Note:** If `podman` is installed somewhere other than `/usr/bin/podman`, use the output of `which podman` for `ExecStart` and `ExecStop`.
 
@@ -408,10 +422,10 @@ https://yoursite.com/?v=a
 
 **How it works:**
 
-- Templates are enabled/disabled via environment variables
-- When enabled, users can switch between versions: `a`, `b`, `c`, or `d`
-- The selected version is remembered as users navigate through the site
-- The default version is set in environment variables
+- Templates are enabled/disabled via the `ENABLE_TEMPLATES` environment variable
+- When enabled and the URL has **no** `v=` parameter, a template selector (A–F buttons) is displayed so users can switch between versions: `a`, `b`, `c`, `d`, `e`, or `f`. The choice is saved in the browser (localStorage) and remembered across visits
+- When the URL contains a valid `v=` parameter (e.g. a shared study link), that template is forced: the selector is hidden and the parameter is preserved as users navigate through the site
+- The default version is set via the `DEFAULT_TEMPLATE` environment variable
 
 **Use cases:**
 
@@ -423,6 +437,24 @@ https://yoursite.com/?v=a
 
 - Standard version: `https://contact.example.com/?v=a`
 - Alternative version: `https://contact.example.com/?v=b`
+
+---
+
+## Prefilling the Login Identifier
+
+Append an `id` query parameter to the login URL to pre-fill the identifier field (email address or phone number). This is useful for personalized invitation or study links:
+
+```
+https://yoursite.com/login?id=user@example.com
+```
+
+**How it works:**
+
+- Values containing `@` are treated as email addresses and used as-is
+- Other values are treated as phone numbers, and a leading `+` is added automatically if missing (a literal `+` in a query string decodes to a space, so both `?id=+41789600142` and `?id=41789600142` work)
+- The field is only pre-filled — users can still edit it before requesting a code
+- Without the parameter, the field starts empty
+- Can be combined with other parameters, e.g. `https://yoursite.com/login?id=user@example.com&v=b`
 
 ---
 
@@ -439,7 +471,7 @@ Show a warning message on the login page to inform users not to enter real infor
 Set `SHOW_DISCLAIMER=true` in the root `.env` file and restart the containers:
 
 ```bash
-docker compose -f docker-compose.yml restart web
+docker compose -f compose-privacy.yml restart web
 ```
 
 The disclaimer is then displayed on every visit to the login page, regardless of the URL.
@@ -518,7 +550,6 @@ Icons are stored directly in the JSON file as text values. They use icon names f
 | Logout label       | `navigation.logout`              | Text | "Sign Out"                             |
 | Logout icon        | `navigation.logoutIcon`          | Icon | "circle-x"                             |
 | Field icon         | `access.fromIcon`                | Icon | "mail"                                 |
-| Footer links       | `footer.*`                       | Text | "Privacy Policy", "Terms & Conditions" |
 
 ---
 
@@ -526,4 +557,4 @@ Icons are stored directly in the JSON file as text values. They use icon names f
 
 - **JSON Validation:** Use https://jsonlint.com/ to check if your en.json file is valid
 - **Icon Search:** https://lucide.dev/icons/ for finding the right icon name
-- **Color Customization:** The app uses Tailwind CSS color names (red-50, red-900, etc.)
+- **Color Customization:** The app uses Tailwind CSS color names; light and dark palettes are defined in `web/app/app.css` (`:root` and the `prefers-color-scheme: dark` media query) — dark mode follows the user's system preference automatically, so adjust both palettes when customizing colors.

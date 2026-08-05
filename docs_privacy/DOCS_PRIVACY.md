@@ -288,7 +288,7 @@ Each setting determines whether a specific field is disallowed by default:
 ```ini
 [privacy]
 default_disallow_photo = false
-default_dissalow_gender = false
+default_disallow_gender = false
 default_disallow_birthday = false
 default_disallow_address = false
 default_disallow_company = false
