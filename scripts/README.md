@@ -1,6 +1,10 @@
 # Radicale-IDP Helper Scripts
 
-This directory contains utility scripts for managing the Radicale-IDP Docker deployment.
+This directory contains utility scripts for managing the Radicale-IDP Docker/Podman deployment.
+
+## Container Runtime
+
+The scripts auto-detect the container runtime: Docker if available, otherwise Podman. On the production server (Podman, no Docker), the scripts use `sudo podman compose` automatically when run as a non-root user, so that they see the root-owned containers. Run them with `sudo` consistently (see `docs_privacy/DEPLOYMENT_PRIVACY.md`).
 
 ## Scripts
 
@@ -13,7 +17,7 @@ Initialize the web application database with required schema.
 ```
 
 **What it does:**
-- Verifies docker-compose is installed and configured
+- Detects the container runtime (Docker or Podman with sudo)
 - Checks if services are running (starts them if needed)
 - Runs database migrations: `npm run db:migrate`
 - Verifies database file exists and is accessible
@@ -44,21 +48,19 @@ sudo ./scripts/backup.sh /backup/radicale-idp
 ```
 
 **What it backs up:**
-1. **CalDAV/CardDAV Collections** - radicale_collections volume
-2. **Radicale Data** - radicale_data volume (includes privacy.db)
-3. **Web App Data** - web_data volume (includes local.db)
-4. **SQL Dumps** - Full SQL dumps of both databases
-5. **Configuration** - docker-compose files and Radicale config
-6. **Environment** - .env file (backed up securely)
+1. **Radicale Data** - radicale_data volume (collections, calendars, contacts, and privacy.db)
+2. **Web App Data** - web_data volume (includes local.db)
+3. **SQL Dumps** - Full SQL dumps of both databases
+4. **Configuration** - compose-privacy.yml and Radicale config
+5. **Environment** - .env file (backed up securely)
 
 **Backup files:**
-- `collections-YYYYMMDD_HHMMSS.tar.gz` - All calendar/contact data
-- `radicale-data-YYYYMMDD_HHMMSS.tar.gz` - Privacy database and cache
+- `radicale-data-YYYYMMDD_HHMMSS.tar.gz` - Collections, calendar/contact data, and privacy database
 - `web-data-YYYYMMDD_HHMMSS.tar.gz` - Web app database
 - `privacy-db-YYYYMMDD_HHMMSS.sql` - SQL dump of privacy settings
 - `web-db-YYYYMMDD_HHMMSS.sql` - SQL dump of web app database
 - `config-YYYYMMDD_HHMMSS.tar.gz` - Configuration files
-- `compose-privacy.yml`, `docker-compose.prod.yml` - Current compose config
+- `compose-privacy.yml` - Current compose config
 - `.env.backup` - Environment variables (secure, 600 permissions)
 - `BACKUP_INFO.txt` - Backup metadata and restore instructions
 
@@ -87,11 +89,10 @@ Monitor the health and status of all services.
 ```
 
 **What it checks:**
-- Docker and docker-compose are installed
-- Both containers (radicale and web) are running
+- Containers (radicale, web, nginx, certbot) are running
 - Services are responding to HTTP requests
 - Databases are accessible
-- Docker volumes are mounted correctly
+- Container volumes are mounted correctly
 - Configuration files exist
 - Environment variables are set
 - Container resource usage
@@ -128,7 +129,7 @@ sudo crontab -e
 ### Weekly optimization
 ```bash
 # Add:
-0 3 0 * * docker-compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;" && docker-compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
+0 3 0 * * docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;" && docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 ## Example: Complete Setup Script
@@ -152,7 +153,7 @@ fi
 
 # 2. Start services
 echo "Starting services..."
-docker-compose -f compose-privacy.yml up -d
+docker compose -f compose-privacy.yml up -d
 
 # 3. Wait for services to be ready
 echo "Waiting for services..."
@@ -182,11 +183,11 @@ echo "  - Web App: http://localhost:3000/web"
 ### If services won't start
 ```bash
 # Check logs
-docker-compose -f compose-privacy.yml logs
+docker compose -f compose-privacy.yml logs
 
 # Reset volumes (WARNING: deletes data!)
-docker-compose -f compose-privacy.yml down -v
-docker-compose -f compose-privacy.yml up -d
+docker compose -f compose-privacy.yml down -v
+docker compose -f compose-privacy.yml up -d
 
 # Reinitialize
 ./scripts/init-web-db.sh
@@ -207,8 +208,8 @@ docker-compose -f compose-privacy.yml up -d
 du -sh /var/lib/docker/volumes/*
 
 # Optimize databases
-docker-compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
-docker-compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
+docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 
 # Clean up old backups manually
 find /backup/radicale-idp -type d -mtime +7 -exec rm -rf {} \;
@@ -218,6 +219,6 @@ find /backup/radicale-idp -type d -mtime +7 -exec rm -rf {} \;
 
 For issues with these scripts:
 1. Run `./scripts/health-check.sh` to diagnose problems
-2. Check the logs: `docker-compose -f compose-privacy.yml logs`
+2. Check the logs: `docker compose -f compose-privacy.yml logs`
 3. Review the [DEPLOYMENT.md](../DEPLOYMENT.md) guide
 4. Consult the [DOCS_PRIVACY.md](../DOCS_PRIVACY.md) documentation
