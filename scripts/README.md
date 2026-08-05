@@ -48,6 +48,22 @@ Stop the stack and optionally remove images and data.
 - Before a fresh redeploy
 - To reset the environment completely (`--rmi --volumes`)
 
+### add-vcard-uids.sh
+Ensure every vCard in `default-data/` has a UID property (CardDAV clients expect one).
+
+**Usage:**
+```bash
+./scripts/add-vcard-uids.sh [default_data_dir]
+```
+
+**What it does:**
+- Scans `<default-data>/<user>/<collection>/*.vcf`
+- For cards without a UID, inserts `UID:<user subfolder><file name>` (alphanumeric characters only) after the `BEGIN:VCARD` line
+- Cards that already have a UID are left untouched (idempotent)
+
+**When to use:**
+- After adding or editing vCards in `default-data/`, before seeding a fresh deployment
+
 ### backup.sh
 Create comprehensive backups of all Radicale-IDP data.
 
