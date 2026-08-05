@@ -241,6 +241,12 @@ The system supports two formats for default data:
 > UID:john-doe-unique-id
 > END:VCARD
 > ```
+>
+> Instead of adding UIDs by hand, you can run the helper script, which backfills a deterministic UID (`<user subfolder><file name>`, alphanumeric only) on every card that lacks one. It is idempotent — existing UIDs are never modified:
+>
+> ```bash
+> ./scripts/add-vcard-uids.sh
+> ```
 
 ### Adding a New User
 
