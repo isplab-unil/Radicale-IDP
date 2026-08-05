@@ -77,7 +77,8 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 - `volumes/nginx/conf.d/default.conf.template` - Nginx configuration template
 - `scripts/backup.sh` - Automated backup tool
 - `scripts/health-check.sh` - System monitoring with SSL validation
-- `scripts/init-web-db.sh` - Database initialization
+- `scripts/start.sh` - Build and start the stack (with optional `--no-cache`)
+- `scripts/cleanup.sh` - Stop the stack, optionally removing images and volumes
 
 ---
 
@@ -1357,14 +1358,12 @@ docker compose -f compose-privacy.yml exec web ls -la /data/
 ```
 
 **Initialize web database**:
-```bash
-./scripts/init-web-db.sh
-```
+Migrations run automatically when the web container starts (`pnpm db:push && pnpm start`). If the database is missing, just restart the stack: `./scripts/start.sh`
 
 **Reset databases** (careful - removes all data):
 ```bash
-docker compose -f compose-privacy.yml down -v
-docker compose -f compose-privacy.yml up -d
+./scripts/cleanup.sh --volumes
+./scripts/start.sh
 ```
 
 ### SSL/TLS Certificate Issues

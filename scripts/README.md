@@ -8,24 +8,45 @@ The scripts auto-detect the container runtime: Docker if available, otherwise Po
 
 ## Scripts
 
-### init-web-db.sh
-Initialize the web application database with required schema.
+### start.sh
+Start (or restart) the whole stack, building images as needed.
 
 **Usage:**
 ```bash
-./scripts/init-web-db.sh
+./scripts/start.sh              # build if needed, start services
+./scripts/start.sh --no-cache   # force a full rebuild without build cache
 ```
 
 **What it does:**
 - Detects the container runtime (Docker or Podman with sudo)
-- Checks if services are running (starts them if needed)
-- Runs database migrations: `npm run db:migrate`
-- Verifies database file exists and is accessible
+- Verifies `.env` exists
+- Builds images and starts all services (`up -d --build`)
+- With `--no-cache`: rebuilds images from scratch first (slow — use after dependency changes)
 
 **When to use:**
-- First time setup
-- After resetting volumes
-- If you see database-related errors in the web app
+- First time setup (after configuring `.env`)
+- Deploying updates
+- Restarting the stack after a cleanup
+
+**Note:** Database migrations (`db:push`) and default data seeding happen automatically inside the containers at startup — no separate init step is needed.
+
+### cleanup.sh
+Stop the stack and optionally remove images and data.
+
+**Usage:**
+```bash
+./scripts/cleanup.sh                  # stop and remove containers only (data preserved)
+./scripts/cleanup.sh --rmi            # also remove locally built images
+./scripts/cleanup.sh --volumes        # also remove volumes (DELETES ALL DATA)
+```
+
+**What it does:**
+- Runs `compose down`, adding `--rmi local` and/or `-v` per the flags
+- `--volumes` asks for an explicit `yes` confirmation — run `./scripts/backup.sh` first!
+
+**When to use:**
+- Before a fresh redeploy
+- To reset the environment completely (`--rmi --volumes`)
 
 ### backup.sh
 Create comprehensive backups of all Radicale-IDP data.
@@ -151,23 +172,19 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# 2. Start services
+# 2. Start services (builds images, runs migrations and seeding automatically)
 echo "Starting services..."
-docker compose -f compose-privacy.yml up -d
+./scripts/start.sh
 
 # 3. Wait for services to be ready
 echo "Waiting for services..."
 sleep 10
 
-# 4. Initialize web database
-echo "Initializing web database..."
-./scripts/init-web-db.sh
-
-# 5. Run health checks
+# 4. Run health checks
 echo "Running health checks..."
 ./scripts/health-check.sh
 
-# 6. Create first backup
+# 5. Create first backup
 echo "Creating initial backup..."
 ./scripts/backup.sh
 
@@ -185,12 +202,9 @@ echo "  - Web App: http://localhost:3000/web"
 # Check logs
 docker compose -f compose-privacy.yml logs
 
-# Reset volumes (WARNING: deletes data!)
-docker compose -f compose-privacy.yml down -v
-docker compose -f compose-privacy.yml up -d
-
-# Reinitialize
-./scripts/init-web-db.sh
+# Reset volumes (WARNING: deletes data! run ./scripts/backup.sh first)
+./scripts/cleanup.sh --volumes
+./scripts/start.sh
 ```
 
 ### If database is corrupted
