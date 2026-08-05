@@ -2,6 +2,8 @@
 
 Complete guide to deploy Radicale-IDP (CalDAV/CardDAV server with Privacy Extensions) on a Linux server via Docker.
 
+> **Note (production server):** The production server uses Podman instead of Docker. Wherever a command shows `docker compose`, run `sudo podman compose` instead — the syntax is identical. Use `sudo` consistently for **every** compose command (`up`, `down`, `ps`, `logs`, `exec`, ...): containers created via `sudo podman` are invisible to a rootless `podman`, and vice versa. For the same reason, run the helper scripts (`scripts/backup.sh`, `scripts/health-check.sh`) with `sudo` on the production server.
+
 **Table of Contents**
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)

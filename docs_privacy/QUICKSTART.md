@@ -45,6 +45,8 @@ docker compose -f compose-privacy.yml logs -f
 
 All further `docker compose` commands in this guide assume you are using `-f compose-privacy.yml`.
 
+> **Note (production server):** The production server uses Podman instead of Docker. Wherever a command shows `docker compose`, run `sudo podman compose` instead — the syntax is identical. Use `sudo` consistently for **every** compose command (`up`, `down`, `ps`, `logs`, `exec`, ...): containers created via `sudo podman` are invisible to a rootless `podman`, and vice versa. For the same reason, run the helper scripts (`scripts/backup.sh`, `scripts/health-check.sh`) with `sudo` on the production server.
+
 ---
 
 ## Accessing the Application
