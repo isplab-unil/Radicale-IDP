@@ -186,7 +186,7 @@ class ApplicationPartPut(ApplicationBase):
     def do_PUT(self, environ: types.WSGIEnviron, base_prefix: str,
                path: str, user: str, request_info: dict) -> types.WSGIResponse:
         """Manage PUT request."""
-        # Handle privacy-specific paths
+        # PRIVACY: Handle privacy-specific paths
         if path.startswith("/privacy/"):
             if not hasattr(self, '_privacy_http'):
                 from radicale.privacy.http import PrivacyHTTP
