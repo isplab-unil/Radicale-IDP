@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 SettingsResult = Union[Dict[str, bool], Dict[str, str]]
 CardsResult = Dict[str, List[Dict[str, Any]]]
 StatusResult = Dict[str, Union[str, int, List[str]]]
-DownloadResult = Dict[str, Union[str, int]]
+DownloadResult = Dict[str, Any]
 APIResult = Union[SettingsResult, CardsResult, StatusResult, DownloadResult, str]
 
 
@@ -225,21 +225,32 @@ class PrivacyHTTP:
     ) -> types.WSGIResponse:
         """Handle GET /privacy/cards/<user>/download"""
         user_identifier = url_params["user"]
-        logger.info("DOWNLOAD cards for user: %s", user_identifier)
-
-        success, result = self._privacy_core.download_cards(user_identifier)
-        if success and isinstance(result, dict):
-            vcf = result.get("vcf")
-            if isinstance(vcf, str):
+        template = Request(environ).args.get("template")
+        if template is not None:
+            template = template.lower()
+            if template not in VALID_TEMPLATES:
                 return (
-                    client.OK,
-                    {
-                        "Content-Type": "text/vcard; charset=utf-8",
-                        "Content-Disposition": f'attachment; filename="{user_identifier}.vcf"',
-                    },
-                    vcf.encode("utf-8"),
+                    client.BAD_REQUEST,
+                    {"Content-Type": "application/json"},
+                    json.dumps({"error": f"Invalid template: {template}"}).encode(),
                     None,
                 )
+        logger.info("DOWNLOAD cards for user: %s (template: %s)",
+                    user_identifier, template or "full")
+
+        success, result = self._privacy_core.download_cards(
+            user_identifier, template)
+        if success and isinstance(result, dict):
+            filename = f"{user_identifier}.json"
+            return (
+                client.OK,
+                {
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Content-Disposition": f'attachment; filename="{filename}"',
+                },
+                json.dumps(result).encode("utf-8"),
+                None,
+            )
         return self._to_wsgi_response(success, result)
 
     def _handle_create_settings(

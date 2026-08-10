@@ -71,14 +71,15 @@ export async function reprocessUserCards(user: string) {
 }
 
 /**
- * Download the user's vCards as a raw text/vcard stream.
+ * Download the user's matching cards shaped by the active template.
  * Unlike request(), this returns the raw Response (not parsed JSON).
  */
-export async function downloadUserCards(user: string): Promise<Response> {
+export async function downloadUserCards(user: string, template?: string): Promise<Response> {
   const token = process.env.RADICALE_TOKEN;
   if (!token) throw new Error('RADICALE_TOKEN is not configured');
 
-  return fetch(buildUrl(`/privacy/cards/${encodeURIComponent(user)}/download`), {
+  const query = template ? `?template=${encodeURIComponent(template)}` : '';
+  return fetch(buildUrl(`/privacy/cards/${encodeURIComponent(user)}/download${query}`), {
     headers: { Authorization: `Bearer ${token}` },
   });
 }

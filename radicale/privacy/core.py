@@ -426,16 +426,24 @@ class PrivacyCore:
         except Exception as e:
             return False, f"Error reprocessing cards: {str(e)}"
 
-    def download_cards(self, user: str) -> Tuple[bool, Union[Dict[str, Union[str, int]], str]]:
-        """Serialize all vCards matching a user's identity into one vCard stream.
+    def download_cards(
+        self, user: str, template: Optional[str] = None
+    ) -> Tuple[bool, Union[Dict[str, Any], str]]:
+        """Return the user's matching cards shaped by the active template.
+
+        Unlike a raw vCard export, the download follows the disclosure
+        template currently in use so the participant receives exactly the
+        data they see on the data access page.
 
         Args:
             user: The user identifier (email or phone)
+            template: Optional disclosure template (a-f). When omitted, the
+                full extracted card data is returned.
 
         Returns:
             Tuple of (success, result)
-            If success is True, result contains the combined vCard data
-            ("vcf") and the number of exported cards ("count")
+            If success is True, result contains the template-shaped JSON
+            payload.
             If success is False, result contains the error message
         """
         is_valid, error_msg = self._validate_user_identifier(user)
@@ -450,49 +458,24 @@ class PrivacyCore:
             except Exception as e:
                 return False, str(e)
 
+        # Reuse get_matching_cards: it validates the template and shapes
+        # the payload to match what the frontend currently displays.
+        success, result = self.get_matching_cards(lookup_id, template)
+        if not success:
+            return False, result
+
+        # Log the export for accountability (GDPR)
+        details: Dict[str, Any] = {"template": template or "full"}
+        if isinstance(result, dict):
+            if "matches" in result:
+                details["cards_exported"] = len(result["matches"])
+            elif "count" in result:
+                details["cards_exported"] = result["count"]
+
         try:
-            matches = self._scanner.find_identity_occurrences(lookup_id)
-            serialized_cards = []
-            for match in matches:
-                try:
-                    discover_path = "/" + match["collection_path"].lstrip("/")
-                    collections = list(self._scanner._storage.discover(discover_path))
-                    collection = next(iter(collections), None)
-                except Exception as e:
-                    logger.warning("PRIVACY: Error discovering collection: %r", e)
-                    continue
-
-                if not collection:
-                    continue
-
-                item = None
-                for candidate in collection.get_all():
-                    if (isinstance(candidate, Item) and
-                            (candidate.component_name == "VCARD" or candidate.name == "VCARD") and
-                            hasattr(candidate.vobject_item, "uid") and
-                            candidate.vobject_item.uid.value == match["vcard_uid"]):
-                        item = candidate
-                        break
-
-                if not item:
-                    logger.warning("PRIVACY: vCard %r not found for download", match["vcard_uid"])
-                    continue
-
-                serialized_cards.append(item.serialize())
-
-            # Log the export for accountability (GDPR)
-            try:
-                self._privacy_db.log_vcard_action(
-                    "data_exported", lookup_id,
-                    details={"cards_exported": len(serialized_cards)})
-            except Exception as e:
-                logger.debug("PRIVACY: Could not log export to database: %s", e)
-
-            return True, {
-                "vcf": "".join(serialized_cards),
-                "count": len(serialized_cards),
-            }
-
+            self._privacy_db.log_vcard_action(
+                "data_exported", lookup_id, details=details)
         except Exception as e:
-            logger.error("PRIVACY: Error downloading cards: %s", str(e), exc_info=True)
-            return False, f"Error downloading cards: {str(e)}"
+            logger.debug("PRIVACY: Could not log export to database: %s", e)
+
+        return True, result

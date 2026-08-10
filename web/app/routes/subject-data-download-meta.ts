@@ -4,12 +4,12 @@ export function meta() {
     {
       name: 'description',
       content:
-        'Download all contact data stored about you in vCard format. Exercise your right to data portability and keep a copy of your personal information.',
+        'Download the contact data displayed for your account as a JSON file. Exercise your right to data portability and keep a copy of your personal information.',
     },
     {
       name: 'keywords',
       content:
-        'Subject Data Download, data portability, GDPR, personal information, vCard export, contact data download, privacy',
+        'Subject Data Download, data portability, GDPR, personal information, JSON export, contact data download, privacy',
     },
     { property: 'og:title', content: 'Subject Data Download' },
     {
