@@ -912,7 +912,7 @@ def test_get_matching_cards_with_binary_photo(core):
 
 @pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
 def test_download_cards(core):
-    """Test that download_cards returns the matching vCards serialized."""
+    """Test that download_cards returns the matching cards shaped by template."""
     # Create two test vCards containing the user's email
     for uid, name in [("download-card-1", "Download One"), ("download-card-2", "Download Two")]:
         vcard = vobject.vCard()
@@ -928,25 +928,34 @@ def test_download_cards(core):
         item = Item(vobject_item=vcard, collection_path=f"dluser/{uid}", component_name="VCARD")
         collection.upload(f"{uid}.vcf", item)
 
-    success, result = core.download_cards("download@test.com")
-
+    # Template B only discloses the number of matching cards
+    success, result = core.download_cards("download@test.com", template="b")
     assert success
-    assert result["count"] == 2
-    payload = result["vcf"]
-    assert payload.count("BEGIN:VCARD") == 2
-    assert payload.count("END:VCARD") == 2
-    assert "Download One" in payload
-    assert "Download Two" in payload
+    assert result == {"count": 2}
+
+    # Template A only discloses whether any cards match
+    success, result = core.download_cards("download@test.com", template="a")
+    assert success
+    assert result == {"found": True}
+
+    # Template E returns pruned card details
+    success, result = core.download_cards("download@test.com", template="e")
+    assert success
+    assert len(result["matches"]) == 2
+    assert all("fields" in match for match in result["matches"])
 
 
 @pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
 def test_download_cards_no_matches(core):
     """Test that download_cards returns an empty payload when nothing matches."""
-    success, result = core.download_cards("nobody@test.com")
+    success, result = core.download_cards("nobody@test.com", template="b")
 
     assert success
-    assert result["count"] == 0
-    assert result["vcf"] == ""
+    assert result == {"count": 0}
+
+    success, result = core.download_cards("nobody@test.com", template="a")
+    assert success
+    assert result == {"found": False}
 
 
 def test_shape_cards_found_template():

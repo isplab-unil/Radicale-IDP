@@ -469,3 +469,66 @@ def test_get_matching_cards_invalid_template_param(http_app):
         assert status == client.BAD_REQUEST
         assert "error" in json.loads(body)
         mock_get.assert_not_called()
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_download_cards_with_template_param(http_app):
+    """Test that the download endpoint forwards the template and returns JSON."""
+    with patch.object(http_app._privacy_core, 'download_cards') as mock_download:
+        mock_download.return_value = (True, {"count": 2})
+
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/privacy/cards/test@example.com/download",
+            "QUERY_STRING": "template=B",
+            "HTTP_AUTHORIZATION": f"Bearer {http_app._test_token}"
+        }
+
+        status, headers, body, _ = http_app.do_GET(
+            environ, "/privacy/cards/test@example.com/download")
+
+        assert status == client.OK
+        assert headers["Content-Type"] == "application/json; charset=utf-8"
+        assert 'filename="test@example.com.json"' in headers["Content-Disposition"]
+        assert json.loads(body) == {"count": 2}
+        mock_download.assert_called_once_with("test@example.com", "b")
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_download_cards_without_template_param(http_app):
+    """Test that the download endpoint works without a template."""
+    with patch.object(http_app._privacy_core, 'download_cards') as mock_download:
+        mock_download.return_value = (True, {"matches": []})
+
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/privacy/cards/test@example.com/download",
+            "HTTP_AUTHORIZATION": f"Bearer {http_app._test_token}"
+        }
+
+        status, headers, body, _ = http_app.do_GET(
+            environ, "/privacy/cards/test@example.com/download")
+
+        assert status == client.OK
+        assert headers["Content-Type"] == "application/json; charset=utf-8"
+        assert json.loads(body) == {"matches": []}
+        mock_download.assert_called_once_with("test@example.com", None)
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="Prolematic on Windows due to file locking")
+def test_download_cards_invalid_template_param(http_app):
+    """Test that an invalid download template value is rejected with 400."""
+    with patch.object(http_app._privacy_core, 'download_cards') as mock_download:
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/privacy/cards/test@example.com/download",
+            "QUERY_STRING": "template=z",
+            "HTTP_AUTHORIZATION": f"Bearer {http_app._test_token}"
+        }
+
+        status, headers, body, _ = http_app.do_GET(
+            environ, "/privacy/cards/test@example.com/download")
+
+        assert status == client.BAD_REQUEST
+        assert "error" in json.loads(body)
+        mock_download.assert_not_called()

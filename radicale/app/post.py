@@ -40,7 +40,7 @@ class ApplicationPartPost(ApplicationBase):
     def do_POST(self, environ: types.WSGIEnviron, base_prefix: str,
                 path: str, user: str, request_info: dict) -> types.WSGIResponse:
         """Manage POST request."""
-        # Handle privacy-specific paths
+        # PRIVACY: Handle privacy-specific paths
         if path.startswith("/privacy/"):
             if not hasattr(self, '_privacy_http'):
                 from radicale.privacy.http import PrivacyHTTP

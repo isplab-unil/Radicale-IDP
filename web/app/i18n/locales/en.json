@@ -114,10 +114,10 @@
   },
   "download": {
     "title": "Download your data",
-    "description": "You have the right to receive a copy of the personal data stored about you in a structured, commonly used and machine-readable format. This page lets you export all contact cards containing your information as a vCard (.vcf) file, which you can open or import in any contacts application.",
+    "description": "You have the right to receive a copy of the personal data stored about you in a structured, commonly used and machine-readable format. This page lets you export the contact data currently displayed for your account as a JSON (.json) file, matching the disclosure level you selected.",
     "sectionTitle": "Your contact data export",
-    "sectionDescription": "The export contains the data as currently stored by the contact provider. Fields you marked as private in your Data Preferences are not included, as they have already been removed from the stored cards.",
-    "button": "Download (.vcf)",
+    "sectionDescription": "The export contains exactly the data shown on the data access page for your current disclosure level. Fields you marked as private in your Data Preferences are not included, as they have already been removed from the stored cards.",
+    "button": "Download (.json)",
     "buttonDownloading": "Preparing...",
     "error": "Download failed",
     "errorDescription": "Unable to download your data. Please try again. If the problem persists, contact support."

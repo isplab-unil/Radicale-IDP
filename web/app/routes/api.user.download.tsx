@@ -2,9 +2,15 @@ import { verifyAuth } from '~/lib/auth';
 import { downloadUserCards } from '~/api/radicale';
 import { getUserByContact } from '~/db/operations';
 
-// Loader function for GET requests: download the user's vCards (GDPR
-// data portability). Proxies the Radicale download endpoint and
-// returns the vCard stream as an attachment.
+const VALID_TEMPLATES = ['a', 'b', 'c', 'd', 'e', 'f'];
+
+function parseTemplate(request: Request): string {
+  const template = new URL(request.url).searchParams.get('template')?.toLowerCase();
+  return template && VALID_TEMPLATES.includes(template) ? template : 'a';
+}
+
+// Loader function for GET requests: download the user's matching cards
+// shaped by the active disclosure template as a JSON attachment.
 export async function loader({ request }: { request: Request }) {
   try {
     // Get environment variables
@@ -43,8 +49,9 @@ export async function loader({ request }: { request: Request }) {
       });
     }
 
-    // Fetch the vCard stream from Radicale
-    const resp = await downloadUserCards(user.contact);
+    // Fetch the template-shaped JSON payload from Radicale
+    const template = parseTemplate(request);
+    const resp = await downloadUserCards(user.contact, template);
     if (!resp.ok) {
       return new Response(JSON.stringify({ error: 'Failed to download data from provider' }), {
         status: 502,
@@ -52,12 +59,12 @@ export async function loader({ request }: { request: Request }) {
       });
     }
 
-    const body = await resp.arrayBuffer();
+    const body = await resp.text();
     return new Response(body, {
       status: 200,
       headers: {
-        'Content-Type': 'text/vcard; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="my-data.vcf"',
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="my-data.json"',
       },
     });
   } catch {

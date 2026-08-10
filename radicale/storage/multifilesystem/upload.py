@@ -52,6 +52,7 @@ class CollectionPartUpload(CollectionPartGet, CollectionPartCache,
         logger.debug("Item name: %r", item.name)
         logger.debug("Item type: %r", type(item))
 
+        # PRIVACY: Apply privacy enforcement
         try:
             # Get privacy enforcement instance
             privacy_enforcement = PrivacyEnforcement.get_instance(self._storage.configuration)
@@ -115,7 +116,7 @@ class CollectionPartUpload(CollectionPartGet, CollectionPartCache,
         cache_folder = self._storage._get_collection_cache_subfolder(self._filesystem_path, ".Radicale.cache", "item")
         self._storage._makedirs_synced(cache_folder)
 
-        # Get privacy enforcement instance
+        # PRIVACY: Get privacy enforcement instance
         try:
             privacy_enforcement = PrivacyEnforcement.get_instance(self._storage.configuration)
         except Exception as e:
@@ -126,7 +127,7 @@ class CollectionPartUpload(CollectionPartGet, CollectionPartCache,
             uid = item.uid
             logger.debug("Store item from list with uid: '%s'" % uid)
 
-            # Apply privacy enforcement
+            # PRIVACY: Apply privacy enforcement
             try:
                 item = privacy_enforcement.enforce_privacy(item)
             except Exception as e:

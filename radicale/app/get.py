@@ -81,7 +81,7 @@ class ApplicationPartGet(ApplicationBase):
         user: str, request_info: dict,
     ) -> types.WSGIResponse:
         """Manage GET request."""
-        # Handle privacy-specific paths
+        # PRIVACY: Handle privacy-specific paths
         if path.startswith("/privacy/"):
             if not hasattr(self, "_privacy_http"):
                 from radicale.privacy.http import PrivacyHTTP
