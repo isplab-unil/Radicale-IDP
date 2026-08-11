@@ -211,6 +211,33 @@ The system looks for user data in the `default-data/` directory at the project r
 2. If the volume is empty (first run), it loads data from `default-data/`
 3. Each user is created with the password specified in `DEFAULT_USER_PASSWORD` environment variable
 
+This is a **one-time seed**: after the first startup, the Docker volume becomes the source of truth for Radicale data. Rebuilding the image or restarting the container will **not** copy changes from `default-data/` into the existing volume. This behavior is intentional and idiomatic for stateful services — it prevents accidental overwrites of live collections, privacy settings, and user sessions.
+
+### Reloading Default Data
+
+If you modify `default-data/` and want those changes to appear in Radicale, you must remove the existing volumes and start fresh so the seed script runs again:
+
+```bash
+docker compose -f compose-privacy.yml down -v
+docker compose -f compose-privacy.yml up --build -d
+```
+
+> ⚠️ **WARNING:** The `-v` flag deletes **all** persistent data, including:
+> - All user collections (contacts, calendars)
+> - The privacy database (all privacy settings and logs)
+> - The web application database (user sessions, verification codes)
+>
+> Make a backup first if you need to preserve any of this data:
+> ```bash
+> # Backup Radicale data (collections and privacy database)
+> docker cp radicale-idp-server:/var/lib/radicale ./backup-radicale
+>
+> # Backup web app database
+> docker cp radicale-idp-web:/data ./backup-web
+> ```
+
+For production deployments, treat `default-data/` as an initial bootstrap dataset. Once the service is running, add or update contacts through the CalDAV/CardDAV clients or Radicale's API rather than re-seeding from `default-data/`.
+
 ### Supported Formats
 
 The system supports two formats for default data:
@@ -268,27 +295,11 @@ The system supports two formats for default data:
    DEFAULT_USER_PASSWORD=YourSecurePassword123
    ```
 
-4. **Important:** Remove any existing Docker volumes to reload the data:
+4. **Reload the default data** so the new user is seeded into the empty volume (see [Reloading Default Data](#reloading-default-data) for the warning and details):
    ```bash
    docker compose -f compose-privacy.yml down -v
    docker compose -f compose-privacy.yml up --build -d
    ```
-
-   > ⚠️ **WARNING:** The `-v` flag will delete ALL volume data, including:
-   > - All existing user collections (contacts, calendars)
-   > - The privacy database (all privacy settings and logs)
-   > - The web application database (user sessions, verification codes)
-   > 
-   > **Make a backup before removing volumes if you need to preserve this data!**
-   > 
-   > To backup your data:
-   > ```bash
-   > # Backup Radicale data (collections and privacy database)
-   > docker cp radicale-idp-server:/var/lib/radicale ./backup-radicale
-   > 
-   > # Backup web app database
-   > docker cp radicale-idp-web:/data ./backup-web
-   > ```
 
 ### Security Considerations
 

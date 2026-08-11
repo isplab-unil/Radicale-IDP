@@ -274,6 +274,8 @@ docker compose -f compose-privacy.yml down
 docker compose -f compose-privacy.yml down -v
 ```
 
+> **Note:** `default-data/` is copied into the persistent volume only on the first startup. If you modify `default-data/` and want those changes reloaded, you must stop with `-v` to remove the volumes, then start again with `--build` so the seed script runs on a clean volume. See the QUICKSTART guide for details.
+
 ### Viewing Logs
 
 ```bash
