@@ -69,7 +69,7 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 ### What's Included
 
 - `compose-privacy.yml` - Service orchestration with nginx, certbot, radicale, and web services
-- `Dockerfile.local` - Build Radicale from local source with privacy extensions
+- `Dockerfile.privacy` - Build Radicale from local source with privacy extensions
 - `.env.example` - Environment variable template
 - `config/radicale.config` - Radicale server configuration
 - `volumes/certbot/certbot-entrypoint.sh` - Automated SSL certificate management

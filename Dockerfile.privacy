@@ -2,7 +2,7 @@
 # This Dockerfile builds Radicale from local source code
 # Use when deploying the fork with privacy extensions
 #
-# Build: docker build -f Dockerfile.local -t radicale-idp .
+# Build: docker build -f Dockerfile.privacy -t radicale-idp .
 # Or via docker-compose: just use this as the Dockerfile
 
 FROM python:3-alpine AS builder
