@@ -192,7 +192,9 @@ export default function PreferencesPage() {
         <div className="space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-5xl font-medium text-gray-900 dark:text-gray-100 mb-6">{t('preferences.title')}</h1>
+            <h1 className="text-5xl font-medium text-gray-900 dark:text-gray-100 mb-6">
+              {t('preferences.title')}
+            </h1>
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed mb-2 max-w-4xl">
               {t('preferences.description')}
             </p>

@@ -1,6 +1,10 @@
 import { verifyAuth } from '~/lib/auth';
-import { updatePrivacySettings, createPrivacySettings, reprocessUserCards } from '~/api/radicale';
-import type { PrivacySettings } from '~/api/radicale';
+import {
+  updatePrivacySettings,
+  createPrivacySettings,
+  reprocessUserCards,
+  type PrivacySettings,
+} from '~/api/radicale';
 import {
   getUserByContact,
   getUserPreferences,
