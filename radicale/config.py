@@ -678,6 +678,38 @@ DEFAULT_CONFIG_SCHEMA: types.CONFIG_SCHEMA = OrderedDict([
         ("default_disallow_nickname", {
             "value": "False",
             "help": "default value for disallowing nickname in privacy settings",
+            "type": bool}),
+        ("default_api_disallow_photo", {
+            "value": "False",
+            "help": "default value for disallowing photo access via OAuth API",
+            "type": bool}),
+        ("default_api_disallow_gender", {
+            "value": "False",
+            "help": "default value for disallowing gender access via OAuth API",
+            "type": bool}),
+        ("default_api_disallow_birthday", {
+            "value": "False",
+            "help": "default value for disallowing birthday access via OAuth API",
+            "type": bool}),
+        ("default_api_disallow_address", {
+            "value": "False",
+            "help": "default value for disallowing address access via OAuth API",
+            "type": bool}),
+        ("default_api_disallow_company", {
+            "value": "False",
+            "help": "default value for disallowing company access via OAuth API",
+            "type": bool}),
+        ("default_api_disallow_title", {
+            "value": "False",
+            "help": "default value for disallowing title access via OAuth API",
+            "type": bool}),
+        ("default_api_disallow_related", {
+            "value": "False",
+            "help": "default value for disallowing related person access via OAuth API",
+            "type": bool}),
+        ("default_api_disallow_nickname", {
+            "value": "False",
+            "help": "default value for disallowing nickname access via OAuth API",
             "type": bool})
         ])),
     ("hook", OrderedDict([

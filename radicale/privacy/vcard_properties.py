@@ -84,6 +84,20 @@ PRIVACY_TO_VCARD_MAP = {
     'disallow_nickname': ['nickname'],
 }
 
+# Mapping of API-sharing privacy settings to vCard properties.
+# These control whether a stored field may be returned to OAuth-authenticated
+# (third-party app) clients. The property list mirrors PRIVACY_TO_VCARD_MAP.
+API_PRIVACY_TO_VCARD_MAP = {
+    'api_disallow_photo': ['photo'],
+    'api_disallow_gender': ['gender'],
+    'api_disallow_birthday': ['bday'],
+    'api_disallow_address': ['adr', 'label'],
+    'api_disallow_company': ['org', 'logo'],
+    'api_disallow_title': ['title', 'role'],
+    'api_disallow_related': ['related'],
+    'api_disallow_nickname': ['nickname'],
+}
+
 # List of public vCard properties that should never be filtered
 PUBLIC_VCARD_PROPERTIES = ['version', 'fn', 'n', 'email', 'tel']
 

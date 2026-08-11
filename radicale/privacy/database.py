@@ -41,6 +41,16 @@ class UserSettings(Base):
     disallow_related = Column(Boolean, default=False)
     disallow_nickname = Column(Boolean, default=False)
 
+    # API-sharing privacy settings fields
+    api_disallow_photo = Column(Boolean, default=False)
+    api_disallow_gender = Column(Boolean, default=False)
+    api_disallow_birthday = Column(Boolean, default=False)
+    api_disallow_address = Column(Boolean, default=False)
+    api_disallow_company = Column(Boolean, default=False)
+    api_disallow_title = Column(Boolean, default=False)
+    api_disallow_related = Column(Boolean, default=False)
+    api_disallow_nickname = Column(Boolean, default=False)
+
 
 class PrivacyLog(Base):
     """Privacy logging model for statistics and audit trail."""
@@ -109,6 +119,14 @@ class PrivacyDatabase:
                     "disallow_title": self._configuration.get("privacy", "default_disallow_title"),
                     "disallow_related": self._configuration.get("privacy", "default_disallow_related"),
                     "disallow_nickname": self._configuration.get("privacy", "default_disallow_nickname"),
+                    "api_disallow_photo": self._configuration.get("privacy", "default_api_disallow_photo"),
+                    "api_disallow_gender": self._configuration.get("privacy", "default_api_disallow_gender"),
+                    "api_disallow_birthday": self._configuration.get("privacy", "default_api_disallow_birthday"),
+                    "api_disallow_address": self._configuration.get("privacy", "default_api_disallow_address"),
+                    "api_disallow_company": self._configuration.get("privacy", "default_api_disallow_company"),
+                    "api_disallow_title": self._configuration.get("privacy", "default_api_disallow_title"),
+                    "api_disallow_related": self._configuration.get("privacy", "default_api_disallow_related"),
+                    "api_disallow_nickname": self._configuration.get("privacy", "default_api_disallow_nickname"),
                 }
 
             user_settings = UserSettings(
