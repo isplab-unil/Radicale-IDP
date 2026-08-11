@@ -61,6 +61,14 @@ export async function loader({ request }: { request: Request }) {
           disallow_title: preferences.disallowTitle === 1,
           disallow_related: preferences.disallowRelated === 1,
           disallow_nickname: preferences.disallowNickname === 1,
+          api_disallow_photo: preferences.apiDisallowPhoto === 1,
+          api_disallow_gender: preferences.apiDisallowGender === 1,
+          api_disallow_birthday: preferences.apiDisallowBirthday === 1,
+          api_disallow_address: preferences.apiDisallowAddress === 1,
+          api_disallow_company: preferences.apiDisallowCompany === 1,
+          api_disallow_title: preferences.apiDisallowTitle === 1,
+          api_disallow_related: preferences.apiDisallowRelated === 1,
+          api_disallow_nickname: preferences.apiDisallowNickname === 1,
         }
       : {
           disallow_photo: false,
@@ -71,6 +79,14 @@ export async function loader({ request }: { request: Request }) {
           disallow_title: false,
           disallow_related: false,
           disallow_nickname: false,
+          api_disallow_photo: false,
+          api_disallow_gender: false,
+          api_disallow_birthday: false,
+          api_disallow_address: false,
+          api_disallow_company: false,
+          api_disallow_title: false,
+          api_disallow_related: false,
+          api_disallow_nickname: false,
         };
 
     const contactProviderSynced = preferences ? preferences.contactProviderSynced === 1 : true;
@@ -161,6 +177,14 @@ export async function action({ request }: { request: Request }) {
       disallowTitle: preferences.disallow_title ? 1 : 0,
       disallowRelated: preferences.disallow_related ? 1 : 0,
       disallowNickname: preferences.disallow_nickname ? 1 : 0,
+      apiDisallowPhoto: preferences.api_disallow_photo ? 1 : 0,
+      apiDisallowGender: preferences.api_disallow_gender ? 1 : 0,
+      apiDisallowBirthday: preferences.api_disallow_birthday ? 1 : 0,
+      apiDisallowAddress: preferences.api_disallow_address ? 1 : 0,
+      apiDisallowCompany: preferences.api_disallow_company ? 1 : 0,
+      apiDisallowTitle: preferences.api_disallow_title ? 1 : 0,
+      apiDisallowRelated: preferences.api_disallow_related ? 1 : 0,
+      apiDisallowNickname: preferences.api_disallow_nickname ? 1 : 0,
     };
 
     // Save preferences to web database

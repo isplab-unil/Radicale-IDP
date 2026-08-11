@@ -105,6 +105,16 @@ export async function saveUserPreferences(
     disallowAddress?: number;
     disallowCompany?: number;
     disallowTitle?: number;
+    disallowRelated?: number;
+    disallowNickname?: number;
+    apiDisallowPhoto?: number;
+    apiDisallowGender?: number;
+    apiDisallowBirthday?: number;
+    apiDisallowAddress?: number;
+    apiDisallowCompany?: number;
+    apiDisallowTitle?: number;
+    apiDisallowRelated?: number;
+    apiDisallowNickname?: number;
   }
 ) {
   // Try to update existing preferences first

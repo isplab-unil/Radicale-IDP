@@ -7,6 +7,16 @@ export type PrivacySettings = {
   disallow_address: boolean;
   disallow_company: boolean;
   disallow_title: boolean;
+  disallow_related: boolean;
+  disallow_nickname: boolean;
+  api_disallow_photo: boolean;
+  api_disallow_gender: boolean;
+  api_disallow_birthday: boolean;
+  api_disallow_address: boolean;
+  api_disallow_company: boolean;
+  api_disallow_title: boolean;
+  api_disallow_related: boolean;
+  api_disallow_nickname: boolean;
 };
 
 function buildUrl(path: string): string {
