@@ -40,7 +40,9 @@ COPY --chown=radicale:radicale --from=builder /app/venv /app
 # Copy default data and scripts
 COPY default-data /default-data
 COPY scripts/init-default-data.sh /scripts/
-RUN chmod 755 /scripts/init-default-data.sh
+COPY scripts/add-vcard-uids.sh /scripts/
+RUN chmod 755 /scripts/init-default-data.sh /scripts/add-vcard-uids.sh \
+    && /scripts/add-vcard-uids.sh /default-data
 
 # Create required directories
 RUN mkdir -p /var/lib/radicale/collections /var/lib/radicale/cache \
