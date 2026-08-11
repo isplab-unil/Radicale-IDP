@@ -69,7 +69,7 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 ### What's Included
 
 - `compose-privacy.yml` - Service orchestration with nginx, certbot, radicale, and web services
-- `Dockerfile.local` - Build Radicale from local source with privacy extensions
+- `Dockerfile.privacy` - Build Radicale from local source with privacy extensions
 - `.env.example` - Environment variable template
 - `config/radicale.config` - Radicale server configuration
 - `volumes/certbot/certbot-entrypoint.sh` - Automated SSL certificate management
@@ -273,6 +273,8 @@ docker compose -f compose-privacy.yml down
 # Stop and remove all volumes (REMOVES ALL DATA!)
 docker compose -f compose-privacy.yml down -v
 ```
+
+> **Note:** `default-data/` is copied into the persistent volume only on the first startup. If you modify `default-data/` and want those changes reloaded, you must stop with `-v` to remove the volumes, then start again with `--build` so the seed script runs on a clean volume. See the QUICKSTART guide for details.
 
 ### Viewing Logs
 

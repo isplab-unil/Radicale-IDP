@@ -3,7 +3,7 @@ services:
   radicale:
     build:
       context: .
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile.privacy
     container_name: radicale-idp-server
 
     # Port exposed within Docker network (nginx will proxy)
