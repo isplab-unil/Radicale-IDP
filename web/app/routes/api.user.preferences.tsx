@@ -1,5 +1,6 @@
 import { verifyAuth } from '~/lib/auth';
 import { updatePrivacySettings, createPrivacySettings, reprocessUserCards } from '~/api/radicale';
+import type { PrivacySettings } from '~/api/radicale';
 import {
   getUserByContact,
   getUserPreferences,
@@ -154,7 +155,7 @@ export async function action({ request }: { request: Request }) {
     }
 
     const body = (await request.json()) as {
-      preferences?: Record<string, boolean>;
+      preferences?: PrivacySettings;
     };
 
     const { preferences } = body;

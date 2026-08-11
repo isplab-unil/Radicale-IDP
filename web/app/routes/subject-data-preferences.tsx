@@ -6,70 +6,116 @@ import { meta, handle } from './subject-data-preferences-meta';
 
 export { meta, handle };
 
+type FieldState = 'private' | 'stored_no_api' | 'stored_api';
+
+type ApiPreferences = Record<string, boolean>;
+
+type TristatePreferences = Record<string, FieldState>;
+
+const FIELD_IDS = [
+  'photo',
+  'nickname',
+  'gender',
+  'birthday',
+  'address',
+  'related',
+  'company',
+  'title',
+] as const;
+
+function apiToTristate(apiPrefs: ApiPreferences): TristatePreferences {
+  const result: TristatePreferences = {};
+  for (const field of FIELD_IDS) {
+    const disallow = apiPrefs[`disallow_${field}`] ?? false;
+    const apiDisallow = apiPrefs[`api_disallow_${field}`] ?? false;
+    if (disallow) {
+      result[field] = 'private';
+    } else if (apiDisallow) {
+      result[field] = 'stored_no_api';
+    } else {
+      result[field] = 'stored_api';
+    }
+  }
+  return result;
+}
+
+function tristateToApi(tristatePrefs: TristatePreferences): ApiPreferences {
+  const result: ApiPreferences = {};
+  for (const field of FIELD_IDS) {
+    const state = tristatePrefs[field] ?? 'stored_api';
+    result[`disallow_${field}`] = state === 'private';
+    result[`api_disallow_${field}`] = state === 'stored_no_api';
+  }
+  return result;
+}
+
 export default function PreferencesPage() {
   const { t } = useTranslation();
-  const [preferences, setPreferences] = useState<Record<string, boolean>>({});
-  const [originalPreferences, setOriginalPreferences] = useState<Record<string, boolean>>({});
+  const [preferences, setPreferences] = useState<TristatePreferences>({});
+  const [originalPreferences, setOriginalPreferences] = useState<TristatePreferences>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  // Derived: unsaved changes exist when current values differ from the
-  // last saved/loaded ones (toggling an option back reverts the change).
+
   const hasChanges =
     Object.keys(preferences).length !== Object.keys(originalPreferences).length ||
-    Object.keys(preferences).some(key => preferences[key] !== originalPreferences[key]);
+    FIELD_IDS.some(field => preferences[field] !== originalPreferences[field]);
 
-  // Mapping between API field names and user-friendly labels
   const fieldMapping = {
-    disallow_photo: {
+    photo: {
       label: t('preferences.fields.photo.label'),
       description: t('preferences.fields.photo.description'),
     },
-    disallow_nickname: {
+    nickname: {
       label: t('preferences.fields.nickname.label'),
       description: t('preferences.fields.nickname.description'),
     },
-    disallow_gender: {
+    gender: {
       label: t('preferences.fields.gender.label'),
       description: t('preferences.fields.gender.description'),
     },
-    disallow_birthday: {
+    birthday: {
       label: t('preferences.fields.birthday.label'),
       description: t('preferences.fields.birthday.description'),
     },
-    disallow_address: {
+    address: {
       label: t('preferences.fields.address.label'),
       description: t('preferences.fields.address.description'),
     },
-    disallow_related: {
+    related: {
       label: t('preferences.fields.related.label'),
       description: t('preferences.fields.related.description'),
     },
-    disallow_company: {
+    company: {
       label: t('preferences.fields.company.label'),
       description: t('preferences.fields.company.description'),
     },
-    disallow_title: {
+    title: {
       label: t('preferences.fields.title.label'),
       description: t('preferences.fields.title.description'),
     },
   };
 
-  // Client-side authentication check
+  const stateOptions: { value: FieldState; labelKey: string }[] = [
+    { value: 'private', labelKey: 'preferences.states.private' },
+    { value: 'stored_no_api', labelKey: 'preferences.states.storedNoApi' },
+    { value: 'stored_api', labelKey: 'preferences.states.storedApi' },
+  ];
+
   useEffect(() => {
     if (typeof window !== 'undefined' && !isAuthenticated()) {
       window.location.href = '/login';
     }
   }, []);
 
-  // Load preferences from database
   useEffect(() => {
     const loadPreferences = async () => {
       try {
         const response = await authFetch('/api/user/preferences');
         if (response.ok) {
           const data = await response.json();
-          setPreferences(data.preferences);
-          setOriginalPreferences(data.preferences);
+          const tristate = apiToTristate(data.preferences);
+          setPreferences(tristate);
+          setOriginalPreferences(tristate);
         } else {
           toast.error(t('preferences.loadError'), {
             description: t('preferences.loadErrorDescription'),
@@ -89,12 +135,11 @@ export default function PreferencesPage() {
     }
   }, []);
 
-  const handlePreferenceChange = (fieldId: string, checked: boolean) => {
-    const newPreferences = {
-      ...preferences,
-      [fieldId]: checked,
-    };
-    setPreferences(newPreferences);
+  const handlePreferenceChange = (fieldId: string, state: FieldState) => {
+    setPreferences(prev => ({
+      ...prev,
+      [fieldId]: state,
+    }));
   };
 
   const handleSavePreferences = async () => {
@@ -103,7 +148,7 @@ export default function PreferencesPage() {
     try {
       const response = await authFetch('/api/user/preferences', {
         method: 'PUT',
-        body: JSON.stringify({ preferences }),
+        body: JSON.stringify({ preferences: tristateToApi(preferences) }),
       });
 
       if (response.ok) {
@@ -188,23 +233,33 @@ export default function PreferencesPage() {
           </div>
 
           {/* Preferences Form */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {Object.entries(fieldMapping).map(([fieldId, fieldInfo]) => (
-              <div key={fieldId} className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  checked={preferences[fieldId] || false}
-                  onChange={e => handlePreferenceChange(fieldId, e.target.checked)}
-                  className="h-5 w-5 mt-1 rounded border-gray-300 dark:border-[#3a3a3c] text-brand-blue focus:ring-brand-blue disabled:opacity-50"
-                  disabled={saving}
-                />
-                <div className="flex-1">
-                  <label className="text-lg text-gray-900 dark:text-gray-100 cursor-pointer select-none font-medium">
-                    {t('preferences.keepPrivate', { field: fieldInfo.label })}
-                  </label>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{fieldInfo.description}</p>
+              <fieldset key={fieldId} className="space-y-3">
+                <legend className="text-lg text-gray-900 dark:text-gray-100 font-medium">
+                  {fieldInfo.label}
+                </legend>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{fieldInfo.description}</p>
+                <div className="flex flex-wrap gap-4 pt-1">
+                  {stateOptions.map(option => (
+                    <label
+                      key={option.value}
+                      className="inline-flex items-center space-x-2 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name={`preference-${fieldId}`}
+                        value={option.value}
+                        checked={preferences[fieldId] === option.value}
+                        onChange={() => handlePreferenceChange(fieldId, option.value)}
+                        className="h-4 w-4 border-gray-300 dark:border-[#3a3a3c] text-brand-blue focus:ring-brand-blue disabled:opacity-50"
+                        disabled={saving}
+                      />
+                      <span className="text-gray-900 dark:text-gray-100">{t(option.labelKey)}</span>
+                    </label>
+                  ))}
                 </div>
-              </div>
+              </fieldset>
             ))}
           </div>
         </div>

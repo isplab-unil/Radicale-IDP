@@ -117,6 +117,16 @@ export async function action({ request }: { request: Request }) {
           disallow_address: currentPreferences.disallowAddress === 1,
           disallow_company: currentPreferences.disallowCompany === 1,
           disallow_title: currentPreferences.disallowTitle === 1,
+          disallow_related: currentPreferences.disallowRelated === 1,
+          disallow_nickname: currentPreferences.disallowNickname === 1,
+          api_disallow_photo: currentPreferences.apiDisallowPhoto === 1,
+          api_disallow_gender: currentPreferences.apiDisallowGender === 1,
+          api_disallow_birthday: currentPreferences.apiDisallowBirthday === 1,
+          api_disallow_address: currentPreferences.apiDisallowAddress === 1,
+          api_disallow_company: currentPreferences.apiDisallowCompany === 1,
+          api_disallow_title: currentPreferences.apiDisallowTitle === 1,
+          api_disallow_related: currentPreferences.apiDisallowRelated === 1,
+          api_disallow_nickname: currentPreferences.apiDisallowNickname === 1,
         };
 
         // Update Radicale with current preferences
