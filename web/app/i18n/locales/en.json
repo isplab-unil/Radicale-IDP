@@ -16,13 +16,13 @@
   },
   "preferences": {
     "title": "Your Preferences",
-    "description": "Control how your personal information is handled in the contact management system. For each field, choose whether it should be kept private, stored but not shared with third-party apps, or stored and shared.",
-    "explanation": "When someone creates a contact card with your information, your choice below determines whether the field is stored on the contact provider and whether it can be accessed by third-party apps through OAuth.",
+    "description": "Control how your personal information is handled in the contact management system. For each field, choose whether it should be kept private or shared with the contact owner, with or without third-party apps.",
+    "explanation": "When someone saves you as a contact, the contact owner is the person whose address book contains your information. Third-party apps are services connected through OAuth.",
     "loading": "Loading preferences...",
     "states": {
       "private": "Keep private",
-      "storedNoApi": "Store, but don't share with third-party apps",
-      "storedApi": "Store and share with third-party apps"
+      "storedNoApi": "Contact owner only",
+      "storedApi": "Contact owner and third-party apps"
     },
     "fields": {
       "photo": {
