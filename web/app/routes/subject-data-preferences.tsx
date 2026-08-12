@@ -44,7 +44,9 @@ function tristateToApi(tristatePrefs: TristatePreferences): ApiPreferences {
   for (const field of FIELD_IDS) {
     const state = tristatePrefs[field] ?? 'stored_api';
     result[`disallow_${field}`] = state === 'private';
-    result[`api_disallow_${field}`] = state === 'stored_no_api';
+    // Monotonic semantics: api_disallow means "third-party apps never get
+    // this field", which includes the 'private' state (disallow dominates).
+    result[`api_disallow_${field}`] = state !== 'stored_api';
   }
   return result;
 }
