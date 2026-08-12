@@ -53,6 +53,7 @@ export default function PreferencesPage() {
   const { t } = useTranslation();
   const [preferences, setPreferences] = useState<TristatePreferences>({});
   const [originalPreferences, setOriginalPreferences] = useState<TristatePreferences>({});
+  const [apiSharingEnabled, setApiSharingEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -116,6 +117,7 @@ export default function PreferencesPage() {
           const tristate = apiToTristate(data.preferences);
           setPreferences(tristate);
           setOriginalPreferences(tristate);
+          setApiSharingEnabled(data.enableApiSharing === true);
         } else {
           toast.error(t('preferences.loadError'), {
             description: t('preferences.loadErrorDescription'),
@@ -230,9 +232,11 @@ export default function PreferencesPage() {
             </div>
           </div>
 
-          <div className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            <p>{t('preferences.explanation')}</p>
-          </div>
+          {apiSharingEnabled && (
+            <div className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+              <p>{t('preferences.explanation')}</p>
+            </div>
+          )}
 
           {/* Preferences Form */}
           <div className="space-y-8">
@@ -242,25 +246,48 @@ export default function PreferencesPage() {
                   {fieldInfo.label}
                 </legend>
                 <p className="text-sm text-gray-600 dark:text-gray-300">{fieldInfo.description}</p>
-                <div className="flex flex-wrap gap-4 pt-1">
-                  {stateOptions.map(option => (
-                    <label
-                      key={option.value}
-                      className="inline-flex items-center space-x-2 cursor-pointer"
-                    >
+                {apiSharingEnabled ? (
+                  <div className="flex flex-wrap gap-4 pt-1">
+                    {stateOptions.map(option => (
+                      <label
+                        key={option.value}
+                        className="inline-flex items-center space-x-2 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name={`preference-${fieldId}`}
+                          value={option.value}
+                          checked={preferences[fieldId] === option.value}
+                          onChange={() => handlePreferenceChange(fieldId, option.value)}
+                          className="h-4 w-4 border-gray-300 dark:border-[#3a3a3c] text-brand-blue focus:ring-brand-blue disabled:opacity-50"
+                          disabled={saving}
+                        />
+                        <span className="text-gray-900 dark:text-gray-100">{t(option.labelKey)}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-4 pt-1">
+                    <label className="inline-flex items-center space-x-2 cursor-pointer">
                       <input
-                        type="radio"
+                        type="checkbox"
                         name={`preference-${fieldId}`}
-                        value={option.value}
-                        checked={preferences[fieldId] === option.value}
-                        onChange={() => handlePreferenceChange(fieldId, option.value)}
+                        checked={preferences[fieldId] === 'private'}
+                        onChange={() =>
+                          handlePreferenceChange(
+                            fieldId,
+                            preferences[fieldId] === 'private' ? 'stored_api' : 'private'
+                          )
+                        }
                         className="h-4 w-4 border-gray-300 dark:border-[#3a3a3c] text-brand-blue focus:ring-brand-blue disabled:opacity-50"
                         disabled={saving}
                       />
-                      <span className="text-gray-900 dark:text-gray-100">{t(option.labelKey)}</span>
+                      <span className="text-gray-900 dark:text-gray-100">
+                        {t('preferences.states.private')}
+                      </span>
                     </label>
-                  ))}
-                </div>
+                  </div>
+                )}
               </fieldset>
             ))}
           </div>

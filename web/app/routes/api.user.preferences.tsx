@@ -100,6 +100,7 @@ export async function loader({ request }: { request: Request }) {
       JSON.stringify({
         preferences: formattedPreferences,
         contactProviderSynced,
+        enableApiSharing: env.ENABLE_API_SHARING !== 'false',
       }),
       {
         status: 200,
@@ -191,6 +192,30 @@ export async function action({ request }: { request: Request }) {
       apiDisallowRelated: preferences.api_disallow_related ? 1 : 0,
       apiDisallowNickname: preferences.api_disallow_nickname ? 1 : 0,
     };
+
+    // When API-sharing is disabled, preserve any previously stored
+    // api_disallow_* values so toggling the flag does not wipe them.
+    if (env.ENABLE_API_SHARING === 'false') {
+      const stored = await getUserPreferences(dbUser.id);
+      if (stored) {
+        dbPreferences.apiDisallowPhoto = stored.apiDisallowPhoto;
+        dbPreferences.apiDisallowGender = stored.apiDisallowGender;
+        dbPreferences.apiDisallowBirthday = stored.apiDisallowBirthday;
+        dbPreferences.apiDisallowAddress = stored.apiDisallowAddress;
+        dbPreferences.apiDisallowCompany = stored.apiDisallowCompany;
+        dbPreferences.apiDisallowTitle = stored.apiDisallowTitle;
+        dbPreferences.apiDisallowRelated = stored.apiDisallowRelated;
+        dbPreferences.apiDisallowNickname = stored.apiDisallowNickname;
+        preferences.api_disallow_photo = stored.apiDisallowPhoto === 1;
+        preferences.api_disallow_gender = stored.apiDisallowGender === 1;
+        preferences.api_disallow_birthday = stored.apiDisallowBirthday === 1;
+        preferences.api_disallow_address = stored.apiDisallowAddress === 1;
+        preferences.api_disallow_company = stored.apiDisallowCompany === 1;
+        preferences.api_disallow_title = stored.apiDisallowTitle === 1;
+        preferences.api_disallow_related = stored.apiDisallowRelated === 1;
+        preferences.api_disallow_nickname = stored.apiDisallowNickname === 1;
+      }
+    }
 
     // Save preferences to web database
     await saveUserPreferences(dbUser.id, dbPreferences);
