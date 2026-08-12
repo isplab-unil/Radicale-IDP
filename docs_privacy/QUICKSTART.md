@@ -17,6 +17,7 @@ This guide explains the key features and customization options for the Radicale 
 - [Redeploying and Updating](#redeploying-and-updating)
 - [Auto-start on Boot](#auto-start-on-boot)
 - [Template Versions](#template-versions)
+- [API Sharing (Tri-State Privacy UI)](#api-sharing-tri-state-privacy-ui)
 - [Prefilling the Login Identifier](#prefilling-the-login-identifier)
 - [Disclaimer Box](#disclaimer-box)
 - [Changing Text, Icons & Translations](#changing-text-icons--translations)
@@ -88,10 +89,12 @@ For production deployment using Docker Compose (recommended), environment variab
 2. Find the variable you want to change
 3. Update the value (keep it on the same line)
 4. Save the file
-5. Restart the Docker containers for changes to take effect:
+5. Recreate the containers for changes to take effect:
    ```bash
-   docker compose -f compose-privacy.yml restart
+   docker compose -f compose-privacy.yml up -d
    ```
+
+   > **Note:** `docker compose restart` is **not** enough — it reuses the existing containers with their frozen environment and never re-reads the `.env` file. `up -d` detects the configuration change and recreates the affected containers. A rebuild (`--build`) is not required for environment-only changes.
 
 > **Note:** The `web/.env` file exists for local development only (running the web app without Docker). For production with Docker Compose, always use the root `.env` file.
 
@@ -114,6 +117,7 @@ For production deployment using Docker Compose (recommended), environment variab
 | `DEFAULT_TEMPLATE`      | Default template version                                       | `a`, `b`, `c`, `d`, `e`, or `f` |
 | `DEFAULT_USER_PASSWORD` | Password for users created from `default-data/` (⚠️ **change before production**) | `password` (insecure default) |
 | `SHOW_DISCLAIMER`       | Show disclaimer box on the login page                          | `true` or `false`           |
+| `ENABLE_API_SHARING`    | Tri-state privacy UI (storage + third-party API-sharing)       | `true` or `false`           |
 | `SELF_SIGNED_SSL`       | SSL mode: self-signed (dev) or Let's Encrypt (prod)            | `true` or `false`           |
 | `DOMAIN`                | Domain name (required when `SELF_SIGNED_SSL=false`)            | `radicale.example.com`      |
 | `EMAIL`                 | Let's Encrypt contact email (required when `SELF_SIGNED_SSL=false`) | `admin@example.com`    |
@@ -451,6 +455,27 @@ https://yoursite.com/?v=a
 
 - Standard version: `https://contact.example.com/?v=a`
 - Alternative version: `https://contact.example.com/?v=b`
+
+---
+
+## API Sharing (Tri-State Privacy UI)
+
+Control whether users can distinguish between "store my data" and "share it with third-party apps via the API" on the preferences page.
+
+**What it does:**
+
+- `ENABLE_API_SHARING=true` (default) — each contact field (photo, nickname, gender, birthday, address, related, company, title) offers three radio choices: keep private, store but don't share via API, or store and allow API sharing.
+- `ENABLE_API_SHARING=false` — each field shows only a binary "Keep private" checkbox.
+
+Toggling the flag off does not wipe users' existing API-sharing choices — previously stored `api_disallow_*` preferences are preserved and take effect again if the flag is turned back on.
+
+**How to disable:**
+
+Set `ENABLE_API_SHARING=false` in the root `.env` file and recreate the web container:
+
+```bash
+docker compose -f compose-privacy.yml up -d
+```
 
 ---
 
