@@ -23,8 +23,8 @@ export default function LoginPage() {
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
             {showDisclaimer && (
-              <div className="bg-red-50 p-6 rounded-2xl mb-20">
-                <p className="text-red-900 text-center">
+              <div className="bg-red-50 dark:bg-[#3a1d1d] p-6 rounded-2xl mb-20">
+                <p className="text-red-900 dark:text-red-300 text-center">
                   <span className="font-semibold">{t('login.disclaimerTitle')}</span>
                   <span className="mx-2">—</span>
                   {t('login.disclaimer')}
