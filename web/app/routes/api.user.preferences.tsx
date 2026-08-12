@@ -1,5 +1,10 @@
 import { verifyAuth } from '~/lib/auth';
-import { updatePrivacySettings, createPrivacySettings, reprocessUserCards } from '~/api/radicale';
+import {
+  updatePrivacySettings,
+  createPrivacySettings,
+  reprocessUserCards,
+  type PrivacySettings,
+} from '~/api/radicale';
 import {
   getUserByContact,
   getUserPreferences,
@@ -61,6 +66,14 @@ export async function loader({ request }: { request: Request }) {
           disallow_title: preferences.disallowTitle === 1,
           disallow_related: preferences.disallowRelated === 1,
           disallow_nickname: preferences.disallowNickname === 1,
+          api_disallow_photo: preferences.apiDisallowPhoto === 1,
+          api_disallow_gender: preferences.apiDisallowGender === 1,
+          api_disallow_birthday: preferences.apiDisallowBirthday === 1,
+          api_disallow_address: preferences.apiDisallowAddress === 1,
+          api_disallow_company: preferences.apiDisallowCompany === 1,
+          api_disallow_title: preferences.apiDisallowTitle === 1,
+          api_disallow_related: preferences.apiDisallowRelated === 1,
+          api_disallow_nickname: preferences.apiDisallowNickname === 1,
         }
       : {
           disallow_photo: false,
@@ -71,6 +84,14 @@ export async function loader({ request }: { request: Request }) {
           disallow_title: false,
           disallow_related: false,
           disallow_nickname: false,
+          api_disallow_photo: false,
+          api_disallow_gender: false,
+          api_disallow_birthday: false,
+          api_disallow_address: false,
+          api_disallow_company: false,
+          api_disallow_title: false,
+          api_disallow_related: false,
+          api_disallow_nickname: false,
         };
 
     const contactProviderSynced = preferences ? preferences.contactProviderSynced === 1 : true;
@@ -79,6 +100,7 @@ export async function loader({ request }: { request: Request }) {
       JSON.stringify({
         preferences: formattedPreferences,
         contactProviderSynced,
+        enableApiSharing: env.ENABLE_API_SHARING !== 'false',
       }),
       {
         status: 200,
@@ -138,7 +160,7 @@ export async function action({ request }: { request: Request }) {
     }
 
     const body = (await request.json()) as {
-      preferences?: Record<string, boolean>;
+      preferences?: PrivacySettings;
     };
 
     const { preferences } = body;
@@ -161,7 +183,39 @@ export async function action({ request }: { request: Request }) {
       disallowTitle: preferences.disallow_title ? 1 : 0,
       disallowRelated: preferences.disallow_related ? 1 : 0,
       disallowNickname: preferences.disallow_nickname ? 1 : 0,
+      apiDisallowPhoto: preferences.api_disallow_photo ? 1 : 0,
+      apiDisallowGender: preferences.api_disallow_gender ? 1 : 0,
+      apiDisallowBirthday: preferences.api_disallow_birthday ? 1 : 0,
+      apiDisallowAddress: preferences.api_disallow_address ? 1 : 0,
+      apiDisallowCompany: preferences.api_disallow_company ? 1 : 0,
+      apiDisallowTitle: preferences.api_disallow_title ? 1 : 0,
+      apiDisallowRelated: preferences.api_disallow_related ? 1 : 0,
+      apiDisallowNickname: preferences.api_disallow_nickname ? 1 : 0,
     };
+
+    // When API-sharing is disabled, preserve any previously stored
+    // api_disallow_* values so toggling the flag does not wipe them.
+    if (env.ENABLE_API_SHARING === 'false') {
+      const stored = await getUserPreferences(dbUser.id);
+      if (stored) {
+        dbPreferences.apiDisallowPhoto = stored.apiDisallowPhoto;
+        dbPreferences.apiDisallowGender = stored.apiDisallowGender;
+        dbPreferences.apiDisallowBirthday = stored.apiDisallowBirthday;
+        dbPreferences.apiDisallowAddress = stored.apiDisallowAddress;
+        dbPreferences.apiDisallowCompany = stored.apiDisallowCompany;
+        dbPreferences.apiDisallowTitle = stored.apiDisallowTitle;
+        dbPreferences.apiDisallowRelated = stored.apiDisallowRelated;
+        dbPreferences.apiDisallowNickname = stored.apiDisallowNickname;
+        preferences.api_disallow_photo = stored.apiDisallowPhoto === 1;
+        preferences.api_disallow_gender = stored.apiDisallowGender === 1;
+        preferences.api_disallow_birthday = stored.apiDisallowBirthday === 1;
+        preferences.api_disallow_address = stored.apiDisallowAddress === 1;
+        preferences.api_disallow_company = stored.apiDisallowCompany === 1;
+        preferences.api_disallow_title = stored.apiDisallowTitle === 1;
+        preferences.api_disallow_related = stored.apiDisallowRelated === 1;
+        preferences.api_disallow_nickname = stored.apiDisallowNickname === 1;
+      }
+    }
 
     // Save preferences to web database
     await saveUserPreferences(dbUser.id, dbPreferences);

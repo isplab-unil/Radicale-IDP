@@ -26,6 +26,15 @@ export const userPreferencesTable = sqliteTable('user_preferences', {
   disallowTitle: int().notNull().default(0),
   disallowRelated: int().notNull().default(0),
   disallowNickname: int().notNull().default(0),
+  // API-sharing flags: when true, the field is stored but hidden from OAuth clients
+  apiDisallowPhoto: int().notNull().default(0),
+  apiDisallowGender: int().notNull().default(0),
+  apiDisallowBirthday: int().notNull().default(0),
+  apiDisallowAddress: int().notNull().default(0),
+  apiDisallowCompany: int().notNull().default(0),
+  apiDisallowTitle: int().notNull().default(0),
+  apiDisallowRelated: int().notNull().default(0),
+  apiDisallowNickname: int().notNull().default(0),
   contactProviderSynced: int().notNull().default(0), // 0 = false, 1 = true
   createdAt: text()
     .notNull()

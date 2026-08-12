@@ -16,13 +16,19 @@ from radicale.privacy.database import PrivacyDatabase
 from radicale.privacy.reprocessor import PrivacyReprocessor
 from radicale.privacy.scanner import PrivacyScanner
 from radicale.privacy.templates import shape_cards
-from radicale.privacy.vcard_properties import (PRIVACY_TO_VCARD_MAP,
+from radicale.privacy.vcard_properties import (API_PRIVACY_TO_VCARD_MAP,
+                                               PRIVACY_TO_VCARD_MAP,
                                                VCARD_NAME_TO_ENUM,
                                                VCARD_PROPERTY_TYPES,
                                                VCardPropertyType)
 from radicale.utils import normalize_phone_e164
 
 logger = logging.getLogger(__name__)
+
+# All privacy setting keys accepted by the API/storage layer.
+ALL_PRIVACY_SETTINGS = (
+    set(PRIVACY_TO_VCARD_MAP.keys()) | set(API_PRIVACY_TO_VCARD_MAP.keys())
+)
 
 
 def _photo_to_data_uri(photo) -> str:
@@ -120,10 +126,10 @@ class PrivacyCore:
                 logger.error("PRIVACY: Failed to create default settings for user %s: %s", lookup_id, e)
                 return False, f"Failed to create default settings: {str(e)}"
 
-        # Convert settings to dict
+        # Convert settings to dict (includes both storage and API-sharing flags)
         settings_dict = {
             setting: getattr(settings, setting)
-            for setting in PRIVACY_TO_VCARD_MAP.keys()
+            for setting in ALL_PRIVACY_SETTINGS
         }
 
         # Log the privacy settings that were retrieved
@@ -155,10 +161,16 @@ class PrivacyCore:
         if not all(field in settings for field in required_fields):
             return False, {
                 "error": "Missing required fields",
-                "required_fields": list(required_fields)
+                "required_fields": sorted(required_fields)
             }
 
-        if not all(isinstance(settings[field], bool) for field in required_fields):
+        # api_disallow_* fields are optional for backwards compatibility;
+        # default them to False if not provided.
+        settings = dict(settings)
+        for field in API_PRIVACY_TO_VCARD_MAP.keys():
+            settings.setdefault(field, False)
+
+        if not all(isinstance(settings[field], bool) for field in ALL_PRIVACY_SETTINGS):
             return False, "All settings must be boolean values"
 
         if '@' in user:
@@ -202,11 +214,11 @@ class PrivacyCore:
         if not settings:
             return False, "No settings provided"
 
-        valid_fields = set(PRIVACY_TO_VCARD_MAP.keys())
+        valid_fields = ALL_PRIVACY_SETTINGS
         if not all(field in valid_fields for field in settings):
             return False, {
                 "error": "Invalid field names",
-                "valid_fields": list(valid_fields)
+                "valid_fields": sorted(valid_fields)
             }
 
         if not all(isinstance(settings[field], bool) for field in settings):

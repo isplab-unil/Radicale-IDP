@@ -16,10 +16,14 @@
   },
   "preferences": {
     "title": "Your Preferences",
-    "description": "Control how your personal information is handled in the contact management system. Select which contact fields you want to keep private and prevent from being synced.",
-    "explanation": "When someone creates a contact card with your information, the following fields will not be included if you've marked them as private:",
+    "description": "Control how your personal information is handled in the contact management system. For each field, choose whether it should be kept private or shared with the contact owner, with or without third-party apps.",
+    "explanation": "When someone saves you as a contact, the contact owner is the person whose address book contains your information. Third-party apps are services connected through OAuth.",
     "loading": "Loading preferences...",
-    "keepPrivate": "Keep {{field}} private",
+    "states": {
+      "private": "Keep private",
+      "storedNoApi": "Contact owner only",
+      "storedApi": "Contact owner and third-party apps"
+    },
     "fields": {
       "photo": {
         "label": "Photo",
