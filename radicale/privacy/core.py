@@ -157,14 +157,20 @@ class PrivacyCore:
             return False, error_msg
 
         # Validate settings
-        required_fields = ALL_PRIVACY_SETTINGS
+        required_fields = set(PRIVACY_TO_VCARD_MAP.keys())
         if not all(field in settings for field in required_fields):
             return False, {
                 "error": "Missing required fields",
                 "required_fields": sorted(required_fields)
             }
 
-        if not all(isinstance(settings[field], bool) for field in required_fields):
+        # api_disallow_* fields are optional for backwards compatibility;
+        # default them to False if not provided.
+        settings = dict(settings)
+        for field in API_PRIVACY_TO_VCARD_MAP.keys():
+            settings.setdefault(field, False)
+
+        if not all(isinstance(settings[field], bool) for field in ALL_PRIVACY_SETTINGS):
             return False, "All settings must be boolean values"
 
         if '@' in user:

@@ -195,6 +195,22 @@ def test_default_settings_from_config(db_manager):
     assert user_settings.disallow_address == config.get("privacy", "default_disallow_address")
     assert user_settings.disallow_company == config.get("privacy", "default_disallow_company")
     assert user_settings.disallow_title == config.get("privacy", "default_disallow_title")
+    assert user_settings.api_disallow_photo == config.get("privacy", "default_api_disallow_photo")
+    assert user_settings.api_disallow_gender == config.get("privacy", "default_api_disallow_gender")
+
+
+def test_create_user_settings_with_api_fields(db_manager):
+    """Test creating settings with API-sharing fields."""
+    settings = {
+        "disallow_photo": False,
+        "api_disallow_photo": True,
+        "api_disallow_company": True,
+    }
+    user_settings = db_manager.create_user_settings("test@example.com", settings)
+    assert user_settings.disallow_photo is False
+    assert user_settings.api_disallow_photo is True
+    assert user_settings.api_disallow_company is True
+    assert user_settings.api_disallow_gender is False
 
 
 def test_config_changes_affect_new_users(db_manager):

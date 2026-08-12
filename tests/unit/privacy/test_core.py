@@ -123,7 +123,45 @@ def test_create_settings_success(core):
     # Verify settings were created
     success, result = core.get_settings("test@example.com")
     assert success
-    assert result == settings
+    for key, value in settings.items():
+        assert result[key] == value
+    # api_disallow fields default to False when omitted
+    for key in ["api_disallow_photo", "api_disallow_gender", "api_disallow_birthday",
+                "api_disallow_address", "api_disallow_company", "api_disallow_title",
+                "api_disallow_nickname", "api_disallow_related"]:
+        assert result[key] is False
+
+
+def test_create_settings_with_api_fields(core):
+    """Test creating settings with both storage and API-sharing flags."""
+    settings = {
+        "disallow_photo": False,
+        "disallow_gender": False,
+        "disallow_birthday": False,
+        "disallow_address": False,
+        "disallow_company": False,
+        "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
+        "api_disallow_photo": True,
+        "api_disallow_gender": True,
+        "api_disallow_birthday": False,
+        "api_disallow_address": False,
+        "api_disallow_company": True,
+        "api_disallow_title": False,
+        "api_disallow_nickname": False,
+        "api_disallow_related": False,
+    }
+    success, result = core.create_settings("apitest@example.com", settings)
+    assert success
+    assert result == {"status": "created"}
+
+    success, result = core.get_settings("apitest@example.com")
+    assert success
+    assert result["api_disallow_photo"] is True
+    assert result["api_disallow_gender"] is True
+    assert result["api_disallow_company"] is True
+    assert result["api_disallow_birthday"] is False
 
 
 def test_create_settings_missing_fields(core):
@@ -196,6 +234,36 @@ def test_update_settings_success(core):
     assert updated_settings["disallow_title"] is False  # Unchanged
     assert updated_settings["disallow_nickname"] is False  # Unchanged
     assert updated_settings["disallow_related"] is False  # Unchanged
+
+
+def test_update_settings_api_fields(core):
+    """Test updating API-sharing settings independently of storage settings."""
+    initial_settings = {
+        "disallow_photo": False,
+        "disallow_gender": False,
+        "disallow_birthday": False,
+        "disallow_address": False,
+        "disallow_company": False,
+        "disallow_title": False,
+        "disallow_nickname": False,
+        "disallow_related": False,
+    }
+    core.create_settings("apiupdate@example.com", initial_settings)
+
+    update_settings = {
+        "api_disallow_photo": True,
+        "api_disallow_company": True,
+    }
+    success, result = core.update_settings("apiupdate@example.com", update_settings)
+    assert success
+    assert result == {"status": "updated"}
+
+    success, result = core.get_settings("apiupdate@example.com")
+    assert success
+    assert result["api_disallow_photo"] is True
+    assert result["api_disallow_company"] is True
+    assert result["disallow_photo"] is False  # Unchanged
+    assert result["disallow_company"] is False  # Unchanged
 
 
 def test_update_settings_not_found(core):
