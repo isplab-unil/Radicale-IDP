@@ -111,10 +111,9 @@ services:
       # Persistent storage for web app database
       - web_data:/data
 
-    # Depends on radicale service being ready
+    # Start after the radicale container
     depends_on:
-      radicale:
-        condition: service_healthy
+      - radicale
 
     # Docker network for inter-service communication
     networks:
@@ -177,12 +176,11 @@ services:
 
     entrypoint: "/nginx-entrypoint.sh"
 
-    # Wait for backend services to be ready
+    # Start after backend containers exist so their names resolve
+    # when nginx loads its config
     depends_on:
-      radicale:
-        condition: service_healthy
-      web:
-        condition: service_healthy
+      - radicale
+      - web
 
     # Docker network for inter-service communication
     networks:
