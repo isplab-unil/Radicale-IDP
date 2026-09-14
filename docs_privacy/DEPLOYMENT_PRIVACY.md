@@ -1,14 +1,17 @@
-# Radicale-IDP Docker Deployment Guide
+# Radicale-IDP Deployment Guide (Podman)
 
-Complete guide to deploy Radicale-IDP (CalDAV/CardDAV server with Privacy Extensions) on a Linux server via Docker.
+Complete guide to deploy Radicale-IDP (CalDAV/CardDAV server with Privacy Extensions) on a Linux server via Podman containers.
 
-> **Note (production server):** The production server uses Podman instead of Docker. Wherever a command shows `docker compose`, run `sudo podman compose` instead — the syntax is identical. Use `sudo` consistently for **every** compose command (`up`, `down`, `ps`, `logs`, `exec`, ...): containers created via `sudo podman` are invisible to a rootless `podman`, and vice versa. For the same reason, run the helper scripts (`scripts/backup.sh`, `scripts/health-check.sh`) with `sudo` on the production server.
+> [!IMPORTANT]
+> The production server uses Podman as the default container runtime. **All** commands in this guide use `sudo podman compose`. Use `sudo` consistently for **every** command (`up`, `down`, `ps`, `logs`, `exec`, ...): containers created via `sudo podman` are invisible to a rootless `podman`, and vice versa. For the same reason, run the helper scripts (`scripts/backup.sh`, `scripts/health-check.sh`) with `sudo` on the production server.
+>
+> For local development, `docker compose` (without sudo) works identically and podman rootless is also an option. The syntax is identical.
 
 **Table of Contents**
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
 3. [Quick Start](#quick-start)
-4. [Docker Management](#docker-management)
+4. [Container Management (Podman)](#container-management-podman)
 5. [Environment Configuration](#environment-configuration)
 6. [Server Configuration](#server-configuration)
 7. [Deployment Options](#deployment-options)
@@ -30,13 +33,13 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 - **Privacy Controls**: Users can hide sensitive fields (photo, birthday, address, etc.) from their vCards
 - **Web UI**: React-based interface for managing privacy preferences
 - **Multi-Protocol**: Supports CalDAV, CardDAV, and WebDAV standards
-- **Docker Native**: Production-ready containerized deployment
+- **Container Native**: Production-ready Podman deployment
 
 ### Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  Nginx (Docker Container)                    │
+│                  Nginx (Container)                          │
 │     [SSL/TLS termination, reverse proxy, HTTP/HTTPS]        │
 │                    Ports: 80 (HTTP), 443 (HTTPS)            │
 └────────────────────────┬────────────────────────────────────┘
@@ -88,9 +91,9 @@ Radicale-IDP is a CalDAV/CardDAV server built on Radicale with integrated privac
 
 - **OS**: Linux (Ubuntu 20.04+, Debian 11+, or similar)
 - **SSH Access**: Server accessible only via SSH with sudo privileges
-- **Docker**: 20.10+ with Docker Compose 2.0+
+- **Podman**: 4.0+ with podman-compose support (production default)
 - **Resources**: 1GB+ RAM recommended, 10GB disk space
-- **Python 3.8+**: Already in Docker containers
+- **Python 3.8+**: Already provided in the containers
 
 ### Before You Start
 
@@ -105,11 +108,11 @@ Determine and have ready:
 
 ### Installation Check
 
-On your server, verify Docker is installed:
+On your server, verify Podman is installed:
 
 ```bash
-docker --version      # Should be 20.10+
-docker compose --version  # Should be 2.0+
+sudo podman --version      # Should be 4.0+
+sudo podman compose --version
 ```
 
 If not installed, see the [Troubleshooting](#troubleshooting) section.
@@ -168,28 +171,28 @@ chmod 600 .env
 ### Step 4: Start Services
 
 ```bash
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 ```
 
 On the first run, build the images at the same time:
 
 ```bash
-docker compose -f compose-privacy.yml up --build -d
+sudo podman compose -f compose-privacy.yml up --build -d
 ```
 
-Docker automatically manages volume creation and permissions.
+The container runtime automatically manages volume creation and permissions.
 
 ### Step 5: Verify Deployment
 
 ```bash
 # Check services status
-docker compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml ps
 
 # Run health check
 ./scripts/health-check.sh
 
 # View logs
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 ```
 
 All services should show as "Up" and healthy.
@@ -218,34 +221,34 @@ Then: `ssh radicale-server` (tunnels run in background)
 
 ---
 
-## Docker Management
+## Container Management (Podman)
 
-Docker Compose manages all containers, volumes, and networking. No manual setup of directories or permissions needed.
+Podman Compose (via `sudo podman compose`) manages all containers, volumes, and networking. No manual setup of directories or permissions needed.
 
-### Understanding Docker Compose
+### Understanding Compose
 
 The deployment uses a single Compose file: `compose-privacy.yml`. It defines the full stack: radicale, web, nginx, and certbot services.
 
 The repository also contains `compose.yaml`, which is the upstream Radicale-only file and is **not** used for this deployment.
 
-All commands should pass the file explicitly: `docker compose -f compose-privacy.yml ...`
+All commands should pass the file explicitly: `sudo podman compose -f compose-privacy.yml ...`
 
 All commands below assume `-f compose-privacy.yml`; the examples show it explicitly.
 
 ### Building Images
 
-Build Docker images from Dockerfiles:
+Build container images from the Dockerfiles:
 
 ```bash
 # Build all images
-docker compose -f compose-privacy.yml build
+sudo podman compose -f compose-privacy.yml build
 
 # Build specific service
-docker compose -f compose-privacy.yml build web
-docker compose -f compose-privacy.yml build radicale
+sudo podman compose -f compose-privacy.yml build web
+sudo podman compose -f compose-privacy.yml build radicale
 
 # Force rebuild (ignore cache)
-docker compose -f compose-privacy.yml build --no-cache web
+sudo podman compose -f compose-privacy.yml build --no-cache web
 ```
 
 **When to rebuild**:
@@ -259,19 +262,19 @@ docker compose -f compose-privacy.yml build --no-cache web
 **Start services**:
 ```bash
 # Background
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 
 # Foreground (see output directly)
-docker compose -f compose-privacy.yml up
+sudo podman compose -f compose-privacy.yml up
 ```
 
 **Stop services**:
 ```bash
 # Stop containers (keeps all data)
-docker compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml down
 
 # Stop and remove all volumes (REMOVES ALL DATA!)
-docker compose -f compose-privacy.yml down -v
+sudo podman compose -f compose-privacy.yml down -v
 ```
 
 > **Note:** `default-data/` is copied into the persistent volume only on the first startup. If you modify `default-data/` and want those changes reloaded, you must stop with `-v` to remove the volumes, then start again with `--build` so the seed script runs on a clean volume. See the QUICKSTART guide for details.
@@ -280,17 +283,17 @@ docker compose -f compose-privacy.yml down -v
 
 ```bash
 # All services, real-time
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 
 # Specific service
-docker compose -f compose-privacy.yml logs -f radicale
-docker compose -f compose-privacy.yml logs -f web
+sudo podman compose -f compose-privacy.yml logs -f radicale
+sudo podman compose -f compose-privacy.yml logs -f web
 
 # Last 50 lines
-docker compose -f compose-privacy.yml logs --tail=50
+sudo podman compose -f compose-privacy.yml logs --tail=50
 
 # With timestamps
-docker compose -f compose-privacy.yml logs -f -t
+sudo podman compose -f compose-privacy.yml logs -f -t
 
 # Stop log viewing: press Ctrl+C
 ```
@@ -299,16 +302,16 @@ docker compose -f compose-privacy.yml logs -f -t
 
 ```bash
 # List running containers
-docker compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml ps
 
 # Show all containers (including stopped)
-docker compose -f compose-privacy.yml ps -a
+sudo podman compose -f compose-privacy.yml ps -a
 
 # Show resource usage (CPU, memory, network)
-docker stats
+sudo podman stats
 
 # Check specific container details
-docker compose -f compose-privacy.yml ps web
+sudo podman compose -f compose-privacy.yml ps web
 ```
 
 ### Common Workflows
@@ -321,51 +324,51 @@ cd /opt/radicale-idp
 git pull
 
 # Rebuild images
-docker compose -f compose-privacy.yml build
+sudo podman compose -f compose-privacy.yml build
 
 # Stop old containers
-docker compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml down
 
 # Start with new images
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 
 # Check logs
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 ```
 
 **Quick restart (keeps data)**:
 ```bash
-docker compose -f compose-privacy.yml restart
+sudo podman compose -f compose-privacy.yml restart
 # or
-docker compose -f compose-privacy.yml down && docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml down && sudo podman compose -f compose-privacy.yml up -d
 ```
 
 **Complete rebuild (removes all data)**:
 ```bash
 # CAUTION: This removes all data! Create backup first!
-docker compose -f compose-privacy.yml down -v              # Stop and remove volumes
-docker compose -f compose-privacy.yml build --no-cache     # Rebuild from scratch
-docker compose -f compose-privacy.yml up -d                # Start fresh
-docker compose -f compose-privacy.yml logs -f              # Watch startup
+sudo podman compose -f compose-privacy.yml down -v              # Stop and remove volumes
+sudo podman compose -f compose-privacy.yml build --no-cache     # Rebuild from scratch
+sudo podman compose -f compose-privacy.yml up -d                # Start fresh
+sudo podman compose -f compose-privacy.yml logs -f              # Watch startup
 ```
 
 **Troubleshooting workflow**:
 ```bash
 # Check status
-docker compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml ps
 
 # View logs
-docker compose -f compose-privacy.yml logs web
+sudo podman compose -f compose-privacy.yml logs web
 
 # Rebuild specific service
-docker compose -f compose-privacy.yml build --no-cache web
+sudo podman compose -f compose-privacy.yml build --no-cache web
 
 # Restart service
-docker compose -f compose-privacy.yml down web
-docker compose -f compose-privacy.yml up -d web
+sudo podman compose -f compose-privacy.yml down web
+sudo podman compose -f compose-privacy.yml up -d web
 
 # Check logs again
-docker compose -f compose-privacy.yml logs -f web
+sudo podman compose -f compose-privacy.yml logs -f web
 ```
 
 ---
@@ -376,7 +379,7 @@ docker compose -f compose-privacy.yml logs -f web
 
 All configuration is managed through environment variables. Copy `.env.example` to `.env` and customize.
 
-**Note**: Docker automatically manages volume creation and permissions. No manual directory setup or `chmod`/`chown` commands needed - just copy the `.env` file and start the containers!
+**Note**: The container runtime automatically manages volume creation and permissions. No manual directory setup or `chmod`/`chown` commands needed - just copy the `.env` file and start the containers!
 
 ```ini
 # ====== CRITICAL - Security Tokens ======
@@ -514,7 +517,7 @@ default_disallow_address = false
 default_disallow_company = false
 default_disallow_title = false
 ```
-Configures privacy feature storage and defaults. All paths in Docker are `/var/lib/radicale/`.
+Configures privacy feature storage and defaults. All paths inside the container are `/var/lib/radicale/`.
 
 **[auth]**
 ```ini
@@ -595,20 +598,20 @@ type = authenticated  # Privacy features enabled
 cd /opt/radicale-idp
 
 # Start services
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 
 # Services accessible at:
 # - Radicale: http://localhost:5232/
 # - Web app: http://localhost:3000/
 
 # View logs
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 
 # Stop services (keeps data)
-docker compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml down
 
 # Stop and remove data
-docker compose -f compose-privacy.yml down -v
+sudo podman compose -f compose-privacy.yml down -v
 ```
 
 **Characteristics**:
@@ -627,13 +630,13 @@ Same commands as development deployment. The configuration includes health check
 cd /opt/radicale-idp
 
 # Start services
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 
 # Verify services
-docker compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml ps
 
 # View logs
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 ```
 
 **Production features included**:
@@ -644,7 +647,7 @@ docker compose -f compose-privacy.yml logs -f
 
 **Characteristics**:
 - Data persists across container restarts
-- Docker-managed named volumes (automatic backup compatible)
+- Container-managed named volumes (automatic backup compatible)
 - Containers use resources as needed (no artificial limits)
 - Zero manual setup required
 
@@ -693,7 +696,7 @@ SELF_SIGNED_SSL=true
 ```
 
 **What happens**:
-1. Start services: `docker compose -f compose-privacy.yml up -d`
+1. Start services: `sudo podman compose -f compose-privacy.yml up -d`
 2. Certbot container generates self-signed certificate on first run
 3. Nginx container configures SSL with self-signed certificate
 4. Services available at `https://localhost/` (expect browser warning)
@@ -721,7 +724,7 @@ EMAIL=admin@example.com
 ```
 
 **What happens**:
-1. Start services: `docker compose -f compose-privacy.yml up -d`
+1. Start services: `sudo podman compose -f compose-privacy.yml up -d`
 2. Certbot container obtains Let's Encrypt certificate via ACME challenge
 3. Nginx container configures SSL with Let's Encrypt certificate
 4. Services available at `https://your-domain.com/` (trusted certificate)
@@ -763,7 +766,7 @@ The certbot container runs automatically and:
 
 Run the bootstrapping script to complete setup:
 ```bash
-podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
+sudo podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 ```
 
 This script:
@@ -782,10 +785,10 @@ This script:
 **Commands**:
 ```bash
 # 1. Start services (nginx starts in HTTP-only mode)
-podman compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 
 # 2. Obtain SSL certificate and switch to HTTPS
-podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
+sudo podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 
 # 3. Verify HTTPS is working
 curl https://your-domain.com/
@@ -798,13 +801,13 @@ If ports 80/443 are closed or not yet configured, certbot cannot complete the AC
 **Temporary Solution** - Use self-signed certificates:
 ```bash
 # 1. Stop services
-podman compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml down
 
 # 2. Update .env
 SELF_SIGNED_SSL=true
 
 # 3. Start with self-signed certificates
-podman compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 ```
 
 **Switch to Let's Encrypt Later** (once ports are open):
@@ -815,11 +818,11 @@ DOMAIN=your-domain.com
 EMAIL=your-email@example.com
 
 # 2. Restart services
-podman compose -f compose-privacy.yml down
-podman compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml up -d
 
 # 3. Obtain Let's Encrypt certificate
-podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
+sudo podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 ```
 
 #### Troubleshooting Bootstrapping
@@ -827,10 +830,10 @@ podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 **obtain-ssl-certificate.sh times out**:
 ```bash
 # Check if certbot container is running
-podman compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml ps
 
 # View certbot logs
-podman compose -f compose-privacy.yml logs certbot
+sudo podman compose -f compose-privacy.yml logs certbot
 
 # Common causes:
 # - Ports 80/443 not accessible from internet
@@ -839,14 +842,14 @@ podman compose -f compose-privacy.yml logs certbot
 ```
 
 **Certbot fails with "Connection refused"**:
-- Verify nginx is running: `podman compose -f compose-privacy.yml ps nginx`
-- Check nginx logs: `podman compose -f compose-privacy.yml logs nginx`
+- Verify nginx is running: `sudo podman compose -f compose-privacy.yml ps nginx`
+- Check nginx logs: `sudo podman compose -f compose-privacy.yml logs nginx`
 - Ensure port 80 is accessible: `curl http://your-domain.com/.well-known/acme-challenge/test`
 
 **Already have certificates but nginx won't start with HTTPS**:
 ```bash
 # Manually reload nginx with HTTPS
-podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
+sudo podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh
 ```
 
 ### Switching Between Modes
@@ -864,11 +867,11 @@ nano .env
 dig your-domain.com
 
 # 3. Restart services
-docker compose -f compose-privacy.yml down
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml up -d
 
 # 4. Monitor certificate acquisition
-docker compose -f compose-privacy.yml logs -f certbot
+sudo podman compose -f compose-privacy.yml logs -f certbot
 ```
 
 **From Production to Development**:
@@ -879,8 +882,8 @@ nano .env
 #   SELF_SIGNED_SSL=true
 
 # 2. Restart services
-docker compose -f compose-privacy.yml down
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml up -d
 ```
 
 ### SSL Certificate Verification
@@ -894,12 +897,12 @@ docker compose -f compose-privacy.yml up -d
 openssl x509 -enddate -noout -in volumes/ssl/self-signed/fullchain.pem
 
 # Check certificate expiration (Let's Encrypt mode)
-docker compose -f compose-privacy.yml exec certbot certbot certificates
+sudo podman compose -f compose-privacy.yml exec certbot certbot certificates
 ```
 
 **View certbot logs**:
 ```bash
-docker compose -f compose-privacy.yml logs certbot
+sudo podman compose -f compose-privacy.yml logs certbot
 ```
 
 ### Manual Certificate Operations
@@ -907,10 +910,10 @@ docker compose -f compose-privacy.yml logs certbot
 **Force certificate renewal** (Let's Encrypt mode only):
 ```bash
 # Renew certificate
-docker compose -f compose-privacy.yml exec certbot certbot renew --force-renewal
+sudo podman compose -f compose-privacy.yml exec certbot certbot renew --force-renewal
 
 # Restart nginx to load renewed certificate
-docker compose -f compose-privacy.yml restart nginx
+sudo podman compose -f compose-privacy.yml restart nginx
 ```
 
 **Regenerate self-signed certificate**:
@@ -919,10 +922,10 @@ docker compose -f compose-privacy.yml restart nginx
 rm volumes/ssl/self-signed/fullchain.pem volumes/ssl/self-signed/privkey.pem
 
 # Restart certbot to generate new certificate
-docker compose -f compose-privacy.yml restart certbot
+sudo podman compose -f compose-privacy.yml restart certbot
 
 # Restart nginx to load new certificate
-docker compose -f compose-privacy.yml restart nginx
+sudo podman compose -f compose-privacy.yml restart nginx
 ```
 
 ### Nginx Configuration
@@ -945,11 +948,11 @@ Nginx configuration is **dynamically generated** based on SSL mode:
 ```bash
 # Check if certificates exist
 ls -la volumes/ssl/self-signed/  # For self-signed mode
-docker compose -f compose-privacy.yml exec certbot ls -la /etc/letsencrypt/live/  # For Let's Encrypt mode
+sudo podman compose -f compose-privacy.yml exec certbot ls -la /etc/letsencrypt/live/  # For Let's Encrypt mode
 
 # If missing, restart certbot to generate
-docker compose -f compose-privacy.yml restart certbot
-docker compose -f compose-privacy.yml logs -f certbot
+sudo podman compose -f compose-privacy.yml restart certbot
+sudo podman compose -f compose-privacy.yml logs -f certbot
 ```
 
 **Let's Encrypt certificate acquisition failed**:
@@ -963,7 +966,7 @@ sudo ufw status
 curl -I http://your-domain.com/.well-known/acme-challenge/test
 
 # 3. Check certbot logs
-docker compose -f compose-privacy.yml logs certbot
+sudo podman compose -f compose-privacy.yml logs certbot
 
 # 4. Common issues:
 #    - DNS not propagated (wait 24-48 hours)
@@ -975,7 +978,7 @@ docker compose -f compose-privacy.yml logs certbot
 **Browser shows "Not Secure" warning**:
 - **Expected in development mode** (self-signed certificates)
 - In production mode: Verify Let's Encrypt certificate was obtained successfully
-- Check certificate expiration: `docker compose -f compose-privacy.yml exec certbot certbot certificates`
+- Check certificate expiration: `sudo podman compose -f compose-privacy.yml exec certbot certbot certificates`
 
 **First-time setup - ports 80/443 are closed**:
 
@@ -983,7 +986,7 @@ If you're setting up Let's Encrypt but ports 80/443 aren't accessible yet:
 1. Use `SELF_SIGNED_SSL=true` temporarily
 2. Request firewall/network admin to open ports
 3. Switch to Let's Encrypt mode once ports are open
-4. Run `podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh`
+4. Run `sudo podman compose -f compose-privacy.yml exec nginx obtain-ssl-certificate.sh`
 
 See "SSL Certificate Bootstrapping" section above for detailed instructions.
 
@@ -1110,7 +1113,7 @@ React-based web app provides user-friendly interface:
 
 ### Backup Strategy
 
-Regular backups are critical for production deployments. The backup script works seamlessly with Docker-managed volumes.
+Regular backups are critical for production deployments. The backup script works seamlessly with Podman-managed volumes.
 
 #### Automated Backup
 
@@ -1128,7 +1131,7 @@ Regular backups are critical for production deployments. The backup script works
 #   - .env.backup (configuration - keep secure!)
 ```
 
-**No special setup needed** - the backup script automatically accesses Docker-managed volumes.
+**No special setup needed** - the backup script automatically accesses Podman-managed volumes.
 
 #### Schedule Daily Backups
 
@@ -1147,29 +1150,29 @@ sudo crontab -e
 ls /backup/radicale-idp/
 
 # Stop services
-docker compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml down
 
 # Remove volumes (CAUTION: removes current data!)
 # Note: the `radicale-idp_` prefix is the compose project name (the project directory name)
-docker volume rm radicale-idp_radicale_data radicale-idp_web_data
+sudo podman volume rm radicale-idp_radicale_data radicale-idp_web_data
 
 # Restore specific backup (example from backup YYYYMMDD_HHMMSS)
 cd /backup/radicale-idp/YYYYMMDD_HHMMSS/
 
 # Restore Radicale data (collections, vCards, and privacy database)
-docker run --rm \
+sudo podman run --rm \
   -v radicale-idp_radicale_data:/data \
   -v .:/backup:ro \
   alpine tar xzf /backup/radicale-data-*.tar.gz -C /data
 
 # Restore web app data
-docker run --rm \
+sudo podman run --rm \
   -v radicale-idp_web_data:/data \
   -v .:/backup:ro \
   alpine tar xzf /backup/web-data-*.tar.gz -C /data
 
 # Restart services
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 ```
 
 ### Health Monitoring
@@ -1194,59 +1197,59 @@ Reclaim unused space:
 
 ```bash
 # Radicale privacy database
-docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+sudo podman compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
 
 # Web app database
-docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
+sudo podman compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 #### Backup Databases
 
 ```bash
 # Privacy database
-docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > privacy-backup.sql
+sudo podman compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db ".dump" > privacy-backup.sql
 
 # Web database
-docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db ".dump" > web-backup.sql
+sudo podman compose -f compose-privacy.yml exec web sqlite3 /data/local.db ".dump" > web-backup.sql
 ```
 
 ### Updating Containers
 
 ```bash
 # Pull latest images
-docker compose -f compose-privacy.yml pull
+sudo podman compose -f compose-privacy.yml pull
 
 # Rebuild local image
-docker compose -f compose-privacy.yml build --no-cache radicale
+sudo podman compose -f compose-privacy.yml build --no-cache radicale
 
 # Restart services
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 
 # Verify update
-docker compose -f compose-privacy.yml ps
-docker compose -f compose-privacy.yml logs
+sudo podman compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml logs
 ```
 
 ### Viewing Logs
 
 ```bash
 # Real-time logs (all services)
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 
 # Specific service logs
-docker compose -f compose-privacy.yml logs -f radicale
-docker compose -f compose-privacy.yml logs -f web
-docker compose -f compose-privacy.yml logs -f nginx
-docker compose -f compose-privacy.yml logs -f certbot
+sudo podman compose -f compose-privacy.yml logs -f radicale
+sudo podman compose -f compose-privacy.yml logs -f web
+sudo podman compose -f compose-privacy.yml logs -f nginx
+sudo podman compose -f compose-privacy.yml logs -f certbot
 
 # Last 100 lines of logs
-docker compose -f compose-privacy.yml logs -f --tail=100
+sudo podman compose -f compose-privacy.yml logs -f --tail=100
 
 # Logs with timestamps
-docker compose -f compose-privacy.yml logs -f -t
+sudo podman compose -f compose-privacy.yml logs -f -t
 
 # Multiple services at once
-docker compose -f compose-privacy.yml logs -f radicale web nginx
+sudo podman compose -f compose-privacy.yml logs -f radicale web nginx
 ```
 
 ### Token Rotation
@@ -1270,8 +1273,8 @@ nano .env
 
 **Step 3**: Restart services
 ```bash
-docker compose -f compose-privacy.yml down
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml up -d
 ```
 
 **Step 4**: Invalidate old tokens
@@ -1286,9 +1289,9 @@ docker compose -f compose-privacy.yml up -d
 
 **Check logs**:
 ```bash
-docker compose -f compose-privacy.yml logs
-docker compose -f compose-privacy.yml logs radicale
-docker compose -f compose-privacy.yml logs web
+sudo podman compose -f compose-privacy.yml logs
+sudo podman compose -f compose-privacy.yml logs radicale
+sudo podman compose -f compose-privacy.yml logs web
 ```
 
 **Common issues**:
@@ -1307,17 +1310,17 @@ docker compose -f compose-privacy.yml logs web
 
 3. **Volume permission issues**
    ```bash
-   # Docker manages volumes automatically, but if you have permission issues:
+   # The container runtime manages volumes automatically, but if you have permission issues:
    # Remove and recreate volumes
-   docker volume rm radicale-idp_radicale_data radicale-idp_web_data
-   docker compose -f compose-privacy.yml up -d
+   sudo podman volume rm radicale-idp_radicale_data radicale-idp_web_data
+   sudo podman compose -f compose-privacy.yml up -d
    ```
 
 ### Connection Refused
 
 **Verify services running**:
 ```bash
-docker compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml ps
 
 # All services should show "Up"
 ```
@@ -1338,7 +1341,7 @@ curl http://localhost:3000/
 
 **Verify RADICALE_TOKEN is set**:
 ```bash
-docker compose -f compose-privacy.yml exec radicale env | grep RADICALE_TOKEN
+sudo podman compose -f compose-privacy.yml exec radicale env | grep RADICALE_TOKEN
 ```
 
 **Test API with token**:
@@ -1355,8 +1358,8 @@ curl -H "Authorization: Bearer $RADICALE_TOKEN" \
 
 **Check if databases exist**:
 ```bash
-docker compose -f compose-privacy.yml exec radicale ls -la /var/lib/radicale/
-docker compose -f compose-privacy.yml exec web ls -la /data/
+sudo podman compose -f compose-privacy.yml exec radicale ls -la /var/lib/radicale/
+sudo podman compose -f compose-privacy.yml exec web ls -la /data/
 ```
 
 **Initialize web database**:
@@ -1382,15 +1385,15 @@ grep SELF_SIGNED_SSL .env
 **Nginx container won't start**:
 ```bash
 # Check nginx logs
-docker compose -f compose-privacy.yml logs nginx
+sudo podman compose -f compose-privacy.yml logs nginx
 
 # Verify certificates exist
 ls -la volumes/ssl/self-signed/  # For SELF_SIGNED_SSL=true
-docker compose -f compose-privacy.yml exec certbot ls -la /etc/letsencrypt/live/  # For SELF_SIGNED_SSL=false
+sudo podman compose -f compose-privacy.yml exec certbot ls -la /etc/letsencrypt/live/  # For SELF_SIGNED_SSL=false
 
 # Restart certbot to regenerate certificates
-docker compose -f compose-privacy.yml restart certbot
-docker compose -f compose-privacy.yml logs -f certbot
+sudo podman compose -f compose-privacy.yml restart certbot
+sudo podman compose -f compose-privacy.yml logs -f certbot
 ```
 
 **Certificate expired or invalid**:
@@ -1399,13 +1402,13 @@ docker compose -f compose-privacy.yml logs -f certbot
 openssl x509 -enddate -noout -in volumes/ssl/self-signed/fullchain.pem
 
 # Force renewal (Let's Encrypt mode)
-docker compose -f compose-privacy.yml exec certbot certbot renew --force-renewal
-docker compose -f compose-privacy.yml restart nginx
+sudo podman compose -f compose-privacy.yml exec certbot certbot renew --force-renewal
+sudo podman compose -f compose-privacy.yml restart nginx
 
 # Regenerate (self-signed mode)
 rm volumes/ssl/self-signed/*.pem
-docker compose -f compose-privacy.yml restart certbot
-docker compose -f compose-privacy.yml restart nginx
+sudo podman compose -f compose-privacy.yml restart certbot
+sudo podman compose -f compose-privacy.yml restart nginx
 ```
 
 **Let's Encrypt acquisition failed**:
@@ -1415,7 +1418,7 @@ See the detailed troubleshooting section in "Reverse Proxy & SSL" → "Troublesh
 
 **Check resource usage**:
 ```bash
-docker stats
+sudo podman stats
 
 # Shows CPU, memory, network I/O per container
 ```
@@ -1425,18 +1428,18 @@ docker stats
 # Overall disk usage
 df -h
 
-# Docker volumes usage
-du -sh /var/lib/docker/volumes/*
+# Podman volumes usage (rootful Podman stores volumes here)
+du -sh /var/lib/containers/storage/volumes/*
 
 # View all volumes
-docker volume ls
-docker volume inspect radicale-idp_radicale_data
+sudo podman volume ls
+sudo podman volume inspect radicale-idp_radicale_data
 ```
 
 **Optimize database**:
 ```bash
-docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
-docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
+sudo podman compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db "VACUUM;"
+sudo podman compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 ```
 
 ---
@@ -1447,16 +1450,16 @@ docker compose -f compose-privacy.yml exec web sqlite3 /data/local.db "VACUUM;"
 
 ```bash
 # Start services
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 
 # Stop services
-docker compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml down
 
 # Check status
-docker compose -f compose-privacy.yml ps
+sudo podman compose -f compose-privacy.yml ps
 
 # View logs
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 
 # Run backup
 ./scripts/backup.sh
@@ -1465,8 +1468,8 @@ docker compose -f compose-privacy.yml logs -f
 ./scripts/health-check.sh
 
 # Execute command in container
-docker compose -f compose-privacy.yml exec radicale <command>
-docker compose -f compose-privacy.yml exec web <command>
+sudo podman compose -f compose-privacy.yml exec radicale <command>
+sudo podman compose -f compose-privacy.yml exec web <command>
 ```
 
 ### Important Paths
@@ -1478,7 +1481,7 @@ docker compose -f compose-privacy.yml exec web <command>
 - SSL certificates (Let's Encrypt): `volumes/certbot/conf/live/${DOMAIN}/`
 - Nginx config: `volumes/nginx/conf.d/`
 - Backups: `/backup/radicale-idp/`
-- Docker volumes: Managed automatically (use `docker volume ls` to see)
+- Container volumes: Managed automatically (use `sudo podman volume ls` to see)
 
 **Inside Containers** (for reference):
 - Radicale data: `/var/lib/radicale/`
@@ -1486,15 +1489,15 @@ docker compose -f compose-privacy.yml exec web <command>
 - Nginx SSL (self-signed): `/etc/ssl/self-signed/`
 - Nginx SSL (Let's Encrypt): `/etc/letsencrypt/live/${DOMAIN}/`
 
-**Docker Volume Names**:
+**Volume Names**:
 ```bash
 # List volumes
-docker volume ls
+sudo podman volume ls
 
 # View volume details
 # (the `radicale-idp_` prefix is the compose project name - the project directory name)
-docker volume inspect radicale-idp_radicale_data
-docker volume inspect radicale-idp_web_data
+sudo podman volume inspect radicale-idp_radicale_data
+sudo podman volume inspect radicale-idp_web_data
 ```
 
 ### Port Reference
@@ -1503,8 +1506,8 @@ docker volume inspect radicale-idp_web_data
 |---------|------|--------|-------|
 | Radicale | 5232 | localhost only | Exposed on 127.0.0.1:5232 |
 | Web App | 3000 | localhost only | Exposed on 127.0.0.1:3000 |
-| Nginx (HTTP) | 80 | public | Docker container, exposed on all interfaces |
-| Nginx (HTTPS) | 443 | public | Docker container, exposed on all interfaces |
+| Nginx (HTTP) | 80 | public | Container, exposed on all interfaces |
+| Nginx (HTTPS) | 443 | public | Container, exposed on all interfaces |
 | Certbot | - | internal | Background service, no exposed ports |
 
 ### API Endpoints
@@ -1539,5 +1542,5 @@ POST   /privacy/cards/{user}/reprocess    # Reprocess vCards
 **Status**: Production-ready
 
 For additional help:
-- Check service logs: `docker compose -f compose-privacy.yml logs`
+- Check service logs: `sudo podman compose -f compose-privacy.yml logs`
 - Health check: `./scripts/health-check.sh`
