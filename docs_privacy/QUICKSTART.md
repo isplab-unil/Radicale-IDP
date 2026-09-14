@@ -3,9 +3,9 @@
 This guide explains the key features and customization options for the Radicale IDP privacy web application.
 
 > [!IMPORTANT]
-> This documentation uses `docker compose` for examples. On the production server, replace `docker compose` with `sudo podman compose` — the syntax is otherwise identical.
+> The production server uses Podman as the default container runtime. **All** commands in this guide use `sudo podman compose`. Use `sudo` consistently for **every** command (`up`, `down`, `ps`, `logs`, `exec`, ...): containers created via `sudo podman` are invisible to a rootless `podman`, and vice versa. For the same reason, run the helper scripts (`scripts/backup.sh`, `scripts/health-check.sh`) with `sudo` on the production server.
 >
-> Use `sudo` consistently for **every** compose command (`up`, `down`, `ps`, `logs`, `exec`, ...): containers created via `sudo podman` are invisible to a rootless `podman`, and vice versa. For the same reason, run the helper scripts (`scripts/backup.sh`, `scripts/health-check.sh`) with `sudo` on the production server.
+> For local development, `docker compose` (without sudo) works identically and podman rootless is also an option. The syntax is identical.
 
 ## Table of Contents
 
@@ -34,28 +34,28 @@ This fork ships with two Compose files:
 To deploy the full fork, run from the repository root:
 
 ```bash
-docker compose -f compose-privacy.yml up --build -d
+sudo podman compose -f compose-privacy.yml up --build -d
 ```
 
 To stop it:
 
 ```bash
-docker compose -f compose-privacy.yml down
+sudo podman compose -f compose-privacy.yml down
 ```
 
 To view logs:
 
 ```bash
-docker compose -f compose-privacy.yml logs -f
+sudo podman compose -f compose-privacy.yml logs -f
 ```
 
-All further `docker compose` commands in this guide assume you are using `-f compose-privacy.yml`.
+All further compose commands in this guide assume `-f compose-privacy.yml`.
 
 ---
 
 ## Accessing the Application
 
-Once the Docker Compose deployment is running, you can access the services at:
+Once the Compose deployment is running, you can access the services at:
 
 - **Privacy Web Interface:** `http://YOUR_DOMAIN/`
 - **Radicale Server:** `http://YOUR_DOMAIN/radicale/`
@@ -79,9 +79,9 @@ The password is controlled by the `DEFAULT_USER_PASSWORD` variable in the root `
 
 Environment variables control how the application runs.
 
-### Production Deployment (Docker Compose)
+### Production Deployment (Compose)
 
-For production deployment using Docker Compose (recommended), environment variables are set in the **`.env` file at the root of the project** (not in the `web` directory).
+For production deployment using Compose (recommended), environment variables are set in the **`.env` file at the root of the project** (not in the `web` directory).
 
 ### How to Update Environment Variables
 
@@ -91,12 +91,12 @@ For production deployment using Docker Compose (recommended), environment variab
 4. Save the file
 5. Recreate the containers for changes to take effect:
    ```bash
-   docker compose -f compose-privacy.yml up -d
+   sudo podman compose -f compose-privacy.yml up -d
    ```
 
-   > **Note:** `docker compose restart` is **not** enough — it reuses the existing containers with their frozen environment and never re-reads the `.env` file. `up -d` detects the configuration change and recreates the affected containers. A rebuild (`--build`) is not required for environment-only changes.
+   > **Note:** A plain `compose restart` is **not** enough — it reuses the existing containers with their frozen environment and never re-reads the `.env` file. `up -d` detects the configuration change and recreates the affected containers. A rebuild (`--build`) is not required for environment-only changes.
 
-> **Note:** The `web/.env` file exists for local development only (running the web app without Docker). For production with Docker Compose, always use the root `.env` file.
+> **Note:** The `web/.env` file exists for local development only (running the web app without containers). For production with the Compose deployment, always use the root `.env` file.
 
 ### Available Variables
 
@@ -142,7 +142,7 @@ Each log entry contains a timestamp, the user identifier, the action type, a mes
 
 ### Enable database logging
 
-Add the following to your Radicale configuration file (`config/radicale.config` for Docker, or `~/.config/radicale/config` for local development):
+Add the following to your Radicale configuration file (`config/radicale.config` for the container deployment, or `~/.config/radicale/config` for local development):
 
 ```ini
 [privacy]
@@ -155,14 +155,14 @@ The default value is `false`. The database path is the same SQLite file that sto
 
 ### Viewing server logs
 
-**Docker Compose:**
+**Compose deployment:**
 
 ```bash
 # Follow Radicale server logs in real time
-docker compose -f compose-privacy.yml logs -f radicale
+sudo podman compose -f compose-privacy.yml logs -f radicale
 
 # Show the last 100 lines
-docker compose -f compose-privacy.yml logs --tail=100 radicale
+sudo podman compose -f compose-privacy.yml logs --tail=100 radicale
 ```
 
 **Local server:**
@@ -183,14 +183,14 @@ The privacy database is a standard SQLite file. You can query it from inside the
 **From inside the container:**
 
 ```bash
-docker compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db \
+sudo podman compose -f compose-privacy.yml exec radicale sqlite3 /var/lib/radicale/privacy.db \
   "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC LIMIT 20;"
 ```
 
 **Copy to host and query:**
 
 ```bash
-docker cp radicale-idp-server:/var/lib/radicale/privacy.db ./privacy.db
+sudo podman cp radicale-idp-server:/var/lib/radicale/privacy.db ./privacy.db
 sqlite3 ./privacy.db \
   "SELECT timestamp, action_type, user_identifier, message FROM privacy_logs ORDER BY timestamp DESC;"
 ```
@@ -205,7 +205,7 @@ sqlite3 ./privacy.db \
 
 ## Adding Default User Data
 
-You can pre-populate the Radicale server with user data (contacts, calendars) that will be automatically loaded when the Docker container starts for the first time.
+You can pre-populate the Radicale server with user data (contacts, calendars) that will be automatically loaded when the Radicale container starts for the first time.
 
 ### How It Works
 
@@ -215,15 +215,15 @@ The system looks for user data in the `default-data/` directory at the project r
 2. If the volume is empty (first run), it loads data from `default-data/`
 3. Each user is created with the password specified in `DEFAULT_USER_PASSWORD` environment variable
 
-This is a **one-time seed**: after the first startup, the Docker volume becomes the source of truth for Radicale data. Rebuilding the image or restarting the container will **not** copy changes from `default-data/` into the existing volume. This behavior is intentional and idiomatic for stateful services — it prevents accidental overwrites of live collections, privacy settings, and user sessions.
+This is a **one-time seed**: after the first startup, the container volume becomes the source of truth for Radicale data. Rebuilding the image or restarting the container will **not** copy changes from `default-data/` into the existing volume. This behavior is intentional and idiomatic for stateful services — it prevents accidental overwrites of live collections, privacy settings, and user sessions.
 
 ### Reloading Default Data
 
 If you modify `default-data/` and want those changes to appear in Radicale, you must remove the existing volumes and start fresh so the seed script runs again:
 
 ```bash
-docker compose -f compose-privacy.yml down -v
-docker compose -f compose-privacy.yml up --build -d
+sudo podman compose -f compose-privacy.yml down -v
+sudo podman compose -f compose-privacy.yml up --build -d
 ```
 
 > ⚠️ **WARNING:** The `-v` flag deletes **all** persistent data, including:
@@ -234,10 +234,10 @@ docker compose -f compose-privacy.yml up --build -d
 > Make a backup first if you need to preserve any of this data:
 > ```bash
 > # Backup Radicale data (collections and privacy database)
-> docker cp radicale-idp-server:/var/lib/radicale ./backup-radicale
+> sudo podman cp radicale-idp-server:/var/lib/radicale ./backup-radicale
 >
 > # Backup web app database
-> docker cp radicale-idp-web:/data ./backup-web
+> sudo podman cp radicale-idp-web:/data ./backup-web
 > ```
 
 For production deployments, treat `default-data/` as an initial bootstrap dataset. Once the service is running, add or update contacts through the CalDAV/CardDAV clients or Radicale's API rather than re-seeding from `default-data/`.
@@ -301,8 +301,8 @@ The system supports two formats for default data:
 
 4. **Reload the default data** so the new user is seeded into the empty volume (see [Reloading Default Data](#reloading-default-data) for the warning and details):
    ```bash
-   docker compose -f compose-privacy.yml down -v
-   docker compose -f compose-privacy.yml up --build -d
+   sudo podman compose -f compose-privacy.yml down -v
+   sudo podman compose -f compose-privacy.yml up --build -d
    ```
 
 ### Security Considerations
@@ -333,25 +333,25 @@ When you need to update your deployment to the latest version or apply configura
 
 3. **Stop the current containers:**
    ```bash
-   docker compose -f compose-privacy.yml down
+   sudo podman compose -f compose-privacy.yml down
    ```
 
-   Or if using Podman:
+   Or, for local development with Docker:
    ```bash
-   podman compose -f compose-privacy.yml down
+   docker compose -f compose-privacy.yml down
    ```
 
 4. **Rebuild and start the containers:**
    ```bash
+   sudo podman compose -f compose-privacy.yml up --build -d
+   ```
+
+   Or, for local development with Docker:
+   ```bash
    docker compose -f compose-privacy.yml up --build -d
    ```
 
-   Or if using Podman:
-   ```bash
-   podman compose -f compose-privacy.yml up --build -d
-   ```
-
-The `--build` flag ensures that Docker/Podman rebuilds the images with the latest code changes, and `-d` runs the containers in detached mode (in the background).
+The `--build` flag ensures that the container runtime rebuilds the images with the latest code changes, and `-d` runs the containers in detached mode (in the background).
 
 ### When to Redeploy
 
@@ -365,13 +365,13 @@ You should redeploy when:
 
 ### Preserving Data During Redeployment
 
-The standard redeployment process (`docker compose -f compose-privacy.yml down` without the `-v` flag) **preserves all your data**:
+The standard redeployment process (`sudo podman compose -f compose-privacy.yml down` without the `-v` flag) **preserves all your data**:
 
 - User collections (contacts, calendars) are kept
 - Privacy database and logs are kept
 - Web application database is kept
 
-Only use `docker compose -f compose-privacy.yml down -v` if you intentionally want to delete all data and start fresh (see the warning in the [Adding Default User Data](#adding-default-user-data) section).
+Only use `sudo podman compose -f compose-privacy.yml down -v` if you intentionally want to delete all data and start fresh (see the warning in the [Adding Default User Data](#adding-default-user-data) section).
 
 ---
 
@@ -474,7 +474,7 @@ Toggling the flag off does not wipe users' existing API-sharing choices — prev
 Set `ENABLE_API_SHARING=false` in the root `.env` file and recreate the web container:
 
 ```bash
-docker compose -f compose-privacy.yml up -d
+sudo podman compose -f compose-privacy.yml up -d
 ```
 
 ---
@@ -510,7 +510,7 @@ Show a warning message on the login page to inform users not to enter real infor
 Set `SHOW_DISCLAIMER=true` in the root `.env` file and restart the containers:
 
 ```bash
-docker compose -f compose-privacy.yml restart web
+sudo podman compose -f compose-privacy.yml restart web
 ```
 
 The disclaimer is then displayed on every visit to the login page, regardless of the URL.
