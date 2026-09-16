@@ -20,10 +20,11 @@ if [ "$SELF_SIGNED_SSL" = "true" ]; then
         # Generate new self-signed certificate
         echo "Generating self-signed certificate..."
         mkdir -p /etc/ssl/self-signed
-        openssl req -x509 -nodes -days 365 -newkey rsa:4096 \
+        openssl req -x509 -nodes -days "${SELF_SIGNED_DAYS:-365}" -newkey rsa:4096 \
             -keyout /etc/ssl/self-signed/privkey.pem \
             -out /etc/ssl/self-signed/fullchain.pem \
-            -subj "/CN=localhost"
+            -subj "/CN=localhost" \
+            -addext "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1"
 
         echo "Self-signed certificate created"
         sleep 1d

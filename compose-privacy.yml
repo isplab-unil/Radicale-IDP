@@ -220,6 +220,7 @@ services:
 
     environment:
       - SELF_SIGNED_SSL=${SELF_SIGNED_SSL:-true} # Default to self-signed for dev
+      - SELF_SIGNED_DAYS=${SELF_SIGNED_DAYS:-365} # Self-signed cert validity
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
 
