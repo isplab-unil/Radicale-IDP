@@ -393,6 +393,10 @@ JWT_SECRET=<generate-with-openssl-rand-hex-32>
 # SSL certificate mode: true = self-signed (development), false = Let's Encrypt (production)
 SELF_SIGNED_SSL=true
 
+# Self-signed certificate validity in days (only used when SELF_SIGNED_SSL=true)
+# Defaults to 365 when unset
+SELF_SIGNED_DAYS=2000
+
 # Domain name (required for Let's Encrypt mode when SELF_SIGNED_SSL=false)
 DOMAIN=your-domain.com
 
@@ -457,6 +461,9 @@ Generate with: `openssl rand -hex 32`
 - **SELF_SIGNED_SSL**: Controls certificate mode
   - `true` (default): Use self-signed certificates for development
   - `false`: Use Let's Encrypt certificates for production
+- **SELF_SIGNED_DAYS**: Validity of self-signed certificates in days (only used when `SELF_SIGNED_SSL=true`)
+  - Defaults to 365 when unset
+  - The certbot container only regenerates the certificate when it expires or is deleted, so changing this value requires regenerating the certificate to take effect (see "Manual Certificate Operations" below)
 - **DOMAIN**: Your domain name (required when `SELF_SIGNED_SSL=false`)
   - Must point to your server's IP address
   - Example: `radicale.example.com`
@@ -703,7 +710,8 @@ SELF_SIGNED_SSL=true
 
 **Certificate Management**:
 - Location: `volumes/ssl/self-signed/fullchain.pem` and `privkey.pem`
-- Valid for: 365 days
+- Subject: `CN=localhost`, with SANs for `localhost`, `127.0.0.1`, and `::1`
+- Valid for: `SELF_SIGNED_DAYS` days (defaults to 365)
 - Auto-renewal: 10 days before expiration
 - No domain or email configuration needed
 
@@ -916,7 +924,7 @@ sudo podman compose -f compose-privacy.yml exec certbot certbot renew --force-re
 sudo podman compose -f compose-privacy.yml restart nginx
 ```
 
-**Regenerate self-signed certificate**:
+**Regenerate self-signed certificate** (uses the `SELF_SIGNED_DAYS` value from `.env`):
 ```bash
 # Remove existing certificate
 rm volumes/ssl/self-signed/fullchain.pem volumes/ssl/self-signed/privkey.pem
@@ -927,6 +935,8 @@ sudo podman compose -f compose-privacy.yml restart certbot
 # Restart nginx to load new certificate
 sudo podman compose -f compose-privacy.yml restart nginx
 ```
+
+> **Note:** The certbot container only regenerates a self-signed certificate when it is missing or expires within 10 days. Changing `SELF_SIGNED_DAYS` in `.env` does **not** renew an existing, still-valid certificate — delete the `.pem` files as above and restart to apply a new validity. Browsers will prompt to trust the new certificate (new keypair, new fingerprint).
 
 ### Nginx Configuration
 
@@ -1528,6 +1538,7 @@ POST   /privacy/cards/{user}/reprocess    # Reprocess vCards
 | RADICALE_TOKEN | Privacy API auth | 64-char hex string |
 | JWT_SECRET | Session signing | 64-char hex string |
 | SELF_SIGNED_SSL | SSL mode | true (dev) / false (prod) |
+| SELF_SIGNED_DAYS | Self-signed validity (days) | 2000 (365 if unset) |
 | DOMAIN | Domain name (prod) | radicale.example.com |
 | EMAIL | Let's Encrypt email | admin@example.com |
 | AWS_ACCESS_KEY_ID | OTP delivery | IAM key |
@@ -1538,7 +1549,7 @@ POST   /privacy/cards/{user}/reprocess    # Reprocess vCards
 ---
 
 **Created**: 2024
-**Updated**: 2026-08-04
+**Updated**: 2026-09-16
 **Status**: Production-ready
 
 For additional help:
