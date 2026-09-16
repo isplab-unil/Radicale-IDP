@@ -12,6 +12,7 @@ import type { Route } from './+types/root';
 import { Toaster } from '~/components/ui/sonner';
 import { TemplateProvider } from '~/lib/template-context';
 import { getEnv } from '~/lib/env';
+import { useCspNonce } from '~/lib/csp-nonce';
 import './app.css';
 import { links } from './root-links';
 import i18next from '~/i18n/config';
@@ -33,6 +34,7 @@ export const loader = async (): Promise<RootLoaderData> => {
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const nonce = useCspNonce();
   return (
     <html lang="en">
       <head>
@@ -44,8 +46,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         {children}
         <Toaster />
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
